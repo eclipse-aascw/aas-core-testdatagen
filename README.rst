@@ -1,6 +1,6 @@
-***********************
-aas-core3.1-testdatagen
-***********************
+********************
+aas-core-testdatagen
+********************
 
 .. image:: https://github.com/aas-core-works/aas-core-testdatagen/actions/workflows/ci.yml/badge.svg
     :target: https://github.com/aas-core-works/aas-core-testdatagen/actions/workflows/ci.yml
