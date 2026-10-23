@@ -619,11 +619,18 @@ def _check_value_against_type_annotation(
 
         elif isinstance(type_annotation, intermediate.ListTypeAnnotation):
             item_annotation = intermediate.beneath_optional(type_annotation.items)
+            is_list_of_union = isinstance(
+                item_annotation, intermediate.OurTypeAnnotation
+            ) and isinstance(item_annotation.our_type, intermediate.NamedUnion)
+
             if not (
-                isinstance(item_annotation, intermediate.OurTypeAnnotation)
-                and isinstance(
-                    item_annotation.our_type,
-                    (intermediate.AbstractClass, intermediate.ConcreteClass),
+                is_list_of_union
+                or (
+                    isinstance(item_annotation, intermediate.OurTypeAnnotation)
+                    and isinstance(
+                        item_annotation.our_type,
+                        (intermediate.AbstractClass, intermediate.ConcreteClass),
+                    )
                 )
             ):
                 return _check_list_of_primitives(
@@ -632,17 +639,6 @@ def _check_value_against_type_annotation(
                     symbol_table=symbol_table,
                     constraints_by_class=constraints_by_class,
                 )
-
-            assert isinstance(
-                type_annotation.items, intermediate.OurTypeAnnotation
-            ) and isinstance(
-                type_annotation.items.our_type,
-                (intermediate.AbstractClass, intermediate.ConcreteClass),
-            ), (
-                f"NOTE (mristin): We expect only lists of classes "
-                f"at the moment, but got {type_annotation}. "
-                f"Please contact the developers if you need this feature."
-            )
 
             if not isinstance(value, preseria.ListOfInstances):
                 return [
@@ -655,11 +651,19 @@ def _check_value_against_type_annotation(
             errors = []  # type: List[Error]
 
             for i, item in enumerate(value.values):
-                item_errors = check_structural_constraints(
-                    instance=item,
-                    symbol_table=symbol_table,
-                    constraints_by_class=constraints_by_class,
-                )
+                if is_list_of_union:
+                    item_errors = _check_value_against_type_annotation(
+                        value=item,
+                        type_annotation=item_annotation,
+                        symbol_table=symbol_table,
+                        constraints_by_class=constraints_by_class,
+                    )
+                else:
+                    item_errors = check_structural_constraints(
+                        instance=item,
+                        symbol_table=symbol_table,
+                        constraints_by_class=constraints_by_class,
+                    )
 
                 if item_errors is not None:
                     for item_error in item_errors:
