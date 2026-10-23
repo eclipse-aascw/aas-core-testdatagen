@@ -1,7 +1,7 @@
 """Generate the test data assuming the logic based on pillars of the meta-model V3.2."""
 
 import collections
-from typing import Final, Iterator, Optional, Sequence, Callable
+from typing import Final, Iterator, List, Optional, Sequence, Callable, Mapping
 
 from aas_core_codegen import intermediate
 from aas_core_codegen.common import Identifier
@@ -17,8 +17,79 @@ from aas_core_testdatagen import (
 )
 
 
+_COMPARISON_OPERAND_PROPERTY: Final[Mapping[str, str]] = {
+    "Equal_comparison": "eq",
+    "Not_equal_comparison": "ne",
+    "Greater_than_comparison": "gt",
+    "Greater_than_or_equal_comparison": "ge",
+    "Less_than_comparison": "lt",
+    "Less_than_or_equal_comparison": "le",
+}
+
+# Literal classes by the type of the comparison operands
+_LITERAL_BY_OPERAND_TYPE: Final[Mapping[str, str]] = {
+    "string": "String_literal",
+    "number": "Number_literal",
+    "hex": "Hex_literal",
+    "boolean": "Boolean_literal",
+    "date_time": "Date_time_literal",
+    "time": "Time_literal",
+}
+
+
 class InstanceGenerator(generation.InstanceGenerator):
     """Generate instances specific for the meta-model V3.2."""
+
+    def _comparison_with_compatible_operands(
+        self, path_hash: common.CanHash, cls: intermediate.ConcreteClass
+    ) -> preseria.Instance:
+        """Generate a comparison whose operands are literals of the same type."""
+        prop_name = Identifier(_COMPARISON_OPERAND_PROPERTY[cls.name])
+
+        # Booleans can only be compared for (in)equality.
+        operand_types = [
+            operand_type
+            for operand_type in _LITERAL_BY_OPERAND_TYPE
+            if operand_type != "boolean"
+            or cls.name
+            in (
+                "Equal_comparison",
+                "Not_equal_comparison",
+            )
+        ]
+        operand_type = primitiving.choose_value(
+            path_hash=common.hash_path(path_hash, "operand_type"),
+            choice=operand_types,
+        )
+
+        literal_cls = self.symbol_table.must_find_concrete_class(
+            Identifier(_LITERAL_BY_OPERAND_TYPE[operand_type])
+        )
+
+        operands: List[preseria.ValueUnion] = [
+            self.generate_minimal_concrete_instance(
+                path_hash=common.hash_path(path_hash, [prop_name, i]),
+                cls=literal_cls,
+            )
+            for i in range(2)
+        ]
+
+        return preseria.Instance(
+            properties=collections.OrderedDict(
+                [(prop_name, preseria.TupleOfValues(operands))]
+            ),
+            class_name=cls.name,
+        )
+
+    @override
+    def generate_minimal_concrete_instance(
+        self, path_hash: common.CanHash, cls: intermediate.ConcreteClass
+    ) -> preseria.Instance:
+        """Generate a minimal instance, accounting for the V3.2 constraints."""
+        if cls.name in _COMPARISON_OPERAND_PROPERTY:
+            return self._comparison_with_compatible_operands(path_hash, cls)
+
+        return super().generate_minimal_concrete_instance(path_hash, cls)
 
     @override
     def generate_maximal_concrete_instance(
@@ -27,6 +98,9 @@ class InstanceGenerator(generation.InstanceGenerator):
         cls: intermediate.ConcreteClass,
     ) -> preseria.Instance:
         """Generate a maximal instance, accounting for the V3.2 constraints."""
+        if cls.name in _COMPARISON_OPERAND_PROPERTY:
+            return self._comparison_with_compatible_operands(path_hash, cls)
+
         instance = super().generate_maximal_concrete_instance(path_hash, cls)
 
         if cls.name == "Get_submodel_elements_result":
