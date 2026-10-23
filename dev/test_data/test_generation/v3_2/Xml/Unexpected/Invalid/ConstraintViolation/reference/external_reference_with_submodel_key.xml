@@ -1,0 +1,17 @@
+<reference xmlns="https://admin-shell.io/aas/3/2">
+  <type>ExternalReference</type>
+  <keys>
+    <key>
+      <type>GlobalReference</type>
+      <value>urn:first</value>
+    </key>
+    <key>
+      <type>Submodel</type>
+      <value>urn:middle</value>
+    </key>
+    <key>
+      <type>GlobalReference</type>
+      <value>urn:last</value>
+    </key>
+  </keys>
+</reference>

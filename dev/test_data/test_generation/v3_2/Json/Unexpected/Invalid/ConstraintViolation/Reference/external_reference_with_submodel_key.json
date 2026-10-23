@@ -1,0 +1,17 @@
+{
+  "type": "ExternalReference",
+  "keys": [
+    {
+      "type": "GlobalReference",
+      "value": "urn:first"
+    },
+    {
+      "type": "Submodel",
+      "value": "urn:middle"
+    },
+    {
+      "type": "GlobalReference",
+      "value": "urn:last"
+    }
+  ]
+}
