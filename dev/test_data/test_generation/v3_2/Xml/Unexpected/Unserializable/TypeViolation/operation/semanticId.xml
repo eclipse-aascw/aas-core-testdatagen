@@ -159,7 +159,31 @@
       <value>
         <submodelElementList>
           <idShort>something732046d1</idShort>
-          <typeValueListElement>SubmodelElementCollection</typeValueListElement>
+          <semanticIdListElement>
+            <type>ExternalReference</type>
+            <keys>
+              <key>
+                <type>GlobalReference</type>
+                <value>urn:yet-another-company:10:245e0e92</value>
+              </key>
+            </keys>
+          </semanticIdListElement>
+          <typeValueListElement>Property</typeValueListElement>
+          <valueTypeListElement>xs:boolean</valueTypeListElement>
+          <value>
+            <property>
+              <semanticId>
+                <type>ExternalReference</type>
+                <keys>
+                  <key>
+                    <type>GlobalReference</type>
+                    <value>urn:yet-another-company:10:245e0e92</value>
+                  </key>
+                </keys>
+              </semanticId>
+              <valueType>xs:boolean</valueType>
+            </property>
+          </value>
         </submodelElementList>
       </value>
     </operationVariable>

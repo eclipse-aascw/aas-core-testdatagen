@@ -1,0 +1,140 @@
+{
+  "extensions": [
+    {
+      "name": "[\\h$\ud90b\ude9f\u00ec\u00d6\u010b\u008a1\u00bf"
+    },
+    {
+      "name": "\ud842\udd224\ud842\udd22"
+    }
+  ],
+  "category": "[\\h$\ud90b\ude9f\u00ec\u00d6\u010b\u008a1\u00bf",
+  "idShort": "a-_",
+  "displayName": [
+    {
+      "language": "en-JM-x-d5bea02c",
+      "text": "\u00db\u0103<P\udb63\udc7d\u00b2|dn\u009c\u00de\u00ae"
+    }
+  ],
+  "description": [
+    {
+      "language": "en-JM-x-e9ab6cb4",
+      "text": "0"
+    },
+    {
+      "language": "en-JM-x-970f5fa4",
+      "text": "\u00f6\u0116a\udbf6\udce1\u0099|"
+    }
+  ],
+  "semanticId": {
+    "type": "ExternalReference",
+    "keys": [
+      {
+        "type": "GlobalReference",
+        "value": "urn:another-example:09:160d4555"
+      }
+    ]
+  },
+  "supplementalSemanticIds": [
+    {
+      "type": "ExternalReference",
+      "keys": [
+        {
+          "type": "GlobalReference",
+          "value": "urn:some-company:10:001714f2"
+        }
+      ]
+    },
+    {
+      "type": "ExternalReference",
+      "keys": [
+        {
+          "type": "GlobalReference",
+          "value": "urn:an-example:14:7e48ae02"
+        }
+      ]
+    }
+  ],
+  "qualifiers": [
+    {
+      "type": "something_cda0409b",
+      "valueType": "xs:string"
+    }
+  ],
+  "embeddedDataSpecifications": [
+    {
+      "dataSpecification": {
+        "type": "ExternalReference",
+        "keys": [
+          {
+            "type": "GlobalReference",
+            "value": "urn:something:15:39d00ad7"
+          }
+        ]
+      },
+      "dataSpecificationContent": {
+        "preferredName": [
+          {
+            "language": "en-JM-x-8e1751aa",
+            "text": "\uda51\udc4cM\ud86a\udc07\ud82d\udd0a\ud9c8\udd32"
+          }
+        ],
+        "modelType": "DataSpecificationIec61360"
+      }
+    }
+  ],
+  "inputVariables": [
+    {
+      "value": {
+        "idShort": "somethingf129ec8d",
+        "semanticIdListElement": {
+          "type": "ExternalReference",
+          "keys": [
+            {
+              "type": "GlobalReference",
+              "value": "urn:yet-another-company:10:245e0e92"
+            }
+          ]
+        },
+        "typeValueListElement": "Property",
+        "valueTypeListElement": "xs:boolean",
+        "modelType": "SubmodelElementList"
+      }
+    },
+    {
+      "value": {
+        "idShort": "something8c094fc1",
+        "modelType": "Operation"
+      }
+    },
+    {
+      "value": {
+        "idShort": "somethingcb20d5ef",
+        "modelType": "Operation"
+      }
+    }
+  ],
+  "outputVariables": [
+    {
+      "value": {
+        "idShort": "something3bb46d9a",
+        "modelType": "File"
+      }
+    }
+  ],
+  "inoutputVariables": [
+    {
+      "value": {
+        "idShort": "something24fa02de",
+        "valueType": "xs:unsignedByte",
+        "modelType": "Property"
+      }
+    },
+    {
+      "value": {
+        "idShort": "somethingbde0d723",
+        "modelType": "SubmodelElementCollection"
+      }
+    }
+  ],
+  "modelType": "Operation"
+}
