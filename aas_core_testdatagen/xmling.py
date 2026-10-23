@@ -257,8 +257,10 @@ def _serialize_instance_property(
     name: Identifier,
     instance: preseria.ImmutableInstance,
     symbol_table: intermediate.SymbolTable,
+    force_class_element: bool = False,
 ) -> None:
     cls = symbol_table.must_find_concrete_class(instance.class_name)
+    with_class_element = force_class_element or cls.serialization.with_model_type
 
     xml_prop_name = aas_core_codegen.naming.xml_property(name)
 
@@ -266,14 +268,14 @@ def _serialize_instance_property(
 
     xml_class_name = aas_core_codegen.naming.xml_class_name(instance.class_name)
 
-    if cls.serialization.with_model_type:
+    if with_class_element:
         xmlizer.enqueue_open(xml_class_name)
 
     _serialize_instance_as_sequence(
         xmlizer=xmlizer, instance=instance, symbol_table=symbol_table
     )
 
-    if cls.serialization.with_model_type:
+    if with_class_element:
         xmlizer.write_close(xml_class_name)
 
     xmlizer.write_close(xml_prop_name)
@@ -328,11 +330,18 @@ def _serialize_instance_as_sequence(
             )
 
         elif isinstance(prop_value, preseria.ImmutableInstance):
+            prop_type_anno = intermediate.beneath_optional(
+                cls.properties_by_name[prop_name].type_annotation
+            )
             _serialize_instance_property(
                 xmlizer=xmlizer,
                 name=prop_name,
                 instance=prop_value,
                 symbol_table=symbol_table,
+                force_class_element=(
+                    isinstance(prop_type_anno, intermediate.OurTypeAnnotation)
+                    and isinstance(prop_type_anno.our_type, intermediate.NamedUnion)
+                ),
             )
 
         elif isinstance(prop_value, preseria.SequenceOfImmutableInstances):

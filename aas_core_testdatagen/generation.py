@@ -92,6 +92,14 @@ class InstanceGenerator(abc.ABC):
             ):
                 return self.generate_minimal_instance(path_hash=path_hash, cls=our_type)
 
+            elif isinstance(our_type, intermediate.NamedUnion):
+                return self.generate_minimal_concrete_instance(
+                    path_hash=path_hash,
+                    cls=primitiving.choose_value(
+                        path_hash=path_hash, choice=our_type.implementers
+                    ),
+                )
+
             else:
                 # noinspection PyTypeChecker
                 assert_never(type_annotation.our_type)

@@ -393,6 +393,44 @@ def _check_value_against_type_annotation(
                 if structural_errors is not None:
                     return structural_errors
 
+            elif isinstance(type_annotation.our_type, intermediate.NamedUnion):
+                union = type_annotation.our_type
+
+                if not isinstance(value, preseria.Instance):
+                    return [
+                        Error(
+                            path=Path(segments=[]),
+                            message=(
+                                f"Expected a pre-serialized instance "
+                                f"of the union {union.name!r}, but got {value!r}."
+                            ),
+                        )
+                    ]
+
+                # NOTE: The implementers are the flattened concrete members.
+                if value.class_name not in {
+                    implementer.name for implementer in union.implementers
+                }:
+                    return [
+                        Error(
+                            path=Path(segments=[]),
+                            message=(
+                                f"Expected a pre-serialized instance of a member "
+                                f"of the union {union.name!r}, "
+                                f"but got an instance of {value.class_name!r}."
+                            ),
+                        )
+                    ]
+
+                structural_errors = check_structural_constraints(
+                    instance=value,
+                    symbol_table=symbol_table,
+                    constraints_by_class=constraints_by_class,
+                )
+
+                if structural_errors is not None:
+                    return structural_errors
+
             else:
                 # noinspection PyTypeChecker
                 assert_never(type_annotation.our_type)
