@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "aas-core-testdatagen"
 # NOTE (mristin):
 # Do not forget to sync with __init__.py!
-version = "0.0.4"
+version = "0.0.5rc1"
 
 description = "Generate test data for AAS elements based on the meta-model."
 readme = "README.rst"
