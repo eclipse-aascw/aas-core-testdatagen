@@ -25,7 +25,13 @@ PrimitiveValueTuple = (bool, int, float, str, bytes)
 assert PrimitiveValueTuple == get_args(PrimitiveValueUnion)
 
 
-ValueUnion = Union[PrimitiveValueUnion, "Instance", "ListOfInstances", "TupleOfValues"]
+ValueUnion = Union[
+    PrimitiveValueUnion,
+    "Instance",
+    "ListOfInstances",
+    "TupleOfValues",
+    "SetOfPrimitives",
+]
 
 
 ImmutableValueUnion = Union[
@@ -33,6 +39,7 @@ ImmutableValueUnion = Union[
     "ImmutableInstance",
     "SequenceOfImmutableInstances",
     "TupleOfImmutableValues",
+    "SetOfImmutablePrimitives",
 ]
 
 
@@ -79,6 +86,21 @@ class TupleOfImmutableValues(abc.ABC):
     @abc.abstractmethod
     def values(self) -> Sequence["ImmutableValueUnion"]:
         """The items of the tuple."""
+        raise NotImplementedError()
+
+
+class SetOfImmutablePrimitives(abc.ABC):
+    """Represent an immutable set of primitive values."""
+
+    @property
+    @abc.abstractmethod
+    def values(self) -> Sequence[PrimitiveValueUnion]:
+        """
+        The items of the set.
+
+        We keep them in a sequence, so that test cases can contain duplicates and
+        arbitrary order. The serialization sorts the items.
+        """
         raise NotImplementedError()
 
 
@@ -232,6 +254,35 @@ class TupleOfValues(TupleOfImmutableValues):
         self._values = values
 
 
+class SetOfPrimitives(SetOfImmutablePrimitives):
+    """Represent a set of primitive values."""
+
+    @property
+    @override
+    def values(self) -> List[PrimitiveValueUnion]:
+        return self._values
+
+    @values.setter
+    def values(self, values: List[PrimitiveValueUnion]) -> None:
+        self._values = values
+
+    def __init__(self, values: List[PrimitiveValueUnion]) -> None:
+        """Initialize with the given values."""
+        self._values = values
+
+
+def sorted_set_items(
+    values: Sequence[PrimitiveValueUnion],
+) -> List[PrimitiveValueUnion]:
+    """
+    Sort the set items as the meta-model mandates for the serialization.
+
+    ``False`` goes before ``True``, integers are sorted numerically, and strings
+    by their code points.
+    """
+    return sorted(values)
+
+
 def _to_jsonable(value: ImmutableValueUnion) -> Any:
     """
     Represent the ``value`` as a JSON-able object.
@@ -257,6 +308,8 @@ def _to_jsonable(value: ImmutableValueUnion) -> Any:
     elif isinstance(value, SequenceOfImmutableInstances):
         return [_to_jsonable(item) for item in value.values]
     elif isinstance(value, TupleOfImmutableValues):
+        return [_to_jsonable(item) for item in value.values]
+    elif isinstance(value, SetOfImmutablePrimitives):
         return [_to_jsonable(item) for item in value.values]
     else:
         # noinspection PyTypeChecker

@@ -344,16 +344,36 @@ def _serialize_tuple_property(
 
         elif isinstance(
             item,
-            (preseria.SequenceOfImmutableInstances, preseria.TupleOfImmutableValues),
+            (
+                preseria.SequenceOfImmutableInstances,
+                preseria.TupleOfImmutableValues,
+                preseria.SetOfImmutablePrimitives,
+            ),
         ):
             raise NotImplementedError(
-                f"XML serialization of nested lists and tuples in the tuple "
+                f"XML serialization of nested lists, tuples and sets in the tuple "
                 f"property {name!r} is not defined yet."
             )
 
         else:
             # noinspection PyTypeChecker
             assert_never(item)
+
+    xmlizer.write_close(xml_prop_name)
+
+
+def _serialize_set_property(
+    xmlizer: _Xmlizer,
+    name: Identifier,
+    set_of_primitives: preseria.SetOfImmutablePrimitives,
+) -> None:
+    """Serialize the sorted items of the set as ``<v>`` elements."""
+    xml_prop_name = aas_core_codegen.naming.xml_property(name)
+
+    xmlizer.enqueue_open(xml_prop_name)
+
+    for item in preseria.sorted_set_items(set_of_primitives.values):
+        _serialize_primitive_property(xmlizer=xmlizer, name=Identifier("v"), value=item)
 
     xmlizer.write_close(xml_prop_name)
 
@@ -437,6 +457,11 @@ def _serialize_instance_as_sequence(
                 name=prop_name,
                 tuple_of_values=prop_value,
                 symbol_table=symbol_table,
+            )
+
+        elif isinstance(prop_value, preseria.SetOfImmutablePrimitives):
+            _serialize_set_property(
+                xmlizer=xmlizer, name=prop_name, set_of_primitives=prop_value
             )
 
         else:

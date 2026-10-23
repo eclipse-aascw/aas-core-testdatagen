@@ -145,6 +145,25 @@ def serialize(
 
         return json_tuple, None
 
+    elif isinstance(value, preseria.SetOfImmutablePrimitives):
+        json_set = []  # type: List[Any]
+
+        for i, set_item in enumerate(preseria.sorted_set_items(value.values)):
+            json_item, serialization_error = serialize(
+                value=set_item, symbol_table=symbol_table
+            )
+
+            if serialization_error is not None:
+                return None, (
+                    f"Failed to serialize the set item {i}: {serialization_error}"
+                )
+
+            assert json_item is not None
+
+            json_set.append(json_item)
+
+        return json_set, None
+
     else:
         # noinspection PyTypeChecker
         assert_never(value)

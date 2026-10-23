@@ -516,6 +516,60 @@ def _check_value_against_type_annotation(
             if len(errors) > 0:
                 return errors
 
+        elif isinstance(type_annotation, intermediate.SetTypeAnnotation):
+            if not isinstance(value, preseria.SetOfPrimitives):
+                return [
+                    Error(
+                        path=Path(segments=[]),
+                        message=f"Expected a set of primitives, but got {value!r}.",
+                    )
+                ]
+
+            errors = []
+
+            item_annotation = intermediate.beneath_optional(type_annotation.items)
+
+            for i, item_value in enumerate(value.values):
+                item_errors = _check_value_against_type_annotation(
+                    value=item_value,
+                    type_annotation=item_annotation,
+                    symbol_table=symbol_table,
+                    constraints_by_class=constraints_by_class,
+                )
+
+                if item_errors is not None:
+                    for item_error in item_errors:
+                        # noinspection PyProtectedMember
+                        item_error.path._segments.insert(0, i)
+
+                    errors.extend(item_errors)
+
+            if len(errors) == 0 and len(set(value.values)) != len(value.values):
+                errors.append(
+                    Error(
+                        path=Path(segments=[]),
+                        message=f"Expected unique set items, but got {value!r}.",
+                    )
+                )
+
+            if len(errors) > 0:
+                return errors
+
+        elif isinstance(
+            type_annotation,
+            (
+                intermediate.JsonValueTypeAnnotation,
+                intermediate.JsonArrayTypeAnnotation,
+                intermediate.JsonObjectTypeAnnotation,
+            ),
+        ):
+            # NOTE: Only raising for now; revisit once the extended meta-model
+            # uses the JSON-able types in serializable properties.
+            raise NotImplementedError(
+                f"Verification against the JSON-able type annotation "
+                f"{type_annotation} is not supported yet."
+            )
+
         else:
             # noinspection PyTypeChecker
             assert_never(type_annotation)
@@ -657,11 +711,16 @@ def check_structural_constraints(
         prop_constraints = constraints_by_prop[prop]
 
         if prop_constraints.len_constraint is not None:
-            if isinstance(prop_value, (str, bytes, preseria.ListOfInstances)):
+            if isinstance(
+                prop_value,
+                (str, bytes, preseria.ListOfInstances, preseria.SetOfPrimitives),
+            ):
                 length: int
                 if isinstance(prop_value, (str, bytes)):
                     length = len(prop_value)
-                elif isinstance(prop_value, preseria.ListOfInstances):
+                elif isinstance(
+                    prop_value, (preseria.ListOfInstances, preseria.SetOfPrimitives)
+                ):
                     length = len(prop_value.values)
                 else:
                     # noinspection PyTypeChecker
@@ -736,7 +795,12 @@ def check_structural_constraints(
                             )
                         )
                 elif isinstance(
-                    prop_value, (preseria.ListOfInstances, preseria.TupleOfValues)
+                    prop_value,
+                    (
+                        preseria.ListOfInstances,
+                        preseria.TupleOfValues,
+                        preseria.SetOfPrimitives,
+                    ),
                 ):
                     continue
 

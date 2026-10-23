@@ -176,6 +176,52 @@ class InstanceGenerator(abc.ABC):
                 ]
             )
 
+        elif isinstance(type_annotation, intermediate.SetTypeAnnotation):
+            item_annotation = intermediate.beneath_optional(type_annotation.items)
+
+            minimum_len = 1
+            maximum_len = 3
+
+            if constraints.len_constraint is not None:
+                if constraints.len_constraint.min_value is not None:
+                    minimum_len = max(minimum_len, constraints.len_constraint.min_value)
+
+                maximum_len = max(maximum_len, minimum_len)
+
+                if constraints.len_constraint.max_value is not None:
+                    maximum_len = min(maximum_len, constraints.len_constraint.max_value)
+
+            length = primitiving.generate_int_in_range(
+                path_hash=path_hash, minimum=minimum_len, maximum=maximum_len
+            )
+
+            # NOTE: The items must be unique, but the domain of an item may be small
+            # (*e.g.*, booleans), so we sample with a bounded number of attempts.
+            items = []  # type: List[preseria.PrimitiveValueUnion]
+            for attempt in range(length * 20):
+                if len(items) == length:
+                    break
+
+                item = self.generate_value(
+                    path_hash=common.hash_path(
+                        prefix_hash=path_hash, segment_or_segments=attempt
+                    ),
+                    type_annotation=item_annotation,
+                    constraints=_NO_CONSTRAINTS,
+                )
+                assert isinstance(item, preseria.PrimitiveValueTuple)
+
+                if item not in items:
+                    items.append(item)
+
+            if len(items) < minimum_len:
+                raise AssertionError(
+                    f"Failed to sample at least {minimum_len} unique item(s) "
+                    f"for {type_annotation}, got only {items!r}."
+                )
+
+            return preseria.SetOfPrimitives(items)
+
         else:
             # noinspection PyTypeChecker
             assert_never(type_annotation)
