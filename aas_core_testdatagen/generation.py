@@ -222,6 +222,21 @@ class InstanceGenerator(abc.ABC):
 
             return preseria.SetOfPrimitives(items)
 
+        elif isinstance(
+            type_annotation,
+            (
+                intermediate.JsonValueTypeAnnotation,
+                intermediate.JsonArrayTypeAnnotation,
+                intermediate.JsonObjectTypeAnnotation,
+            ),
+        ):
+            # NOTE: Only raising for now; revisit once the extended meta-model
+            # uses the JSON-able types in serializable properties.
+            raise NotImplementedError(
+                f"Sampling of the JSON-able type annotation {type_annotation} "
+                f"is not supported yet."
+            )
+
         else:
             # noinspection PyTypeChecker
             assert_never(type_annotation)
