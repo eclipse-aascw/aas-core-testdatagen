@@ -542,7 +542,11 @@ def _serialize_instance_as_sequence(
                 isinstance(type_anno.items, intermediate.OurTypeAnnotation)
                 and isinstance(
                     type_anno.items.our_type,
-                    (intermediate.AbstractClass, intermediate.ConcreteClass),
+                    (
+                        intermediate.AbstractClass,
+                        intermediate.ConcreteClass,
+                        intermediate.NamedUnion,
+                    ),
                 )
             ):
                 raise NotImplementedError(

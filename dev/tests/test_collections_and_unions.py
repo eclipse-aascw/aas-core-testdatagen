@@ -86,6 +86,28 @@ _TOY_META_MODEL: Final[str] = textwrap.dedent(
             self.mapping = mapping
             self.many = many
             self.anything = anything
+
+    class Leaf:
+        n: int
+
+        def __init__(self, n: int) -> None:
+            self.n = n
+
+    class Wrap:
+        inner: List["Node"]
+
+        def __init__(self, inner: List["Node"]) -> None:
+            self.inner = inner
+
+    Node = Union[Wrap, Leaf]
+
+    class Forest:
+        nodes: List[Node]
+        first: Node
+
+        def __init__(self, nodes: List[Node], first: Node) -> None:
+            self.nodes = nodes
+            self.first = first
     '''
 )
 
@@ -494,6 +516,59 @@ class TestToyMetaModel(unittest.TestCase):
         self.assertEqual(2, len(violations))
         for name, instance in violations:
             self.assertIsNotNone(self._errors(instance), name)
+
+    def test_minimal_generation_of_recursive_unions_terminates(self) -> None:
+        generator = _ToyGenerator(self.verificator)
+
+        for cls_name in ("Forest", "Wrap"):
+            cls = self.symbol_table.must_find_concrete_class(Identifier(cls_name))
+
+            for i in range(20):
+                path_hash = common.hash_path(prefix_hash=None, segment_or_segments=[i])
+
+                instance = generator.generate_minimal_concrete_instance(path_hash, cls)
+                self.assertIsNone(self._errors(instance), cls_name)
+
+                # Only the non-recursive implementers are chosen.
+                if cls_name == "Forest":
+                    nodes = instance.properties[Identifier("nodes")]
+                    assert isinstance(nodes, preseria.ListOfInstances)
+                    for node in nodes.values:
+                        self.assertEqual("Leaf", node.class_name)
+
+                    first = instance.properties[Identifier("first")]
+                    assert isinstance(first, preseria.Instance)
+                    self.assertEqual("Leaf", first.class_name)
+                else:
+                    inner = instance.properties[Identifier("inner")]
+                    assert isinstance(inner, preseria.ListOfInstances)
+                    for node in inner.values:
+                        self.assertEqual("Leaf", node.class_name)
+
+    def test_json_list_of_union_items(self) -> None:
+        forest = _inst(
+            "Forest",
+            nodes=preseria.ListOfInstances(
+                [
+                    _inst("Leaf", n=1),
+                    _inst("Wrap", inner=preseria.ListOfInstances([_inst("Leaf", n=2)])),
+                ]
+            ),
+            first=_inst("Leaf", n=3),
+        )
+        self.assertIsNone(self._errors(forest))
+
+        jsonable, error = jsoning.serialize(
+            self.verificator.must(forest), self.symbol_table
+        )
+        self.assertIsNone(error)
+        self.assertEqual(
+            {
+                "nodes": [{"n": 1}, {"inner": [{"n": 2}]}],
+                "first": {"n": 3},
+            },
+            jsonable,
+        )
 
     def test_generation_of_list_of_primitives(self) -> None:
         generator = _ToyGenerator(self.verificator)
