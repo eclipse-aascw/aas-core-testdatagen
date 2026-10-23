@@ -12,6 +12,7 @@ from typing import (
     MutableMapping,
     OrderedDict,
     Sequence,
+    Tuple,
     Union,
 )
 
@@ -32,6 +33,8 @@ ValueUnion = Union[
     "TupleOfValues",
     "SetOfPrimitives",
     "ListOfPrimitives",
+    "JsonArray",
+    "JsonObject",
 ]
 
 
@@ -42,6 +45,22 @@ ImmutableValueUnion = Union[
     "TupleOfImmutableValues",
     "SetOfImmutablePrimitives",
     "SequenceOfImmutablePrimitives",
+    "ImmutableJsonArray",
+    "ImmutableJsonObject",
+]
+
+
+# A JSON-able value; there is no null as the meta-model has no such variant.
+JsonValueUnion = Union[bool, float, str, "JsonArray", "JsonObject"]
+
+ImmutableJsonValueUnion = Union[
+    bool, float, str, "ImmutableJsonArray", "ImmutableJsonObject"
+]
+
+# The items of a list that is not a list of instances
+ListItemUnion = Union[PrimitiveValueUnion, "JsonArray", "JsonObject"]
+ImmutableListItemUnion = Union[
+    PrimitiveValueUnion, "ImmutableJsonArray", "ImmutableJsonObject"
 ]
 
 
@@ -92,12 +111,36 @@ class TupleOfImmutableValues(abc.ABC):
 
 
 class SequenceOfImmutablePrimitives(abc.ABC):
-    """Represent an immutable, ordered list of primitive values."""
+    """Represent an immutable, ordered list of primitive or JSON-able values."""
 
     @property
     @abc.abstractmethod
-    def values(self) -> Sequence[PrimitiveValueUnion]:
+    def values(self) -> Sequence[ImmutableListItemUnion]:
         """The items of the list."""
+        raise NotImplementedError()
+
+
+class ImmutableJsonArray(abc.ABC):
+    """Represent an immutable, open JSON-able array."""
+
+    @property
+    @abc.abstractmethod
+    def values(self) -> Sequence[ImmutableJsonValueUnion]:
+        """The items of the array."""
+        raise NotImplementedError()
+
+
+class ImmutableJsonObject(abc.ABC):
+    """Represent an immutable, open JSON-able object."""
+
+    @property
+    @abc.abstractmethod
+    def members(self) -> Sequence[Tuple[str, ImmutableJsonValueUnion]]:
+        """
+        The key-value pairs of the object in their serialization order.
+
+        We keep them in a sequence, so that test cases can contain duplicate keys.
+        """
         raise NotImplementedError()
 
 
@@ -267,20 +310,54 @@ class TupleOfValues(TupleOfImmutableValues):
 
 
 class ListOfPrimitives(SequenceOfImmutablePrimitives):
-    """Represent a list of primitive values."""
+    """Represent a list of primitive or JSON-able values."""
 
     @property
     @override
-    def values(self) -> List[PrimitiveValueUnion]:
+    def values(self) -> List[ListItemUnion]:
         return self._values
 
     @values.setter
-    def values(self, values: List[PrimitiveValueUnion]) -> None:
+    def values(self, values: List[ListItemUnion]) -> None:
         self._values = values
 
-    def __init__(self, values: List[PrimitiveValueUnion]) -> None:
+    def __init__(self, values: List[ListItemUnion]) -> None:
         """Initialize with the given values."""
         self._values = values
+
+
+class JsonArray(ImmutableJsonArray):
+    """Represent an open JSON-able array."""
+
+    @property
+    @override
+    def values(self) -> List[JsonValueUnion]:
+        return self._values
+
+    @values.setter
+    def values(self, values: List[JsonValueUnion]) -> None:
+        self._values = values
+
+    def __init__(self, values: List[JsonValueUnion]) -> None:
+        """Initialize with the given values."""
+        self._values = values
+
+
+class JsonObject(ImmutableJsonObject):
+    """Represent an open JSON-able object."""
+
+    @property
+    @override
+    def members(self) -> List[Tuple[str, JsonValueUnion]]:
+        return self._members
+
+    @members.setter
+    def members(self, members: List[Tuple[str, JsonValueUnion]]) -> None:
+        self._members = members
+
+    def __init__(self, members: List[Tuple[str, JsonValueUnion]]) -> None:
+        """Initialize with the given members."""
+        self._members = members
 
 
 class SetOfPrimitives(SetOfImmutablePrimitives):
@@ -342,6 +419,10 @@ def _to_jsonable(value: ImmutableValueUnion) -> Any:
         return [_to_jsonable(item) for item in value.values]
     elif isinstance(value, SequenceOfImmutablePrimitives):
         return [_to_jsonable(item) for item in value.values]
+    elif isinstance(value, ImmutableJsonArray):
+        return [_to_jsonable(item) for item in value.values]
+    elif isinstance(value, ImmutableJsonObject):
+        return [[key, _to_jsonable(item)] for key, item in value.members]
     else:
         # noinspection PyTypeChecker
         assert_never(value)

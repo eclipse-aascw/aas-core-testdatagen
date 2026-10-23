@@ -16,6 +16,7 @@ from typing import (
     Union,
     Callable,
     Set,
+    Tuple,
     cast,
     Type,
     OrderedDict,
@@ -52,6 +53,22 @@ def _order_created_at_before_updated_at(instance: preseria.Instance) -> None:
 
     instance.properties[created_at] = "2022-04-01T12:00:00Z"
     instance.properties[updated_at] = "2022-04-02T12:00:00Z"
+
+
+def _json_primitive(
+    path_hash: common.CanHash, primitive_type: intermediate.PrimitiveType
+) -> preseria.JsonValueUnion:
+    """Generate an unconstrained primitive usable as a JSON-able value."""
+    return cast(
+        preseria.JsonValueUnion,
+        primitiving.generate_primitive_value_with_constraints(
+            path_hash=path_hash,
+            primitive_type=primitive_type,
+            len_constraint=None,
+            patterns=[],
+            allowed_values=None,
+        ),
+    )
 
 
 class InstanceGenerator(abc.ABC):
@@ -174,23 +191,40 @@ class InstanceGenerator(abc.ABC):
             )
 
             if not is_list_of_instances:
-                primitive_items = []  # type: List[preseria.PrimitiveValueUnion]
+                item_constraints = (
+                    constraints.item_constraints
+                    if constraints.item_constraints is not None
+                    else _NO_CONSTRAINTS
+                )
+                if constraints.key_constraints is not None:
+                    # The keys of JSON objects in the list are constrained.
+                    item_constraints = verification.PropertyConstraints(
+                        len_constraint=item_constraints.len_constraint,
+                        patterns=item_constraints.patterns,
+                        allowed_values=item_constraints.allowed_values,
+                        key_constraints=constraints.key_constraints,
+                    )
+
+                list_items = []  # type: List[preseria.ListItemUnion]
                 for i in range(length):
                     item = self.generate_value(
                         path_hash=common.hash_path(
                             prefix_hash=path_hash, segment_or_segments=i
                         ),
                         type_annotation=item_annotation,
-                        constraints=(
-                            constraints.item_constraints
-                            if constraints.item_constraints is not None
-                            else _NO_CONSTRAINTS
+                        constraints=item_constraints,
+                    )
+                    assert isinstance(
+                        item,
+                        (
+                            *preseria.PrimitiveValueTuple,
+                            preseria.JsonArray,
+                            preseria.JsonObject,
                         ),
                     )
-                    assert isinstance(item, preseria.PrimitiveValueTuple)
-                    primitive_items.append(item)
+                    list_items.append(item)
 
-                return preseria.ListOfPrimitives(primitive_items)
+                return preseria.ListOfPrimitives(list_items)
 
             assert isinstance(
                 item_annotation, intermediate.OurTypeAnnotation
@@ -272,24 +306,106 @@ class InstanceGenerator(abc.ABC):
 
             return preseria.SetOfPrimitives(items)
 
-        elif isinstance(
-            type_annotation,
-            (
-                intermediate.JsonValueTypeAnnotation,
-                intermediate.JsonArrayTypeAnnotation,
-                intermediate.JsonObjectTypeAnnotation,
-            ),
-        ):
-            # NOTE: Only raising for now; revisit once the extended meta-model
-            # uses the JSON-able types in serializable properties.
-            raise NotImplementedError(
-                f"Sampling of the JSON-able type annotation {type_annotation} "
-                f"is not supported yet."
+        elif isinstance(type_annotation, intermediate.JsonValueTypeAnnotation):
+            return self._generate_json_array(path_hash)
+
+        elif isinstance(type_annotation, intermediate.JsonArrayTypeAnnotation):
+            return self._generate_json_array(path_hash)
+
+        elif isinstance(type_annotation, intermediate.JsonObjectTypeAnnotation):
+            return self._generate_json_object(
+                path_hash=path_hash,
+                key_annotation=intermediate.beneath_optional(type_annotation.key),
+                key_constraints=(
+                    constraints.key_constraints
+                    if constraints.key_constraints is not None
+                    else _NO_CONSTRAINTS
+                ),
             )
 
         else:
             # noinspection PyTypeChecker
             assert_never(type_annotation)
+
+    def _generate_json_array(self, path_hash: common.CanHash) -> preseria.JsonArray:
+        """Generate an open JSON-able array with a string, a number and an object."""
+        return preseria.JsonArray(
+            [
+                _json_primitive(
+                    common.hash_path(path_hash, "string"),
+                    intermediate.PrimitiveType.STR,
+                ),
+                _json_primitive(
+                    common.hash_path(path_hash, "number"),
+                    intermediate.PrimitiveType.FLOAT,
+                ),
+                preseria.JsonObject(
+                    [
+                        (
+                            "nested",
+                            _json_primitive(
+                                common.hash_path(path_hash, "nested"),
+                                intermediate.PrimitiveType.BOOL,
+                            ),
+                        )
+                    ]
+                ),
+            ]
+        )
+
+    def _generate_json_object(
+        self,
+        path_hash: common.CanHash,
+        key_annotation: intermediate.TypeAnnotationExceptOptional,
+        key_constraints: verification.PropertyConstraints,
+    ) -> preseria.JsonObject:
+        """
+        Generate a JSON object covering all the kinds of JSON-able values.
+
+        The keys follow the key constraints and are unique.
+        """
+        values: List[preseria.JsonValueUnion] = [
+            _json_primitive(
+                common.hash_path(path_hash, "string"), intermediate.PrimitiveType.STR
+            ),
+            _json_primitive(
+                common.hash_path(path_hash, "number"),
+                intermediate.PrimitiveType.FLOAT,
+            ),
+            _json_primitive(
+                common.hash_path(path_hash, "boolean"),
+                intermediate.PrimitiveType.BOOL,
+            ),
+            self._generate_json_array(common.hash_path(path_hash, "array")),
+        ]
+
+        members = []  # type: List[Tuple[str, preseria.JsonValueUnion]]
+        used_keys = set()  # type: Set[str]
+
+        attempt = 0
+        for value in values:
+            while True:
+                key = self.generate_value(
+                    path_hash=common.hash_path(path_hash, ["key", attempt]),
+                    type_annotation=key_annotation,
+                    constraints=key_constraints,
+                )
+                attempt += 1
+
+                assert isinstance(key, str)
+                if key not in used_keys:
+                    break
+
+                if attempt > 100:
+                    raise AssertionError(
+                        f"Failed to sample a unique JSON object key, "
+                        f"got only {sorted(used_keys)!r}."
+                    )
+
+            used_keys.add(key)
+            members.append((key, value))
+
+        return preseria.JsonObject(members)
 
     @ensure(lambda result, cls: result.class_name == cls.name)
     def _generate_minimal_concrete_instance_by_schema(

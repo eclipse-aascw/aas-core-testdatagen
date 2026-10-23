@@ -3,12 +3,13 @@
 """Test tuples, sets and named unions on a toy meta-model."""
 
 import collections
+import io
 import pathlib
 import re
 import tempfile
 import textwrap
 import unittest
-from typing import ClassVar, Final, List, Optional
+from typing import Any, ClassVar, Dict, Final, List, Optional, cast
 
 import aas_core_codegen.infer_for_schema
 import aas_core_codegen.run
@@ -27,9 +28,9 @@ from aas_core_testdatagen import (
 _TOY_META_MODEL: Final[str] = textwrap.dedent(
     '''\
     """Toy meta-model."""
-    from typing import List, Set, Tuple, Union
+    from typing import List, Optional, Set, Tuple, Union
     from icontract import invariant, DBC
-    from aas_core_meta.marker import verification
+    from aas_core_meta.marker import verification, JSONObject
 
     __xml_namespace__ = "https://example.com/toy/1/0"
     __version__ = "V1.0"
@@ -70,6 +71,21 @@ _TOY_META_MODEL: Final[str] = textwrap.dedent(
 
         def __init__(self, names: List[Name]) -> None:
             self.names = names
+
+    class Bag:
+        mapping: Optional[JSONObject[Name]]
+        many: Optional[List[JSONObject[Name]]]
+        anything: Optional[JSONObject[str]]
+
+        def __init__(
+            self,
+            mapping: Optional[JSONObject[Name]] = None,
+            many: Optional[List[JSONObject[Name]]] = None,
+            anything: Optional[JSONObject[str]] = None,
+        ) -> None:
+            self.mapping = mapping
+            self.many = many
+            self.anything = anything
     '''
 )
 
@@ -233,6 +249,88 @@ class TestToyMetaModel(unittest.TestCase):
             assert errors is not None, item
             self.assertEqual(["names", 1], list(errors[0].path.segments), item)
 
+    def test_json_object_valid(self) -> None:
+        nested = preseria.JsonObject([("k", preseria.JsonArray([1.5, True]))])
+        instance = _inst(
+            "Bag",
+            mapping=preseria.JsonObject([("a", "x"), ("b", nested)]),
+            many=preseria.ListOfPrimitives(
+                [preseria.JsonObject([("a", 2.0)]), preseria.JsonObject([])]
+            ),
+            anything=preseria.JsonObject([("", "empty key is fine here")]),
+        )
+        self.assertIsNone(self._errors(instance))
+
+    def test_json_object_wrong_container(self) -> None:
+        for value in ("a", preseria.JsonArray([]), preseria.ListOfPrimitives([])):
+            instance = _inst("Bag", mapping=value)
+            self.assertIsNotNone(self._errors(instance), value)
+
+    def test_json_object_invalid_value(self) -> None:
+        for member_value in (1, b"x", preseria.ListOfPrimitives([])):
+            instance = _inst(
+                "Bag",
+                mapping=preseria.JsonObject(
+                    [("a", cast(preseria.JsonValueUnion, member_value))]
+                ),
+            )
+            self.assertIsNotNone(self._errors(instance), member_value)
+
+    def test_json_object_duplicate_keys(self) -> None:
+        instance = _inst("Bag", mapping=preseria.JsonObject([("a", "x"), ("a", "y")]))
+        self.assertIsNotNone(self._errors(instance))
+
+    def test_json_object_key_violates_constraint(self) -> None:
+        for key in ("", "toolong"):
+            instance = _inst(
+                "Bag", mapping=preseria.JsonObject([("ok", "x"), (key, "y")])
+            )
+            errors = self._errors(instance)
+            assert errors is not None, key
+            self.assertEqual(["mapping", key], list(errors[0].path.segments), key)
+
+    def test_list_of_json_objects_key_violates_constraint(self) -> None:
+        instance = _inst(
+            "Bag",
+            many=preseria.ListOfPrimitives(
+                [preseria.JsonObject([("ok", "x")]), preseria.JsonObject([("", "y")])]
+            ),
+        )
+        errors = self._errors(instance)
+        assert errors is not None
+        self.assertEqual(["many", 1, ""], list(errors[0].path.segments))
+
+    def test_list_of_json_objects_wrong_item(self) -> None:
+        instance = _inst("Bag", many=preseria.ListOfPrimitives(["a"]))
+        self.assertIsNotNone(self._errors(instance))
+
+    def test_json_json_object(self) -> None:
+        verified = self.verificator.must(
+            _inst(
+                "Bag",
+                mapping=preseria.JsonObject(
+                    [
+                        ("b", "x"),
+                        ("a", preseria.JsonArray([1.5, True, preseria.JsonObject([])])),
+                    ]
+                ),
+                many=preseria.ListOfPrimitives([preseria.JsonObject([("c", 2.0)])]),
+            )
+        )
+        jsonable, error = jsoning.serialize(verified, self.symbol_table)
+        self.assertIsNone(error)
+        self.assertEqual(
+            {
+                "mapping": {"b": "x", "a": [1.5, True, {}]},
+                "many": [{"c": 2.0}],
+            },
+            jsonable,
+        )
+        assert isinstance(jsonable, dict)
+        self.assertEqual(
+            ["b", "a"], list(cast(Dict[str, Any], jsonable["mapping"]).keys())
+        )
+
     def test_json_list_of_primitives(self) -> None:
         verified = self.verificator.must(
             _inst("Named", names=preseria.ListOfPrimitives(["b", "a", "b"]))
@@ -250,6 +348,66 @@ class TestToyMetaModel(unittest.TestCase):
             jsonable,
         )
 
+    def test_xml_json_object(self) -> None:
+        verified = self.verificator.must(
+            _inst(
+                "Bag",
+                mapping=preseria.JsonObject(
+                    [
+                        ("b", "x"),
+                        (
+                            "a",
+                            preseria.JsonArray(
+                                [
+                                    1.5,
+                                    True,
+                                    preseria.JsonObject([("n", "v")]),
+                                ]
+                            ),
+                        ),
+                    ]
+                ),
+                many=preseria.ListOfPrimitives(
+                    [preseria.JsonObject([("c", 2.0)]), preseria.JsonObject([])]
+                ),
+            )
+        )
+        text = re.sub(r">\s+<", "><", xmling.serialize(verified, self.symbol_table))
+        self.assertIn(
+            '<mapping><member xmlns=""><name>b</name>'
+            "<value><string>x</string></value></member>"
+            '<member xmlns=""><name>a</name><value><array><data>'
+            "<value><double>1.5</double></value>"
+            "<value><boolean>1</boolean></value>"
+            "<value><struct><member><name>n</name>"
+            "<value><string>v</string></value></member></struct></value>"
+            "</data></array></value></member></mapping>",
+            text,
+        )
+        self.assertIn(
+            '<many><v><member xmlns=""><name>c</name>'
+            "<value><double>2.0</double></value></member></v><v /></many>",
+            text,
+        )
+
+    def test_xml_json_array_and_value_properties(self) -> None:
+        stream = io.StringIO()
+        with xmling._Xmlizer(namespace="https://example.com", stream=stream) as xmlizer:
+            xmlizer.enqueue_open("root")
+            xmling._serialize_json_array_property(
+                xmlizer, "values", preseria.JsonArray(["a", 1.0])
+            )
+            xmling._serialize_json_value_property(xmlizer, "value", True)
+            xmlizer.write_close("root")
+
+        text = re.sub(r">\s+<", "><", stream.getvalue())
+        self.assertIn(
+            '<values><data xmlns=""><value><string>a</string></value>'
+            "<value><double>1.0</double></value></data></values>",
+            text,
+        )
+        self.assertIn('<value><boolean xmlns="">1</boolean></value>', text)
+
     def test_xml_list_of_primitives(self) -> None:
         verified = self.verificator.must(
             _inst("Named", names=preseria.ListOfPrimitives(["b", "a", "b"]))
@@ -263,6 +421,37 @@ class TestToyMetaModel(unittest.TestCase):
         self.assertIn("<either><b><y>hello</y></b></either>", text)
         self.assertIn("<pair><v1>1</v1><v2>a</v2></pair>", text)
         self.assertIn("<tags><v>a</v><v>z</v></tags>", text)
+
+    def test_generation_of_json_objects(self) -> None:
+        generator = _ToyGenerator(self.verificator)
+        cls = self.symbol_table.must_find_concrete_class(Identifier("Bag"))
+        path_hash = common.hash_path(prefix_hash=None, segment_or_segments=[])
+
+        minimal = generator.generate_minimal_concrete_instance(path_hash, cls)
+        self.assertIsNone(self._errors(minimal))
+
+        maximal = generator.generate_maximal_concrete_instance(path_hash, cls)
+        self.assertIsNone(self._errors(maximal))
+
+        mapping = maximal.properties[Identifier("mapping")]
+        assert isinstance(mapping, preseria.JsonObject)
+
+        keys = [key for key, _ in mapping.members]
+        self.assertEqual(len(keys), len(set(keys)))
+        for key in keys:
+            self.assertTrue(1 <= len(key) <= 5, key)
+
+        kinds = {type(value) for _, value in mapping.members}
+        self.assertTrue({str, float, bool, preseria.JsonArray}.issubset(kinds), kinds)
+
+        many = maximal.properties[Identifier("many")]
+        assert isinstance(many, preseria.ListOfPrimitives)
+        self.assertGreaterEqual(len(many.values), 1)
+        for item in many.values:
+            self.assertIsInstance(item, preseria.JsonObject)
+
+        anything = maximal.properties[Identifier("anything")]
+        self.assertIsInstance(anything, preseria.JsonObject)
 
     def test_generation_of_list_of_primitives(self) -> None:
         generator = _ToyGenerator(self.verificator)

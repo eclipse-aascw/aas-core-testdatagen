@@ -46,6 +46,9 @@ class PropertyConstraints:
     # Constraints on the items, if the property is a list of primitives
     item_constraints: Final[Optional["PropertyConstraints"]]
 
+    # Constraints on the keys, if the property is a JSON object or a list thereof
+    key_constraints: Final[Optional["PropertyConstraints"]]
+
     # fmt: off
     @require(
         lambda allowed_values:
@@ -59,8 +62,10 @@ class PropertyConstraints:
         patterns: Sequence[str],
         allowed_values: Optional[Sequence[preseria.PrimitiveValueUnion]],
         item_constraints: Optional["PropertyConstraints"] = None,
+        key_constraints: Optional["PropertyConstraints"] = None,
     ) -> None:
         self.item_constraints = item_constraints
+        self.key_constraints = key_constraints
         self.len_constraint = len_constraint
         self.patterns = patterns
         self.allowed_values = allowed_values
@@ -81,6 +86,21 @@ def _is_class_annotation(type_anno: intermediate.TypeAnnotationUnion) -> bool:
         type_anno.our_type,
         (intermediate.AbstractClass, intermediate.ConcreteClass),
     )
+
+
+def _json_object_key_annotation(
+    type_anno: intermediate.TypeAnnotationUnion,
+) -> Optional[intermediate.TypeAnnotationExceptOptional]:
+    """Find the key annotation if the type is a JSON object or a list thereof."""
+    type_anno = intermediate.beneath_optional(type_anno)
+
+    if isinstance(type_anno, intermediate.ListTypeAnnotation):
+        type_anno = intermediate.beneath_optional(type_anno.items)
+
+    if isinstance(type_anno, intermediate.JsonObjectTypeAnnotation):
+        return intermediate.beneath_optional(type_anno.key)
+
+    return None
 
 
 def _constraints_of_annotation(
@@ -190,11 +210,21 @@ def reorganize_schema_constraints_by_properties(
                 what=f"property {prop.name!r} of class {cls.name!r}",
             )
 
+            key_constraints = None
+            key_anno = _json_object_key_annotation(type_anno)
+            if key_anno is not None:
+                key_constraints = _constraints_of_annotation(
+                    type_anno=key_anno,
+                    constraints_by_value=constraints_by_value,
+                    what=f"keys of the property {prop.name!r} of class {cls.name!r}",
+                )
+
             result[cls][prop] = PropertyConstraints(
                 len_constraint=property_constraints.len_constraint,
                 patterns=property_constraints.patterns,
                 allowed_values=property_constraints.allowed_values,
                 item_constraints=item_constraints,
+                key_constraints=key_constraints,
             )
 
     return result
@@ -296,6 +326,87 @@ assert all(
 
 
 # fmt: on
+
+
+def _check_json_value(value: object, expect: str = "value") -> Optional[List[Error]]:
+    """
+    Check that the value is a JSON-able value.
+
+    The ``expect`` is one of ``"value"``, ``"array"`` or ``"object"``. Duplicate
+    object keys are rejected at every nesting level.
+    """
+    if isinstance(value, preseria.ImmutableJsonObject):
+        if expect == "array":
+            return [
+                Error(
+                    path=Path(segments=[]),
+                    message=f"Expected a JSON array, but got an object: {value!r}.",
+                )
+            ]
+
+        errors = []  # type: List[Error]
+
+        keys = [key for key, _ in value.members]
+        if len(set(keys)) != len(keys):
+            errors.append(
+                Error(
+                    path=Path(segments=[]),
+                    message=f"Expected unique JSON object keys, but got {keys!r}.",
+                )
+            )
+
+        for key, member_value in value.members:
+            if not isinstance(key, str):
+                errors.append(
+                    Error(
+                        path=Path(segments=[]),
+                        message=f"Expected a str as JSON object key, but got {key!r}.",
+                    )
+                )
+                continue
+
+            member_errors = _check_json_value(member_value)
+            if member_errors is not None:
+                for member_error in member_errors:
+                    # noinspection PyProtectedMember
+                    member_error.path._segments.insert(0, key)
+
+                errors.extend(member_errors)
+
+        return errors if len(errors) > 0 else None
+
+    elif isinstance(value, preseria.ImmutableJsonArray):
+        if expect == "object":
+            return [
+                Error(
+                    path=Path(segments=[]),
+                    message=f"Expected a JSON object, but got an array: {value!r}.",
+                )
+            ]
+
+        errors = []
+
+        for i, item in enumerate(value.values):
+            item_errors = _check_json_value(item)
+            if item_errors is not None:
+                for item_error in item_errors:
+                    # noinspection PyProtectedMember
+                    item_error.path._segments.insert(0, i)
+
+                errors.extend(item_errors)
+
+        return errors if len(errors) > 0 else None
+
+    elif isinstance(value, (bool, float, str)) and expect == "value":
+        return None
+
+    else:
+        return [
+            Error(
+                path=Path(segments=[]),
+                message=f"Expected a JSON-able {expect}, but got {value!r}.",
+            )
+        ]
 
 
 @ensure(lambda result: not (result is not None) or len(result) > 0)
@@ -649,12 +760,17 @@ def _check_value_against_type_annotation(
                 intermediate.JsonObjectTypeAnnotation,
             ),
         ):
-            # NOTE: Only raising for now; revisit once the extended meta-model
-            # uses the JSON-able types in serializable properties.
-            raise NotImplementedError(
-                f"Verification against the JSON-able type annotation "
-                f"{type_annotation} is not supported yet."
+            expect = (
+                "value"
+                if isinstance(type_annotation, intermediate.JsonValueTypeAnnotation)
+                else (
+                    "array"
+                    if isinstance(type_annotation, intermediate.JsonArrayTypeAnnotation)
+                    else "object"
+                )
             )
+
+            return _check_json_value(value, expect=expect)
 
         else:
             # noinspection PyTypeChecker
@@ -663,55 +779,90 @@ def _check_value_against_type_annotation(
     return None
 
 
+def _find_constraint_problems(
+    value: preseria.PrimitiveValueUnion, constraints: PropertyConstraints
+) -> List[str]:
+    """Describe how the primitive value violates the constraints, if at all."""
+    problems = []  # type: List[str]
+
+    if constraints.len_constraint is not None and isinstance(value, (str, bytes)):
+        if (
+            constraints.len_constraint.min_value is not None
+            and len(value) < constraints.len_constraint.min_value
+        ):
+            problems.append(
+                f"its length {len(value)} is shorter than "
+                f"{constraints.len_constraint.min_value}"
+            )
+
+        if (
+            constraints.len_constraint.max_value is not None
+            and len(value) > constraints.len_constraint.max_value
+        ):
+            problems.append(
+                f"its length {len(value)} is longer than "
+                f"{constraints.len_constraint.max_value}"
+            )
+
+    if isinstance(value, str):
+        for pattern in constraints.patterns:
+            if re.fullmatch(pattern, value) is None:
+                problems.append(f"it does not match the pattern {pattern!r}")
+
+    if (
+        constraints.allowed_value_set is not None
+        and value not in constraints.allowed_value_set
+    ):
+        problems.append("it is not in the set of allowed values")
+
+    return problems
+
+
 def _check_items_against_constraints(
     property_name: str,
     class_name: str,
-    items: Sequence[preseria.PrimitiveValueUnion],
+    items: Sequence[object],
     constraints: PropertyConstraints,
 ) -> List[Error]:
     """Check the items of a list of primitives against the item constraints."""
     errors = []  # type: List[Error]
 
     for i, item in enumerate(items):
-        problems = []  # type: List[str]
+        if not isinstance(item, preseria.PrimitiveValueTuple):
+            continue
 
-        if constraints.len_constraint is not None and isinstance(item, (str, bytes)):
-            if (
-                constraints.len_constraint.min_value is not None
-                and len(item) < constraints.len_constraint.min_value
-            ):
-                problems.append(
-                    f"its length {len(item)} is shorter than "
-                    f"{constraints.len_constraint.min_value}"
-                )
-
-            if (
-                constraints.len_constraint.max_value is not None
-                and len(item) > constraints.len_constraint.max_value
-            ):
-                problems.append(
-                    f"its length {len(item)} is longer than "
-                    f"{constraints.len_constraint.max_value}"
-                )
-
-        if isinstance(item, str):
-            for pattern in constraints.patterns:
-                if re.fullmatch(pattern, item) is None:
-                    problems.append(f"it does not match the pattern {pattern!r}")
-
-        if (
-            constraints.allowed_value_set is not None
-            and item not in constraints.allowed_value_set
-        ):
-            problems.append("it is not in the set of allowed values")
-
-        for problem in problems:
+        for problem in _find_constraint_problems(item, constraints):
             errors.append(
                 Error(
                     path=Path(segments=[property_name, i]),
                     message=(
                         f"Item {i} of the property {property_name!r} "
                         f"of class {class_name}, {item!r}, is invalid: {problem}."
+                    ),
+                )
+            )
+
+    return errors
+
+
+def _check_json_object_keys(
+    path_prefix: Sequence[Union[str, int]],
+    class_name: str,
+    json_object: preseria.ImmutableJsonObject,
+    constraints: PropertyConstraints,
+) -> List[Error]:
+    """Check the keys of the JSON object against the key constraints."""
+    errors = []  # type: List[Error]
+
+    for key, _ in json_object.members:
+        for problem in _find_constraint_problems(key, constraints):
+            errors.append(
+                Error(
+                    path=Path(segments=[*path_prefix, key]),
+                    message=(
+                        f"The key {key!r} of the JSON object at "
+                        f"{'/'.join(str(segment) for segment in path_prefix)!r} "
+                        f"of class {class_name} is invalid: {problem}."
                     ),
                 )
             )
@@ -851,6 +1002,28 @@ def check_structural_constraints(
             continue
 
         prop_constraints = constraints_by_prop[prop]
+
+        if prop_constraints.key_constraints is not None:
+            if isinstance(prop_value, preseria.ImmutableJsonObject):
+                errors.extend(
+                    _check_json_object_keys(
+                        path_prefix=[prop.name],
+                        class_name=cls.name,
+                        json_object=prop_value,
+                        constraints=prop_constraints.key_constraints,
+                    )
+                )
+            elif isinstance(prop_value, preseria.ListOfPrimitives):
+                for i, item in enumerate(prop_value.values):
+                    if isinstance(item, preseria.ImmutableJsonObject):
+                        errors.extend(
+                            _check_json_object_keys(
+                                path_prefix=[prop.name, i],
+                                class_name=cls.name,
+                                json_object=item,
+                                constraints=prop_constraints.key_constraints,
+                            )
+                        )
 
         if prop_constraints.item_constraints is not None and isinstance(
             prop_value, preseria.ListOfPrimitives
