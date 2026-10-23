@@ -183,6 +183,44 @@ def serialize(
 
         return json_primitives, None
 
+    elif isinstance(value, preseria.ImmutableJsonArray):
+        json_array = []  # type: List[Any]
+
+        for i, array_item in enumerate(value.values):
+            json_item, serialization_error = serialize(
+                value=array_item, symbol_table=symbol_table
+            )
+
+            if serialization_error is not None:
+                return None, (
+                    f"Failed to serialize the item {i}: {serialization_error}"
+                )
+
+            assert json_item is not None
+
+            json_array.append(json_item)
+
+        return json_array, None
+
+    elif isinstance(value, preseria.ImmutableJsonObject):
+        json_object: MutableMapping[str, Any] = collections.OrderedDict([])
+
+        for key, member_value in value.members:
+            json_member, serialization_error = serialize(
+                value=member_value, symbol_table=symbol_table
+            )
+
+            if serialization_error is not None:
+                return None, (
+                    f"Failed to serialize the member {key!r}: {serialization_error}"
+                )
+
+            assert json_member is not None
+
+            json_object[key] = json_member
+
+        return json_object, None
+
     else:
         # noinspection PyTypeChecker
         assert_never(value)

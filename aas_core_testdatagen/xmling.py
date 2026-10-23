@@ -43,7 +43,7 @@ class _Xmlizer:
 
         self._indent_level = 0
         self._pending_open = None  # type: Optional[str]
-
+        self._pending_reset_namespace = False
         self._open_stack = []  # type: List[str]
 
         self._last_write = None  # type: Optional[_LastWrite]
@@ -71,15 +71,15 @@ class _Xmlizer:
             self._indent_level += 1
             self._stream.write("\n")
             self._stream.write(_XML_INDENT * self._indent_level)
-            self._stream.write(f"<{self._pending_open}>")
+            self._stream.write(f"<{self._pending_open}{self._namespace_reset()}>")
 
         elif self._last_write == _LastWrite.CLOSE:
             self._stream.write("\n")
             self._stream.write(_XML_INDENT * self._indent_level)
-            self._stream.write(f"<{self._pending_open}>")
+            self._stream.write(f"<{self._pending_open}{self._namespace_reset()}>")
 
         elif self._last_write == _LastWrite.TEXT:
-            self._stream.write(f"<{self._pending_open}>")
+            self._stream.write(f"<{self._pending_open}{self._namespace_reset()}>")
 
         else:
             # noinspection PyTypeChecker
@@ -87,18 +87,27 @@ class _Xmlizer:
 
         self._last_write = _LastWrite.OPEN
         self._pending_open = None
+        self._pending_reset_namespace = False
+
+    def _namespace_reset(self) -> str:
+        """Give the attribute to put the pending element in no namespace, if any."""
+        return ' xmlns=""' if self._pending_reset_namespace else ""
 
     @ensure(lambda self, name: self._pending_open == name)
-    def enqueue_open(self, name: str) -> None:
+    def enqueue_open(self, name: str, reset_namespace: bool = False) -> None:
         """
         Enqueue the open element for writing.
 
         If there is a pending open element, it is written to the stream first.
+
+        If ``reset_namespace`` is set, the element is written with an empty default
+        namespace, as required by the elements of XML-RPC.
         """
         if self._pending_open is not None:
             self._handle_pending_open()
 
         self._pending_open = name
+        self._pending_reset_namespace = reset_namespace
         self._open_stack.append(self._pending_open)
 
     def write_close(self, name: str) -> None:
@@ -130,7 +139,7 @@ class _Xmlizer:
             self_closing_element = (
                 f"<{name} xmlns={xml.sax.saxutils.quoteattr(self._namespace)} />"
                 if len(self._open_stack) == 0
-                else f"<{name} />"
+                else f"<{name}{self._namespace_reset()} />"
             )
 
             if self._last_write is None:
@@ -156,6 +165,7 @@ class _Xmlizer:
                 assert_never(self._last_write)
 
             self._pending_open = None
+            self._pending_reset_namespace = False
 
         else:
             if self._last_write is None:
@@ -344,6 +354,8 @@ def _serialize_tuple_property(
                 preseria.TupleOfImmutableValues,
                 preseria.SequenceOfImmutablePrimitives,
                 preseria.SetOfImmutablePrimitives,
+                preseria.ImmutableJsonArray,
+                preseria.ImmutableJsonObject,
             ),
         ):
             raise NotImplementedError(
@@ -370,6 +382,105 @@ def _serialize_set_property(
     for item in preseria.sorted_set_items(set_of_primitives.values):
         _serialize_primitive_property(xmlizer=xmlizer, xml_prop_name="v", value=item)
 
+    xmlizer.write_close(xml_prop_name)
+
+
+def _serialize_json_value_content(
+    xmlizer: _Xmlizer, value: preseria.ImmutableJsonValueUnion, reset_namespace: bool
+) -> None:
+    """
+    Serialize the JSON-able value with the subset of XML-RPC elements.
+
+    The ``reset_namespace`` must be set for the first element beneath an element of
+    the meta-model, as the XML-RPC elements reside in no namespace.
+    """
+    if isinstance(value, bool):
+        xmlizer.enqueue_open("boolean", reset_namespace)
+        # XML-RPC prescribes 0 and 1 for booleans.
+        xmlizer.write_text("1" if value else "0")
+        xmlizer.write_close("boolean")
+
+    elif isinstance(value, float):
+        xmlizer.enqueue_open("double", reset_namespace)
+        xmlizer.write_text(str(value))
+        xmlizer.write_close("double")
+
+    elif isinstance(value, str):
+        xmlizer.enqueue_open("string", reset_namespace)
+        xmlizer.write_text(value)
+        xmlizer.write_close("string")
+
+    elif isinstance(value, preseria.ImmutableJsonArray):
+        xmlizer.enqueue_open("array", reset_namespace)
+        _serialize_json_array_data(xmlizer, value, reset_namespace=False)
+        xmlizer.write_close("array")
+
+    elif isinstance(value, preseria.ImmutableJsonObject):
+        xmlizer.enqueue_open("struct", reset_namespace)
+        _serialize_json_members(xmlizer, value, reset_namespace=False)
+        xmlizer.write_close("struct")
+
+    else:
+        # noinspection PyTypeChecker
+        assert_never(value)
+
+
+def _serialize_json_array_data(
+    xmlizer: _Xmlizer, array: preseria.ImmutableJsonArray, reset_namespace: bool
+) -> None:
+    """Serialize the items of the JSON array as the ``<data>`` element."""
+    xmlizer.enqueue_open("data", reset_namespace)
+
+    for item in array.values:
+        xmlizer.enqueue_open("value")
+        _serialize_json_value_content(xmlizer, item, reset_namespace=False)
+        xmlizer.write_close("value")
+
+    xmlizer.write_close("data")
+
+
+def _serialize_json_members(
+    xmlizer: _Xmlizer, json_object: preseria.ImmutableJsonObject, reset_namespace: bool
+) -> None:
+    """Serialize the members of the JSON object as the ``<member>`` elements."""
+    for key, member_value in json_object.members:
+        xmlizer.enqueue_open("member", reset_namespace)
+
+        xmlizer.enqueue_open("name")
+        xmlizer.write_text(key)
+        xmlizer.write_close("name")
+
+        xmlizer.enqueue_open("value")
+        _serialize_json_value_content(xmlizer, member_value, reset_namespace=False)
+        xmlizer.write_close("value")
+
+        xmlizer.write_close("member")
+
+
+def _serialize_json_value_property(
+    xmlizer: _Xmlizer, xml_prop_name: str, value: preseria.ImmutableJsonValueUnion
+) -> None:
+    """Serialize the property whose value is an arbitrary JSON-able value."""
+    xmlizer.enqueue_open(xml_prop_name)
+    _serialize_json_value_content(xmlizer, value, reset_namespace=True)
+    xmlizer.write_close(xml_prop_name)
+
+
+def _serialize_json_array_property(
+    xmlizer: _Xmlizer, xml_prop_name: str, array: preseria.ImmutableJsonArray
+) -> None:
+    """Serialize the property whose value is an open JSON array."""
+    xmlizer.enqueue_open(xml_prop_name)
+    _serialize_json_array_data(xmlizer, array, reset_namespace=True)
+    xmlizer.write_close(xml_prop_name)
+
+
+def _serialize_json_object_property(
+    xmlizer: _Xmlizer, xml_prop_name: str, json_object: preseria.ImmutableJsonObject
+) -> None:
+    """Serialize the property whose value is an open JSON object."""
+    xmlizer.enqueue_open(xml_prop_name)
+    _serialize_json_members(xmlizer, json_object, reset_namespace=True)
     xmlizer.write_close(xml_prop_name)
 
 
@@ -466,10 +577,29 @@ def _serialize_instance_as_sequence(
         elif isinstance(prop_value, preseria.SequenceOfImmutablePrimitives):
             xmlizer.enqueue_open(xml_prop_name)
             for item in prop_value.values:
-                _serialize_primitive_property(
-                    xmlizer=xmlizer, xml_prop_name="v", value=item
-                )
+                if isinstance(item, preseria.ImmutableJsonObject):
+                    xmlizer.enqueue_open("v")
+                    _serialize_json_members(xmlizer, item, reset_namespace=True)
+                    xmlizer.write_close("v")
+                elif isinstance(item, preseria.ImmutableJsonArray):
+                    xmlizer.enqueue_open("v")
+                    _serialize_json_array_data(xmlizer, item, reset_namespace=True)
+                    xmlizer.write_close("v")
+                else:
+                    _serialize_primitive_property(
+                        xmlizer=xmlizer, xml_prop_name="v", value=item
+                    )
             xmlizer.write_close(xml_prop_name)
+
+        elif isinstance(prop_value, preseria.ImmutableJsonObject):
+            _serialize_json_object_property(
+                xmlizer=xmlizer, xml_prop_name=xml_prop_name, json_object=prop_value
+            )
+
+        elif isinstance(prop_value, preseria.ImmutableJsonArray):
+            _serialize_json_array_property(
+                xmlizer=xmlizer, xml_prop_name=xml_prop_name, array=prop_value
+            )
 
         else:
             # noinspection PyTypeChecker
