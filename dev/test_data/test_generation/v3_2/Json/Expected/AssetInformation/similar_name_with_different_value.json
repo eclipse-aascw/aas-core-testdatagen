@@ -1,0 +1,10 @@
+{
+  "assetKind": "Role",
+  "globalAssetId": "urn:global:asset",
+  "specificAssetIds": [
+    {
+      "name": "globalAssetIds",
+      "value": "urn:other"
+    }
+  ]
+}

@@ -1,0 +1,10 @@
+<assetInformation xmlns="https://admin-shell.io/aas/3/2">
+  <assetKind>Type</assetKind>
+  <globalAssetId>urn:global:asset</globalAssetId>
+  <specificAssetIds>
+    <specificAssetId>
+      <name>globalAssetId</name>
+      <value>urn:other</value>
+    </specificAssetId>
+  </specificAssetIds>
+</assetInformation>
