@@ -1796,6 +1796,26 @@ class CaseGeneratorForSchemaConstraints(CaseGenerator):
                     example_name=example_name,
                 )
 
+    def _generate_json_key_violations(
+        self, cls: intermediate.ConcreteClass
+    ) -> Iterator[casing.CaseJsonKeyViolation]:
+        """Generate violations of the constraints on the keys of JSON objects."""
+        maximal_case = self.min_max_case_registry.maximal_case_map[cls]
+
+        constraints_by_property = self.constraints_by_class[cls]
+
+        for prop in cls.properties:
+            for example_name, instance in generate_json_key_violations(
+                instance=maximal_case.instance,
+                property_name=prop.name,
+                key_constraints=constraints_by_property[prop].key_constraints,
+            ):
+                yield casing.CaseJsonKeyViolation(
+                    instance=instance,
+                    property_name=prop.name,
+                    example_name=example_name,
+                )
+
     def _generate_required_violations(
         self, cls: intermediate.ConcreteClass
     ) -> Iterator[casing.CaseRequiredViolation]:
@@ -2080,6 +2100,7 @@ class CaseGeneratorForSchemaConstraints(CaseGenerator):
             self._generate_positive_and_negative_pattern_examples,
             self._generate_required_violations,
             self._generate_length_violations,
+            self._generate_json_key_violations,
             self._generate_unexpected_additional_properties,
             self._generate_set_violations,
         ]
@@ -2099,6 +2120,109 @@ class CaseGeneratorForSchemaConstraints(CaseGenerator):
         """Generate all the cases according to the meta-model."""
         for cls in self.symbol_table.concrete_classes:
             yield from self._generate_cases_for_class(cls)
+
+
+def generate_json_key_violations(
+    instance: preseria.ImmutableInstance,
+    property_name: Identifier,
+    key_constraints: Optional[verification.PropertyConstraints],
+) -> List[Tuple[Filenameable, preseria.Instance]]:
+    """
+    Generate copies of the instance with a key of a JSON object violating constraints.
+
+    The property is either a JSON object or a list of JSON objects. The first key
+    of the first object is replaced. The result is empty if there are no key
+    constraints to violate.
+    """
+    if key_constraints is None or property_name not in instance.properties:
+        return []
+
+    def first_object(
+        value: preseria.ImmutableValueUnion,
+    ) -> Optional[preseria.ImmutableJsonObject]:
+        if isinstance(value, preseria.ImmutableJsonObject):
+            return value
+
+        if isinstance(value, preseria.SequenceOfImmutablePrimitives):
+            for item in value.values:
+                if isinstance(item, preseria.ImmutableJsonObject):
+                    return item
+
+        return None
+
+    original = first_object(instance.properties[property_name])
+    if original is None or len(original.members) == 0:
+        return []
+
+    original_key = original.members[0][0]
+
+    bad_keys: List[Tuple[Filenameable, str]] = []
+
+    len_constraint = key_constraints.len_constraint
+    if (
+        len_constraint is not None
+        and len_constraint.min_value is not None
+        and len_constraint.min_value > 0
+    ):
+        bad_keys.append(
+            (
+                Filenameable("MinLength"),
+                original_key[: len_constraint.min_value - 1],
+            )
+        )
+
+    if len_constraint is not None and len_constraint.max_value is not None:
+        bad_keys.append(
+            (
+                Filenameable("MaxLength"),
+                original_key
+                + primitiving.generate_str_padding(
+                    len_constraint.max_value - len(original_key) + 1
+                ),
+            )
+        )
+
+    if len(key_constraints.patterns) > 0:
+        examples = frozen_examples_pattern.BY_PATTERN.get(
+            key_constraints.patterns[-1], None
+        )
+        if examples is not None:
+            for example_name, example_text in examples.negatives.items():
+                bad_keys.append((Filenameable(f"Pattern_{example_name}"), example_text))
+
+    existing_keys = {key for key, _ in original.members}
+
+    result: List[Tuple[Filenameable, preseria.Instance]] = []
+    for name, bad_key in bad_keys:
+        if bad_key in existing_keys:
+            continue
+
+        new_object = preseria.JsonObject(
+            cast(
+                List[Tuple[str, preseria.JsonValueUnion]],
+                [(bad_key, original.members[0][1])] + list(original.members[1:]),
+            )
+        )
+
+        new_instance = instance.mutable_copy()
+        value = new_instance.properties[property_name]
+        if isinstance(value, preseria.ListOfPrimitives):
+            new_items = list(value.values)
+            index = next(
+                i
+                for i, item in enumerate(new_items)
+                if isinstance(item, preseria.ImmutableJsonObject)
+            )
+            new_items[index] = new_object
+            new_instance.properties[property_name] = preseria.ListOfPrimitives(
+                values=new_items
+            )
+        else:
+            new_instance.properties[property_name] = new_object
+
+        result.append((name, new_instance))
+
+    return result
 
 
 def test_name_from_function_name() -> Filenameable:

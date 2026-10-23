@@ -745,6 +745,20 @@ def _determine_relative_path(
                 / f"{case.example_name}.xml"
             )
 
+        elif isinstance(case, casing.CaseJsonKeyViolation):
+            xml_prop_name = names.xml_property(
+                symbol_table, case.instance.class_name, case.property_name
+            )
+            return (
+                pathlib.Path("Xml")
+                / "Unexpected"
+                / "Invalid"
+                / "JsonKeyViolation"
+                / xml_class_name
+                / xml_prop_name
+                / f"{case.example_name}.xml"
+            )
+
         elif isinstance(case, casing.CaseMinLengthViolation):
             xml_prop_name = names.xml_property(
                 symbol_table, case.instance.class_name, case.property_name

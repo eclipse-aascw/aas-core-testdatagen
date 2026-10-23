@@ -363,6 +363,20 @@ def _determine_relative_path(
                 / f"{case.example_name}.json"
             )
 
+        elif isinstance(case, casing.CaseJsonKeyViolation):
+            json_prop_name = names.json_property(
+                symbol_table, case.instance.class_name, case.property_name
+            )
+            return (
+                pathlib.Path("Json")
+                / "Unexpected"
+                / "Invalid"
+                / "JsonKeyViolation"
+                / model_type
+                / json_prop_name
+                / f"{case.example_name}.json"
+            )
+
         elif isinstance(case, casing.CaseMinLengthViolation):
             json_prop_name = names.json_property(
                 symbol_table, case.instance.class_name, case.property_name
