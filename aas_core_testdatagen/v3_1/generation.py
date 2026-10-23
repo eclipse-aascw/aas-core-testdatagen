@@ -22,6 +22,9 @@ class InstanceGenerator(generation.InstanceGenerator):
     # introduced in V3.2.
     single_element_lists_in_operation_variables = False
 
+    # V3.2 introduced the created_at/updated_at timestamps.
+    administration_information_timestamps = False
+
 
 class CaseGenerator(generation.CaseGenerator):
     """Generate the test cases specific for the meta-model V3.1."""
