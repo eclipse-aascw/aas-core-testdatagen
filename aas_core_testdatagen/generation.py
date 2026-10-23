@@ -5,6 +5,7 @@ import ast
 import collections
 import inspect
 from typing import (
+    ClassVar,
     Final,
     Optional,
     Sequence,
@@ -42,6 +43,12 @@ class InstanceGenerator(abc.ABC):
     """Define the generation of instances of classes for the given meta-model."""
 
     verificator: Final[verification.Verificator]
+
+    # NOTE:
+    # Since V3.2 (AASd-138), a submodel element list in an operation variable must
+    # have exactly one element. This is the default; meta-models before V3.2
+    # override the flag.
+    single_element_lists_in_operation_variables: ClassVar[bool] = True
 
     # NOTE (mristin):
     # We introduce the shortcuts to the symbol table and schema constraints to stress
@@ -553,6 +560,38 @@ class InstanceGenerator(abc.ABC):
                 constraints=constraints_by_property[prop],
             )
 
+    def _with_single_element_lists(self, element: preseria.Instance) -> None:
+        """Make all the submodel element lists in the tree have exactly one element."""
+        if element.class_name == "Submodel_element_list":
+            template = mutable_list_with_two_boolean_properties(instance_generator=self)
+            template_value = template.properties[Identifier("value")]
+            assert isinstance(template_value, preseria.ListOfInstances)
+            del template_value.values[1:]
+
+            for name in (
+                "type_value_list_element",
+                "value_type_list_element",
+                "semantic_ID_list_element",
+                "value",
+            ):
+                element.properties[Identifier(name)] = template.properties[
+                    Identifier(name)
+                ]
+
+            return
+
+        children_name = {
+            "Submodel_element_collection": "value",
+            "Entity": "statements",
+            "Annotated_relationship_element": "annotations",
+        }.get(element.class_name, None)
+
+        if children_name is not None:
+            children = element.properties.get(Identifier(children_name), None)
+            if isinstance(children, preseria.ListOfInstances):
+                for child in children.values:
+                    self._with_single_element_lists(child)
+
     @ensure(lambda cls, result: result.class_name == cls.name)
     def generate_maximal_concrete_instance(
         self,
@@ -886,6 +925,15 @@ class InstanceGenerator(abc.ABC):
                         path_hash, ["inoutput_variables", i, "value", "ID_short"]
                     )
                 )
+
+            if self.single_element_lists_in_operation_variables:
+                for variables in (
+                    input_variables,
+                    output_variables,
+                    inoutput_variables,
+                ):
+                    for variable in variables.values:
+                        self._with_single_element_lists(variable.must_instance("value"))
 
             return instance
 
@@ -1922,7 +1970,7 @@ def _list_with_two_boolean_properties(
     )
 
 
-def _mutable_list_with_two_boolean_properties(
+def mutable_list_with_two_boolean_properties(
     instance_generator: InstanceGenerator,
 ) -> preseria.Instance:
     """Generate a mutable submodel element list with two boolean properties."""
@@ -2146,7 +2194,7 @@ class CaseGeneratorForStableSemantics(CaseGenerator):
     def _generate_list_one_child_without_semantic_id(
         self,
     ) -> Iterator[casing.CasePositiveManual]:
-        lst = _mutable_list_with_two_boolean_properties(
+        lst = mutable_list_with_two_boolean_properties(
             instance_generator=self.instance_generator
         )
 
@@ -2171,7 +2219,7 @@ class CaseGeneratorForStableSemantics(CaseGenerator):
     def _generate_list_no_semantic_id_list_element(
         self,
     ) -> Iterator[casing.CasePositiveManual]:
-        lst = _mutable_list_with_two_boolean_properties(
+        lst = mutable_list_with_two_boolean_properties(
             instance_generator=self.instance_generator
         )
 
@@ -2185,7 +2233,7 @@ class CaseGeneratorForStableSemantics(CaseGenerator):
     def _generate_list_violation_of_type_value_list_element(
         self,
     ) -> Iterator[casing.CaseConstraintViolation]:
-        lst = _mutable_list_with_two_boolean_properties(self.instance_generator)
+        lst = mutable_list_with_two_boolean_properties(self.instance_generator)
 
         lst_value = lst.properties[Identifier("value")]
 
@@ -2220,7 +2268,7 @@ class CaseGeneratorForStableSemantics(CaseGenerator):
     def _generate_list_violation_of_value_type_list_element(
         self,
     ) -> Iterator[casing.CaseConstraintViolation]:
-        lst = _mutable_list_with_two_boolean_properties(self.instance_generator)
+        lst = mutable_list_with_two_boolean_properties(self.instance_generator)
 
         lst_value = lst.properties[Identifier("value")]
 
@@ -2248,7 +2296,7 @@ class CaseGeneratorForStableSemantics(CaseGenerator):
     def _generate_list_violation_of_semantic_id_list_element(
         self,
     ) -> Iterator[casing.CaseConstraintViolation]:
-        lst = _mutable_list_with_two_boolean_properties(
+        lst = mutable_list_with_two_boolean_properties(
             instance_generator=self.instance_generator
         )
 
@@ -2280,7 +2328,7 @@ class CaseGeneratorForStableSemantics(CaseGenerator):
     def _generate_list_violation_semantic_id_mismatch_between_elements(
         self,
     ) -> Iterator[casing.CaseConstraintViolation]:
-        lst = _mutable_list_with_two_boolean_properties(
+        lst = mutable_list_with_two_boolean_properties(
             instance_generator=self.instance_generator
         )
 
