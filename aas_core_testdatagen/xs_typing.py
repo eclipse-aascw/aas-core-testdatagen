@@ -4,9 +4,7 @@ import base64
 import datetime
 import decimal
 import enum
-import math
 import re
-import struct
 from typing import Final, FrozenSet, Optional, Mapping, Callable, Pattern, Sequence
 
 from icontract import require
@@ -1767,6 +1765,38 @@ def is_xs_date(value: str) -> bool:
     return True
 
 
+# The smallest magnitudes which round to infinity: the half-way between the largest
+# finite value and the next power of two.
+_XS_DOUBLE_OVERFLOW_THRESHOLD: Final[decimal.Decimal] = decimal.Decimal(
+    2**1024 - 2**970
+)
+_XS_FLOAT_OVERFLOW_THRESHOLD: Final[decimal.Decimal] = decimal.Decimal(2**128 - 2**103)
+
+
+def _is_finite_below(value: str, threshold: decimal.Decimal) -> bool:
+    """Check the magnitude of the decimal ``value`` against ``threshold`` exactly."""
+    # NOTE: ``float(.)`` would round the value, and the arithmetic of ``Decimal``
+    # rounds to the context precision. We therefore compare the decimal exponents
+    # first and build the unsigned ``Decimal`` from its tuple, which is exact.
+    unsigned = value.lstrip("+-")
+    mantissa_text, _, exponent_text = unsigned.lower().partition("e")
+
+    mantissa = decimal.Decimal(mantissa_text)
+    if mantissa == 0:
+        return True
+
+    exponent = int(exponent_text) if exponent_text else 0
+
+    magnitude = mantissa.adjusted() + exponent
+    threshold_magnitude = threshold.adjusted()
+    if magnitude != threshold_magnitude:
+        return magnitude < threshold_magnitude
+
+    _, digits, mantissa_exponent = mantissa.as_tuple()
+    assert isinstance(mantissa_exponent, int)
+    return decimal.Decimal((0, digits, mantissa_exponent + exponent)) < threshold
+
+
 def is_xs_double(value: str) -> bool:
     """Check that ``value`` is a valid ``xs:double``."""
     # We need to check explicitly for the regular expression since
@@ -1776,54 +1806,23 @@ def is_xs_double(value: str) -> bool:
     if not matches_xs_double(value):
         return False
 
-    converted = float(value)
+    if value in ("INF", "-INF", "NaN"):
+        return True
 
-    # Check that the value is either "INF" or "-INF".
-    # Otherwise, the value is a decimal which is too big
-    # to be represented as a double-precision floating point
-    # number.
-    #
-    # Python simply rounds up/down to ``INF`` and ``-INF``,
-    # respectively, if the number is too large.
-    # For example: ``float("1e400") == math.inf``
-    if math.isinf(converted) and value != "INF" and value != "-INF":
-        return False
-
-    return True
+    return _is_finite_below(value, _XS_DOUBLE_OVERFLOW_THRESHOLD)
 
 
 def is_xs_float(value: str) -> bool:
     """Check that ``value`` is a valid ``xs:float``."""
-    # We need to check explicitly for the regular expression since
-    # ``float(.)`` is too permissive. For example,
-    # it accepts "nan" although only "NaN" is valid.
-    # See: https://www.w3.org/TR/xmlschema-2/#double
+    # See the note in :py:func:`is_xs_double`.
+    # See: https://www.w3.org/TR/xmlschema-2/#float
     if not matches_xs_float(value):
         return False
 
-    converted = float(value)
+    if value in ("INF", "-INF", "NaN"):
+        return True
 
-    # Check that the value is either "INF" or "-INF".
-    # Otherwise, the value is a decimal which is too big
-    # to be represented as a single-precision floating point
-    # number.
-    #
-    # Python simply rounds up/down to ``INF`` and ``-INF``,
-    # respectively, if the number is too large.
-    # For example: ``float("1e400") == math.inf``
-    if math.isinf(converted) and value != "INF" and value != "-INF":
-        return False
-
-    # Python uses double-precision floating point numbers. Since
-    # we check for a single-precision one, we have to explicitly
-    # see if the number is within a range of a single-precision
-    # floating point numbers.
-    try:
-        _ = struct.pack(">f", converted)
-    except OverflowError:
-        return False
-
-    return True
+    return _is_finite_below(value, _XS_FLOAT_OVERFLOW_THRESHOLD)
 
 
 def is_xs_g_month_day(value: str) -> bool:
