@@ -1,0 +1,15 @@
+<regexComparison xmlns="https://admin-shell.io/aas/3/2">
+  <regex>
+    <stringLiteral>
+      <strVal>something_72aad79d</strVal>
+    </stringLiteral>
+    <attributeOperand>
+      <attribute>
+        <claimAttribute>
+          <claim>something_3bebb210</claim>
+        </claimAttribute>
+      </attribute>
+    </attributeOperand>
+  </regex>
+  <unexpectedAdditionalProperty>UNEXPECTED-ADDITIONAL-PROPERTY</unexpectedAdditionalProperty>
+</regexComparison>

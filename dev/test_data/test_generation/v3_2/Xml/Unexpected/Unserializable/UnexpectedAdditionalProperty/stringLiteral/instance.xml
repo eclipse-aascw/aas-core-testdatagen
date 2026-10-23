@@ -1,0 +1,4 @@
+<stringLiteral xmlns="https://admin-shell.io/aas/3/2">
+  <strVal>something_b358d315</strVal>
+  <unexpectedAdditionalProperty>UNEXPECTED-ADDITIONAL-PROPERTY</unexpectedAdditionalProperty>
+</stringLiteral>

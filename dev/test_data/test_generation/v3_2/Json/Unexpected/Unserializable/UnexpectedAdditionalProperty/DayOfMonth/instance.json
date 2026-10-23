@@ -1,0 +1,8 @@
+{
+  "$dayOfMonth": {
+    "$attribute": {
+      "GLOBAL": "LOCALNOW"
+    }
+  },
+  "unexpectedAdditionalProperty": "UNEXPECTED-ADDITIONAL-PROPERTY"
+}

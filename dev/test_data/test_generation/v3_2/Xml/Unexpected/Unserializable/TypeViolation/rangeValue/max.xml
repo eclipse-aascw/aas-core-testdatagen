@@ -1,0 +1,12 @@
+<rangeValue xmlns="https://admin-shell.io/aas/3/2">
+  <min>12552311.97</min>
+  <max>
+    <type>ExternalReference</type>
+    <keys>
+      <key>
+        <type>GlobalReference</type>
+        <value>unexpected reference</value>
+      </key>
+    </keys>
+  </max>
+</rangeValue>

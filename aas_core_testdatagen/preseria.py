@@ -12,6 +12,7 @@ from typing import (
     MutableMapping,
     OrderedDict,
     Sequence,
+    Tuple,
     Union,
 )
 
@@ -25,11 +26,41 @@ PrimitiveValueTuple = (bool, int, float, str, bytes)
 assert PrimitiveValueTuple == get_args(PrimitiveValueUnion)
 
 
-ValueUnion = Union[PrimitiveValueUnion, "Instance", "ListOfInstances"]
+ValueUnion = Union[
+    PrimitiveValueUnion,
+    "Instance",
+    "ListOfInstances",
+    "TupleOfValues",
+    "SetOfPrimitives",
+    "ListOfPrimitives",
+    "JsonArray",
+    "JsonObject",
+]
 
 
 ImmutableValueUnion = Union[
-    PrimitiveValueUnion, "ImmutableInstance", "SequenceOfImmutableInstances"
+    PrimitiveValueUnion,
+    "ImmutableInstance",
+    "SequenceOfImmutableInstances",
+    "TupleOfImmutableValues",
+    "SetOfImmutablePrimitives",
+    "SequenceOfImmutablePrimitives",
+    "ImmutableJsonArray",
+    "ImmutableJsonObject",
+]
+
+
+# A JSON-able value; there is no null as the meta-model has no such variant.
+JsonValueUnion = Union[bool, float, str, "JsonArray", "JsonObject"]
+
+ImmutableJsonValueUnion = Union[
+    bool, float, str, "ImmutableJsonArray", "ImmutableJsonObject"
+]
+
+# The items of a list that is not a list of instances
+ListItemUnion = Union[PrimitiveValueUnion, "JsonArray", "JsonObject"]
+ImmutableListItemUnion = Union[
+    PrimitiveValueUnion, "ImmutableJsonArray", "ImmutableJsonObject"
 ]
 
 
@@ -66,6 +97,65 @@ class SequenceOfImmutableInstances(abc.ABC):
     @abc.abstractmethod
     def values(self) -> Sequence["ImmutableInstance"]:
         """The items of the list."""
+        raise NotImplementedError()
+
+
+class TupleOfImmutableValues(abc.ABC):
+    """Represent an immutable, fixed-length tuple of heterogeneous values."""
+
+    @property
+    @abc.abstractmethod
+    def values(self) -> Sequence["ImmutableValueUnion"]:
+        """The items of the tuple."""
+        raise NotImplementedError()
+
+
+class SequenceOfImmutablePrimitives(abc.ABC):
+    """Represent an immutable, ordered list of primitive or JSON-able values."""
+
+    @property
+    @abc.abstractmethod
+    def values(self) -> Sequence[ImmutableListItemUnion]:
+        """The items of the list."""
+        raise NotImplementedError()
+
+
+class ImmutableJsonArray(abc.ABC):
+    """Represent an immutable, open JSON-able array."""
+
+    @property
+    @abc.abstractmethod
+    def values(self) -> Sequence[ImmutableJsonValueUnion]:
+        """The items of the array."""
+        raise NotImplementedError()
+
+
+class ImmutableJsonObject(abc.ABC):
+    """Represent an immutable, open JSON-able object."""
+
+    @property
+    @abc.abstractmethod
+    def members(self) -> Sequence[Tuple[str, ImmutableJsonValueUnion]]:
+        """
+        The key-value pairs of the object in their serialization order.
+
+        We keep them in a sequence, so that test cases can contain duplicate keys.
+        """
+        raise NotImplementedError()
+
+
+class SetOfImmutablePrimitives(abc.ABC):
+    """Represent an immutable set of primitive values."""
+
+    @property
+    @abc.abstractmethod
+    def values(self) -> Sequence[PrimitiveValueUnion]:
+        """
+        The items of the set.
+
+        We keep them in a sequence, so that test cases can contain duplicates and
+        arbitrary order. The serialization sorts the items.
+        """
         raise NotImplementedError()
 
 
@@ -202,6 +292,103 @@ class ListOfInstances(SequenceOfImmutableInstances):
         self._values = values
 
 
+class TupleOfValues(TupleOfImmutableValues):
+    """Represent a tuple of values."""
+
+    @property
+    @override
+    def values(self) -> List[ValueUnion]:
+        return self._values
+
+    @values.setter
+    def values(self, values: List[ValueUnion]) -> None:
+        self._values = values
+
+    def __init__(self, values: List[ValueUnion]) -> None:
+        """Initialize with the given values."""
+        self._values = values
+
+
+class ListOfPrimitives(SequenceOfImmutablePrimitives):
+    """Represent a list of primitive or JSON-able values."""
+
+    @property
+    @override
+    def values(self) -> List[ListItemUnion]:
+        return self._values
+
+    @values.setter
+    def values(self, values: List[ListItemUnion]) -> None:
+        self._values = values
+
+    def __init__(self, values: List[ListItemUnion]) -> None:
+        """Initialize with the given values."""
+        self._values = values
+
+
+class JsonArray(ImmutableJsonArray):
+    """Represent an open JSON-able array."""
+
+    @property
+    @override
+    def values(self) -> List[JsonValueUnion]:
+        return self._values
+
+    @values.setter
+    def values(self, values: List[JsonValueUnion]) -> None:
+        self._values = values
+
+    def __init__(self, values: List[JsonValueUnion]) -> None:
+        """Initialize with the given values."""
+        self._values = values
+
+
+class JsonObject(ImmutableJsonObject):
+    """Represent an open JSON-able object."""
+
+    @property
+    @override
+    def members(self) -> List[Tuple[str, JsonValueUnion]]:
+        return self._members
+
+    @members.setter
+    def members(self, members: List[Tuple[str, JsonValueUnion]]) -> None:
+        self._members = members
+
+    def __init__(self, members: List[Tuple[str, JsonValueUnion]]) -> None:
+        """Initialize with the given members."""
+        self._members = members
+
+
+class SetOfPrimitives(SetOfImmutablePrimitives):
+    """Represent a set of primitive values."""
+
+    @property
+    @override
+    def values(self) -> List[PrimitiveValueUnion]:
+        return self._values
+
+    @values.setter
+    def values(self, values: List[PrimitiveValueUnion]) -> None:
+        self._values = values
+
+    def __init__(self, values: List[PrimitiveValueUnion]) -> None:
+        """Initialize with the given values."""
+        self._values = values
+
+
+def sorted_set_items(
+    values: Sequence[PrimitiveValueUnion],
+) -> List[PrimitiveValueUnion]:
+    """
+    Sort the set items as the meta-model mandates for the serialization.
+
+    ``False`` goes before ``True``, integers are sorted numerically, and strings
+    by their code points.
+    """
+    return sorted(values)
+
+
 def _to_jsonable(value: ImmutableValueUnion) -> Any:
     """
     Represent the ``value`` as a JSON-able object.
@@ -226,6 +413,16 @@ def _to_jsonable(value: ImmutableValueUnion) -> Any:
         return obj
     elif isinstance(value, SequenceOfImmutableInstances):
         return [_to_jsonable(item) for item in value.values]
+    elif isinstance(value, TupleOfImmutableValues):
+        return [_to_jsonable(item) for item in value.values]
+    elif isinstance(value, SetOfImmutablePrimitives):
+        return [_to_jsonable(item) for item in value.values]
+    elif isinstance(value, SequenceOfImmutablePrimitives):
+        return [_to_jsonable(item) for item in value.values]
+    elif isinstance(value, ImmutableJsonArray):
+        return [_to_jsonable(item) for item in value.values]
+    elif isinstance(value, ImmutableJsonObject):
+        return [[key, _to_jsonable(item)] for key, item in value.members]
     else:
         # noinspection PyTypeChecker
         assert_never(value)

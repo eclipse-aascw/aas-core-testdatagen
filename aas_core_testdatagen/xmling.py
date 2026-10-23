@@ -16,7 +16,7 @@ from aas_core_codegen import intermediate
 from aas_core_codegen.common import assert_never, Identifier
 from icontract import ensure, require, invariant
 
-from aas_core_testdatagen import preseria, casing, generation, seria, common
+from aas_core_testdatagen import preseria, casing, generation, seria, common, names
 from aas_core_testdatagen.casing import NegativeCase
 
 
@@ -42,9 +42,9 @@ class _Xmlizer:
         self._stream = stream
 
         self._indent_level = 0
-        self._pending_open = None  # type: Optional[Identifier]
-
-        self._open_stack = []  # type: List[Identifier]
+        self._pending_open = None  # type: Optional[str]
+        self._pending_reset_namespace = False
+        self._open_stack = []  # type: List[str]
 
         self._last_write = None  # type: Optional[_LastWrite]
 
@@ -71,15 +71,15 @@ class _Xmlizer:
             self._indent_level += 1
             self._stream.write("\n")
             self._stream.write(_XML_INDENT * self._indent_level)
-            self._stream.write(f"<{self._pending_open}>")
+            self._stream.write(f"<{self._pending_open}{self._namespace_reset()}>")
 
         elif self._last_write == _LastWrite.CLOSE:
             self._stream.write("\n")
             self._stream.write(_XML_INDENT * self._indent_level)
-            self._stream.write(f"<{self._pending_open}>")
+            self._stream.write(f"<{self._pending_open}{self._namespace_reset()}>")
 
         elif self._last_write == _LastWrite.TEXT:
-            self._stream.write(f"<{self._pending_open}>")
+            self._stream.write(f"<{self._pending_open}{self._namespace_reset()}>")
 
         else:
             # noinspection PyTypeChecker
@@ -87,21 +87,30 @@ class _Xmlizer:
 
         self._last_write = _LastWrite.OPEN
         self._pending_open = None
+        self._pending_reset_namespace = False
+
+    def _namespace_reset(self) -> str:
+        """Give the attribute to put the pending element in no namespace, if any."""
+        return ' xmlns=""' if self._pending_reset_namespace else ""
 
     @ensure(lambda self, name: self._pending_open == name)
-    def enqueue_open(self, name: Identifier) -> None:
+    def enqueue_open(self, name: str, reset_namespace: bool = False) -> None:
         """
         Enqueue the open element for writing.
 
         If there is a pending open element, it is written to the stream first.
+
+        If ``reset_namespace`` is set, the element is written with an empty default
+        namespace, as required by the elements of XML-RPC.
         """
         if self._pending_open is not None:
             self._handle_pending_open()
 
         self._pending_open = name
+        self._pending_reset_namespace = reset_namespace
         self._open_stack.append(self._pending_open)
 
-    def write_close(self, name: Identifier) -> None:
+    def write_close(self, name: str) -> None:
         """
         Write the close element to the stream, handling any pending open element first.
 
@@ -130,7 +139,7 @@ class _Xmlizer:
             self_closing_element = (
                 f"<{name} xmlns={xml.sax.saxutils.quoteattr(self._namespace)} />"
                 if len(self._open_stack) == 0
-                else f"<{name} />"
+                else f"<{name}{self._namespace_reset()} />"
             )
 
             if self._last_write is None:
@@ -156,6 +165,7 @@ class _Xmlizer:
                 assert_never(self._last_write)
 
             self._pending_open = None
+            self._pending_reset_namespace = False
 
         else:
             if self._last_write is None:
@@ -227,9 +237,8 @@ class _Xmlizer:
 
 
 def _serialize_primitive_property(
-    xmlizer: _Xmlizer, name: Identifier, value: preseria.PrimitiveValueUnion
+    xmlizer: _Xmlizer, xml_prop_name: str, value: preseria.PrimitiveValueUnion
 ) -> None:
-    xml_prop_name = aas_core_codegen.naming.xml_property(name)
 
     xmlizer.enqueue_open(xml_prop_name)
 
@@ -254,26 +263,26 @@ def _serialize_primitive_property(
 
 def _serialize_instance_property(
     xmlizer: _Xmlizer,
-    name: Identifier,
+    xml_prop_name: str,
     instance: preseria.ImmutableInstance,
     symbol_table: intermediate.SymbolTable,
+    force_class_element: bool = False,
 ) -> None:
     cls = symbol_table.must_find_concrete_class(instance.class_name)
-
-    xml_prop_name = aas_core_codegen.naming.xml_property(name)
+    with_class_element = force_class_element or cls.serialization.with_model_type
 
     xmlizer.enqueue_open(xml_prop_name)
 
     xml_class_name = aas_core_codegen.naming.xml_class_name(instance.class_name)
 
-    if cls.serialization.with_model_type:
+    if with_class_element:
         xmlizer.enqueue_open(xml_class_name)
 
     _serialize_instance_as_sequence(
         xmlizer=xmlizer, instance=instance, symbol_table=symbol_table
     )
 
-    if cls.serialization.with_model_type:
+    if with_class_element:
         xmlizer.write_close(xml_class_name)
 
     xmlizer.write_close(xml_prop_name)
@@ -281,11 +290,10 @@ def _serialize_instance_property(
 
 def _serialize_list_of_instances_property(
     xmlizer: _Xmlizer,
-    name: Identifier,
+    xml_prop_name: str,
     list_of_instances: preseria.SequenceOfImmutableInstances,
     symbol_table: intermediate.SymbolTable,
 ) -> None:
-    xml_prop_name = aas_core_codegen.naming.xml_property(name)
 
     xmlizer.enqueue_open(xml_prop_name)
 
@@ -300,6 +308,179 @@ def _serialize_list_of_instances_property(
 
         xmlizer.write_close(xml_cls_name)
 
+    xmlizer.write_close(xml_prop_name)
+
+
+def _serialize_tuple_property(
+    xmlizer: _Xmlizer,
+    xml_prop_name: str,
+    tuple_of_values: preseria.TupleOfImmutableValues,
+    symbol_table: intermediate.SymbolTable,
+) -> None:
+    """
+    Serialize the tuple as the property with one element per item.
+
+    The primitive items are named ``v1``, ``v2``, *etc.* (counting only primitives),
+    while the instances are named after their classes.
+    """
+
+    xmlizer.enqueue_open(xml_prop_name)
+
+    primitive_count = 0
+
+    for item in tuple_of_values.values:
+        if isinstance(item, preseria.PrimitiveValueTuple):
+            primitive_count += 1
+
+            _serialize_primitive_property(
+                xmlizer=xmlizer, xml_prop_name=f"v{primitive_count}", value=item
+            )
+
+        elif isinstance(item, preseria.ImmutableInstance):
+            xml_cls_name = aas_core_codegen.naming.xml_class_name(item.class_name)
+
+            xmlizer.enqueue_open(xml_cls_name)
+
+            _serialize_instance_as_sequence(
+                xmlizer=xmlizer, instance=item, symbol_table=symbol_table
+            )
+
+            xmlizer.write_close(xml_cls_name)
+
+        elif isinstance(
+            item,
+            (
+                preseria.SequenceOfImmutableInstances,
+                preseria.TupleOfImmutableValues,
+                preseria.SequenceOfImmutablePrimitives,
+                preseria.SetOfImmutablePrimitives,
+                preseria.ImmutableJsonArray,
+                preseria.ImmutableJsonObject,
+            ),
+        ):
+            raise NotImplementedError(
+                f"XML serialization of nested lists, tuples and sets in the tuple "
+                f"property {xml_prop_name!r} is not defined yet."
+            )
+
+        else:
+            # noinspection PyTypeChecker
+            assert_never(item)
+
+    xmlizer.write_close(xml_prop_name)
+
+
+def _serialize_set_property(
+    xmlizer: _Xmlizer,
+    xml_prop_name: str,
+    set_of_primitives: preseria.SetOfImmutablePrimitives,
+) -> None:
+    """Serialize the sorted items of the set as ``<v>`` elements."""
+
+    xmlizer.enqueue_open(xml_prop_name)
+
+    for item in preseria.sorted_set_items(set_of_primitives.values):
+        _serialize_primitive_property(xmlizer=xmlizer, xml_prop_name="v", value=item)
+
+    xmlizer.write_close(xml_prop_name)
+
+
+def _serialize_json_value_content(
+    xmlizer: _Xmlizer, value: preseria.ImmutableJsonValueUnion, reset_namespace: bool
+) -> None:
+    """
+    Serialize the JSON-able value with the subset of XML-RPC elements.
+
+    The ``reset_namespace`` must be set for the first element beneath an element of
+    the meta-model, as the XML-RPC elements reside in no namespace.
+    """
+    if isinstance(value, bool):
+        xmlizer.enqueue_open("boolean", reset_namespace)
+        # XML-RPC prescribes 0 and 1 for booleans.
+        xmlizer.write_text("1" if value else "0")
+        xmlizer.write_close("boolean")
+
+    elif isinstance(value, float):
+        xmlizer.enqueue_open("double", reset_namespace)
+        xmlizer.write_text(str(value))
+        xmlizer.write_close("double")
+
+    elif isinstance(value, str):
+        xmlizer.enqueue_open("string", reset_namespace)
+        xmlizer.write_text(value)
+        xmlizer.write_close("string")
+
+    elif isinstance(value, preseria.ImmutableJsonArray):
+        xmlizer.enqueue_open("array", reset_namespace)
+        _serialize_json_array_data(xmlizer, value, reset_namespace=False)
+        xmlizer.write_close("array")
+
+    elif isinstance(value, preseria.ImmutableJsonObject):
+        xmlizer.enqueue_open("struct", reset_namespace)
+        _serialize_json_members(xmlizer, value, reset_namespace=False)
+        xmlizer.write_close("struct")
+
+    else:
+        # noinspection PyTypeChecker
+        assert_never(value)
+
+
+def _serialize_json_array_data(
+    xmlizer: _Xmlizer, array: preseria.ImmutableJsonArray, reset_namespace: bool
+) -> None:
+    """Serialize the items of the JSON array as the ``<data>`` element."""
+    xmlizer.enqueue_open("data", reset_namespace)
+
+    for item in array.values:
+        xmlizer.enqueue_open("value")
+        _serialize_json_value_content(xmlizer, item, reset_namespace=False)
+        xmlizer.write_close("value")
+
+    xmlizer.write_close("data")
+
+
+def _serialize_json_members(
+    xmlizer: _Xmlizer, json_object: preseria.ImmutableJsonObject, reset_namespace: bool
+) -> None:
+    """Serialize the members of the JSON object as the ``<member>`` elements."""
+    for key, member_value in json_object.members:
+        xmlizer.enqueue_open("member", reset_namespace)
+
+        xmlizer.enqueue_open("name")
+        xmlizer.write_text(key)
+        xmlizer.write_close("name")
+
+        xmlizer.enqueue_open("value")
+        _serialize_json_value_content(xmlizer, member_value, reset_namespace=False)
+        xmlizer.write_close("value")
+
+        xmlizer.write_close("member")
+
+
+def _serialize_json_value_property(
+    xmlizer: _Xmlizer, xml_prop_name: str, value: preseria.ImmutableJsonValueUnion
+) -> None:
+    """Serialize the property whose value is an arbitrary JSON-able value."""
+    xmlizer.enqueue_open(xml_prop_name)
+    _serialize_json_value_content(xmlizer, value, reset_namespace=True)
+    xmlizer.write_close(xml_prop_name)
+
+
+def _serialize_json_array_property(
+    xmlizer: _Xmlizer, xml_prop_name: str, array: preseria.ImmutableJsonArray
+) -> None:
+    """Serialize the property whose value is an open JSON array."""
+    xmlizer.enqueue_open(xml_prop_name)
+    _serialize_json_array_data(xmlizer, array, reset_namespace=True)
+    xmlizer.write_close(xml_prop_name)
+
+
+def _serialize_json_object_property(
+    xmlizer: _Xmlizer, xml_prop_name: str, json_object: preseria.ImmutableJsonObject
+) -> None:
+    """Serialize the property whose value is an open JSON object."""
+    xmlizer.enqueue_open(xml_prop_name)
+    _serialize_json_members(xmlizer, json_object, reset_namespace=True)
     xmlizer.write_close(xml_prop_name)
 
 
@@ -322,17 +503,26 @@ def _serialize_instance_as_sequence(
     for prop_name in expected_property_order:
         prop_value = instance.properties[prop_name]
 
+        xml_prop_name = names.xml_property(symbol_table, cls.name, prop_name)
+
         if isinstance(prop_value, preseria.PrimitiveValueTuple):
             _serialize_primitive_property(
-                xmlizer=xmlizer, name=prop_name, value=prop_value
+                xmlizer=xmlizer, xml_prop_name=xml_prop_name, value=prop_value
             )
 
         elif isinstance(prop_value, preseria.ImmutableInstance):
+            prop_type_anno = intermediate.beneath_optional(
+                cls.properties_by_name[prop_name].type_annotation
+            )
             _serialize_instance_property(
                 xmlizer=xmlizer,
-                name=prop_name,
+                xml_prop_name=xml_prop_name,
                 instance=prop_value,
                 symbol_table=symbol_table,
+                force_class_element=(
+                    isinstance(prop_type_anno, intermediate.OurTypeAnnotation)
+                    and isinstance(prop_type_anno.our_type, intermediate.NamedUnion)
+                ),
             )
 
         elif isinstance(prop_value, preseria.SequenceOfImmutableInstances):
@@ -352,7 +542,11 @@ def _serialize_instance_as_sequence(
                 isinstance(type_anno.items, intermediate.OurTypeAnnotation)
                 and isinstance(
                     type_anno.items.our_type,
-                    (intermediate.AbstractClass, intermediate.ConcreteClass),
+                    (
+                        intermediate.AbstractClass,
+                        intermediate.ConcreteClass,
+                        intermediate.NamedUnion,
+                    ),
                 )
             ):
                 raise NotImplementedError(
@@ -364,9 +558,51 @@ def _serialize_instance_as_sequence(
 
             _serialize_list_of_instances_property(
                 xmlizer=xmlizer,
-                name=prop_name,
+                xml_prop_name=xml_prop_name,
                 list_of_instances=prop_value,
                 symbol_table=symbol_table,
+            )
+
+        elif isinstance(prop_value, preseria.TupleOfImmutableValues):
+            _serialize_tuple_property(
+                xmlizer=xmlizer,
+                xml_prop_name=xml_prop_name,
+                tuple_of_values=prop_value,
+                symbol_table=symbol_table,
+            )
+
+        elif isinstance(prop_value, preseria.SetOfImmutablePrimitives):
+            _serialize_set_property(
+                xmlizer=xmlizer,
+                xml_prop_name=xml_prop_name,
+                set_of_primitives=prop_value,
+            )
+
+        elif isinstance(prop_value, preseria.SequenceOfImmutablePrimitives):
+            xmlizer.enqueue_open(xml_prop_name)
+            for item in prop_value.values:
+                if isinstance(item, preseria.ImmutableJsonObject):
+                    xmlizer.enqueue_open("v")
+                    _serialize_json_members(xmlizer, item, reset_namespace=True)
+                    xmlizer.write_close("v")
+                elif isinstance(item, preseria.ImmutableJsonArray):
+                    xmlizer.enqueue_open("v")
+                    _serialize_json_array_data(xmlizer, item, reset_namespace=True)
+                    xmlizer.write_close("v")
+                else:
+                    _serialize_primitive_property(
+                        xmlizer=xmlizer, xml_prop_name="v", value=item
+                    )
+            xmlizer.write_close(xml_prop_name)
+
+        elif isinstance(prop_value, preseria.ImmutableJsonObject):
+            _serialize_json_object_property(
+                xmlizer=xmlizer, xml_prop_name=xml_prop_name, json_object=prop_value
+            )
+
+        elif isinstance(prop_value, preseria.ImmutableJsonArray):
+            _serialize_json_array_property(
+                xmlizer=xmlizer, xml_prop_name=xml_prop_name, array=prop_value
             )
 
         else:
@@ -402,7 +638,9 @@ def serialize(
     and result.parts[-1].endswith(".xml")
 )
 @ensure(lambda result: not result.is_absolute())
-def _determine_relative_path(case: casing.CaseUnion) -> pathlib.Path:
+def _determine_relative_path(
+    case: casing.CaseUnion, symbol_table: intermediate.SymbolTable
+) -> pathlib.Path:
     """Determine the relative path for a test case."""
     xml_class_name = aas_core_codegen.naming.xml_class_name(
         aas_core_codegen.common.Identifier(case.instance.class_name)
@@ -414,14 +652,18 @@ def _determine_relative_path(case: casing.CaseUnion) -> pathlib.Path:
         elif isinstance(case, casing.CaseMaximal):
             case_path_component = pathlib.Path("maximal.xml")
         elif isinstance(case, casing.CasePositivePatternExample):
-            xml_prop_name = aas_core_codegen.naming.xml_property(case.property_name)
+            xml_prop_name = names.xml_property(
+                symbol_table, case.instance.class_name, case.property_name
+            )
 
             case_path_component = (
                 pathlib.Path(f"{xml_prop_name}OverPatternExamples")
                 / f"{case.example_name}.xml"
             )
         elif isinstance(case, casing.CasePositiveValueExample):
-            xml_prop_name = aas_core_codegen.naming.xml_property(case.property_name)
+            xml_prop_name = names.xml_property(
+                symbol_table, case.instance.class_name, case.property_name
+            )
             case_path_component = (
                 pathlib.Path(f"{xml_prop_name}OverValueExamples")
                 / f"{case.value_type_name}_{case.example_name}.xml"
@@ -441,7 +683,9 @@ def _determine_relative_path(case: casing.CaseUnion) -> pathlib.Path:
 
     elif isinstance(case, NegativeCase):
         if isinstance(case, casing.CaseTypeViolation):
-            xml_prop_name = aas_core_codegen.naming.xml_property(case.property_name)
+            xml_prop_name = names.xml_property(
+                symbol_table, case.instance.class_name, case.property_name
+            )
             return (
                 pathlib.Path("Xml")
                 / "Unexpected"
@@ -456,7 +700,9 @@ def _determine_relative_path(case: casing.CaseUnion) -> pathlib.Path:
             # If you change this part, make sure you also update
             # _make_null_violation_out_of_required_violation.
 
-            xml_prop_name = aas_core_codegen.naming.xml_property(case.property_name)
+            xml_prop_name = names.xml_property(
+                symbol_table, case.instance.class_name, case.property_name
+            )
             return (
                 pathlib.Path("Xml")
                 / "Unexpected"
@@ -477,7 +723,9 @@ def _determine_relative_path(case: casing.CaseUnion) -> pathlib.Path:
             )
 
         elif isinstance(case, casing.CaseEnumerationViolation):
-            xml_prop_name = aas_core_codegen.naming.xml_property(case.property_name)
+            xml_prop_name = names.xml_property(
+                symbol_table, case.instance.class_name, case.property_name
+            )
             return (
                 pathlib.Path("Xml")
                 / "Unexpected"
@@ -488,7 +736,9 @@ def _determine_relative_path(case: casing.CaseUnion) -> pathlib.Path:
             )
 
         elif isinstance(case, casing.CasePatternViolation):
-            xml_prop_name = aas_core_codegen.naming.xml_property(case.property_name)
+            xml_prop_name = names.xml_property(
+                symbol_table, case.instance.class_name, case.property_name
+            )
             return (
                 pathlib.Path("Xml")
                 / "Unexpected"
@@ -499,8 +749,24 @@ def _determine_relative_path(case: casing.CaseUnion) -> pathlib.Path:
                 / f"{case.example_name}.xml"
             )
 
+        elif isinstance(case, casing.CaseJsonKeyViolation):
+            xml_prop_name = names.xml_property(
+                symbol_table, case.instance.class_name, case.property_name
+            )
+            return (
+                pathlib.Path("Xml")
+                / "Unexpected"
+                / "Invalid"
+                / "JsonKeyViolation"
+                / xml_class_name
+                / xml_prop_name
+                / f"{case.example_name}.xml"
+            )
+
         elif isinstance(case, casing.CaseMinLengthViolation):
-            xml_prop_name = aas_core_codegen.naming.xml_property(case.property_name)
+            xml_prop_name = names.xml_property(
+                symbol_table, case.instance.class_name, case.property_name
+            )
             return (
                 pathlib.Path("Xml")
                 / "Unexpected"
@@ -511,7 +777,9 @@ def _determine_relative_path(case: casing.CaseUnion) -> pathlib.Path:
             )
 
         elif isinstance(case, casing.CaseMaxLengthViolation):
-            xml_prop_name = aas_core_codegen.naming.xml_property(case.property_name)
+            xml_prop_name = names.xml_property(
+                symbol_table, case.instance.class_name, case.property_name
+            )
             return (
                 pathlib.Path("Xml")
                 / "Unexpected"
@@ -522,7 +790,9 @@ def _determine_relative_path(case: casing.CaseUnion) -> pathlib.Path:
             )
 
         elif isinstance(case, casing.CaseEnumerationViolation):
-            xml_prop_name = aas_core_codegen.naming.xml_property(case.property_name)
+            xml_prop_name = names.xml_property(
+                symbol_table, case.instance.class_name, case.property_name
+            )
             return (
                 pathlib.Path("Xml")
                 / "Unexpected"
@@ -533,7 +803,9 @@ def _determine_relative_path(case: casing.CaseUnion) -> pathlib.Path:
             )
 
         elif isinstance(case, casing.CaseSetViolation):
-            xml_prop_name = aas_core_codegen.naming.xml_property(case.property_name)
+            xml_prop_name = names.xml_property(
+                symbol_table, case.instance.class_name, case.property_name
+            )
             return (
                 pathlib.Path("Xml")
                 / "Unexpected"
@@ -544,7 +816,9 @@ def _determine_relative_path(case: casing.CaseUnion) -> pathlib.Path:
             )
 
         elif isinstance(case, casing.CaseDateTimeUtcViolationOnFebruary29th):
-            xml_prop_name = aas_core_codegen.naming.xml_property(case.property_name)
+            xml_prop_name = names.xml_property(
+                symbol_table, case.instance.class_name, case.property_name
+            )
             return (
                 pathlib.Path("Xml")
                 / "Unexpected"
@@ -555,7 +829,9 @@ def _determine_relative_path(case: casing.CaseUnion) -> pathlib.Path:
             )
 
         elif isinstance(case, casing.CaseInvalidValueExample):
-            xml_prop_name = aas_core_codegen.naming.xml_property(case.property_name)
+            xml_prop_name = names.xml_property(
+                symbol_table, case.instance.class_name, case.property_name
+            )
             return (
                 pathlib.Path("Xml")
                 / "Unexpected"
@@ -672,7 +948,7 @@ def generate_test_data(case_generator: generation.CaseGenerator) -> Iterator[Out
     relative_path_asserter = seria.RelativePathAsserter()
 
     for case in case_generator.generate():
-        relative_path = _determine_relative_path(case)
+        relative_path = _determine_relative_path(case, case_generator.symbol_table)
 
         relative_path_asserter.assert_and_add(relative_path)
 

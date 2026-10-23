@@ -1,0 +1,10 @@
+<assetInformation xmlns="https://admin-shell.io/aas/3/2">
+  <assetKind>NotApplicable</assetKind>
+  <globalAssetId>urn:global:asset</globalAssetId>
+  <specificAssetIds>
+    <specificAssetId>
+      <name>GLOBALassetID</name>
+      <value>urn:global:asset</value>
+    </specificAssetId>
+  </specificAssetIds>
+</assetInformation>

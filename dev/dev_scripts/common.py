@@ -11,4 +11,4 @@ def meta_model_version_in_paths(meta_model_version: str) -> str:
     return meta_model_version.replace(".", "_")
 
 
-DEFAULT_META_MODEL_VERSION = "3.1"
+DEFAULT_META_MODEL_VERSION = "3.2"

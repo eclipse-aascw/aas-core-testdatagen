@@ -1,0 +1,7 @@
+<getSubmodelElementsMetadataResult xmlns="https://admin-shell.io/aas/3/2">
+  <pagingMetadata>Unexpected string value</pagingMetadata>
+  <result>
+    <entityMetadata />
+    <multiLanguagePropertyMetadata />
+  </result>
+</getSubmodelElementsMetadataResult>

@@ -1,0 +1,6 @@
+<serviceDescription xmlns="https://admin-shell.io/aas/3/2">
+  <profiles>
+    <v>https://admin-shell.io/aas/API/3/0/SubmodelRegistryServiceSpecification/SSP-002</v>
+    <v>https://admin-shell.io/aas/API/3/2/AasxFileServerServiceSpecification/SSP-002</v>
+  </profiles>
+</serviceDescription>

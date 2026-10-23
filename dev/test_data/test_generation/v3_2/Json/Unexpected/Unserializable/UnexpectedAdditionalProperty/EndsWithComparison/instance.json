@@ -1,0 +1,13 @@
+{
+  "$ends-with": [
+    {
+      "$attribute": {
+        "REFERENCE": "$sm(\"a\\\"b\")#id"
+      }
+    },
+    {
+      "$field": "$aas#assetInformation.assetKind"
+    }
+  ],
+  "unexpectedAdditionalProperty": "UNEXPECTED-ADDITIONAL-PROPERTY"
+}

@@ -1,0 +1,4 @@
+<operationRequestAsync xmlns="https://admin-shell.io/aas/3/2">
+  <clientTimeoutDuration>P5Y36660767143M</clientTimeoutDuration>
+  <unexpectedAdditionalProperty>UNEXPECTED-ADDITIONAL-PROPERTY</unexpectedAdditionalProperty>
+</operationRequestAsync>

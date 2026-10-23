@@ -1,0 +1,11 @@
+<numberLiteral xmlns="https://admin-shell.io/aas/3/2">
+  <numVal>
+    <type>ExternalReference</type>
+    <keys>
+      <key>
+        <type>GlobalReference</type>
+        <value>unexpected reference</value>
+      </key>
+    </keys>
+  </numVal>
+</numberLiteral>

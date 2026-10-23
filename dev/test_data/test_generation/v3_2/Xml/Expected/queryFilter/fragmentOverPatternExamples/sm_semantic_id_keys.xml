@@ -1,0 +1,15 @@
+<queryFilter xmlns="https://admin-shell.io/aas/3/2">
+  <fragment>$sm#semanticId.keys[0]</fragment>
+  <condition>
+    <lessThanOrEqualComparison>
+      <le>
+        <hexLiteral>
+          <hexVal>16#1</hexVal>
+        </hexLiteral>
+        <hexLiteral>
+          <hexVal>16#1F</hexVal>
+        </hexLiteral>
+      </le>
+    </lessThanOrEqualComparison>
+  </condition>
+</queryFilter>

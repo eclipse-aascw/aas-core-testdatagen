@@ -43,6 +43,12 @@ class PropertyConstraints:
     allowed_values: Final[Optional[Sequence[preseria.PrimitiveValueUnion]]]
     allowed_value_set: Final[Optional[Set[preseria.PrimitiveValueUnion]]]
 
+    # Constraints on the items, if the property is a list of primitives
+    item_constraints: Final[Optional["PropertyConstraints"]]
+
+    # Constraints on the keys, if the property is a JSON object or a list thereof
+    key_constraints: Final[Optional["PropertyConstraints"]]
+
     # fmt: off
     @require(
         lambda allowed_values:
@@ -55,7 +61,11 @@ class PropertyConstraints:
         len_constraint: Optional[infer_for_schema.LenConstraint],
         patterns: Sequence[str],
         allowed_values: Optional[Sequence[preseria.PrimitiveValueUnion]],
+        item_constraints: Optional["PropertyConstraints"] = None,
+        key_constraints: Optional["PropertyConstraints"] = None,
     ) -> None:
+        self.item_constraints = item_constraints
+        self.key_constraints = key_constraints
         self.len_constraint = len_constraint
         self.patterns = patterns
         self.allowed_values = allowed_values
@@ -67,6 +77,96 @@ class PropertyConstraints:
 ReorganizedConstraintsByClass: TypeAlias = Mapping[
     intermediate.ClassUnion, Mapping[intermediate.Property, PropertyConstraints]
 ]
+
+
+def _is_class_annotation(type_anno: intermediate.TypeAnnotationUnion) -> bool:
+    """Check that the annotation, ignoring optional, refers to a class."""
+    type_anno = intermediate.beneath_optional(type_anno)
+    return isinstance(type_anno, intermediate.OurTypeAnnotation) and isinstance(
+        type_anno.our_type,
+        (intermediate.AbstractClass, intermediate.ConcreteClass),
+    )
+
+
+def _json_object_key_annotation(
+    type_anno: intermediate.TypeAnnotationUnion,
+) -> Optional[intermediate.TypeAnnotationExceptOptional]:
+    """Find the key annotation if the type is a JSON object or a list thereof."""
+    type_anno = intermediate.beneath_optional(type_anno)
+
+    if isinstance(type_anno, intermediate.ListTypeAnnotation):
+        type_anno = intermediate.beneath_optional(type_anno.items)
+
+    if isinstance(type_anno, intermediate.JsonObjectTypeAnnotation):
+        return intermediate.beneath_optional(type_anno.key)
+
+    return None
+
+
+def _constraints_of_annotation(
+    type_anno: intermediate.TypeAnnotationExceptOptional,
+    constraints_by_value: infer_for_schema.ConstraintsByValue,
+    what: str,
+) -> PropertyConstraints:
+    """Translate the schema constraints of the annotation to property constraints."""
+    constraints = constraints_by_value.get(type_anno, None)
+
+    if constraints is None:
+        return PropertyConstraints(
+            len_constraint=None, patterns=[], allowed_values=None
+        )
+
+    allowed_values: Optional[Sequence[preseria.PrimitiveValueUnion]] = None
+
+    is_primitive_type = intermediate.try_primitive_type(type_anno) is not None
+
+    is_enum = isinstance(type_anno, intermediate.OurTypeAnnotation) and isinstance(
+        type_anno.our_type, intermediate.Enumeration
+    )
+
+    assert not (is_primitive_type and is_enum), (
+        f"Unexpected {what} with type annotation {type_anno} where "
+        f"it was both matched as primitive type and enumeration."
+    )
+
+    if is_primitive_type:
+        if constraints.set_of_primitives is not None:
+            allowed_values = [
+                (
+                    bytes(literal.value)
+                    if isinstance(literal.value, bytearray)
+                    else literal.value
+                )
+                for literal in constraints.set_of_primitives.literals
+            ]
+
+    elif is_enum:
+        if constraints.set_of_enumeration_literals is not None:
+            allowed_values = [
+                literal.value
+                for literal in constraints.set_of_enumeration_literals.literals
+            ]
+        else:
+            assert isinstance(type_anno, intermediate.OurTypeAnnotation) and isinstance(
+                type_anno.our_type, intermediate.Enumeration
+            )
+
+            allowed_values = [literal.value for literal in type_anno.our_type.literals]
+    else:
+        # NOTE (empwilli):
+        # There are no allowed value constraints for non-enums and
+        # non-primitives.
+        pass
+
+    return PropertyConstraints(
+        len_constraint=constraints.len_constraint,
+        patterns=(
+            [pattern_constraint.pattern for pattern_constraint in constraints.patterns]
+            if constraints.patterns is not None
+            else []
+        ),
+        allowed_values=allowed_values,
+    )
 
 
 def reorganize_schema_constraints_by_properties(
@@ -94,72 +194,37 @@ def reorganize_schema_constraints_by_properties(
         for prop in cls.properties:
             type_anno = intermediate.beneath_optional(prop.type_annotation)
 
-            constraints = constraints_by_value.get(type_anno, None)
-
-            if constraints is None:
-                result[cls][prop] = PropertyConstraints(
-                    len_constraint=None,
-                    patterns=[],
-                    allowed_values=None,
+            item_constraints = None
+            if isinstance(
+                type_anno, intermediate.ListTypeAnnotation
+            ) and not _is_class_annotation(type_anno.items):
+                item_constraints = _constraints_of_annotation(
+                    type_anno=intermediate.beneath_optional(type_anno.items),
+                    constraints_by_value=constraints_by_value,
+                    what=f"items of the property {prop.name!r} of class {cls.name!r}",
                 )
-                continue
 
-            allowed_values: Optional[Sequence[preseria.PrimitiveValueUnion]] = None
-
-            is_primitive_type = intermediate.try_primitive_type(type_anno) is not None
-
-            is_enum = isinstance(
-                type_anno, intermediate.OurTypeAnnotation
-            ) and isinstance(type_anno.our_type, intermediate.Enumeration)
-
-            assert not (is_primitive_type and is_enum), (
-                f"Unexpected property {prop.name!r} of class {cls.name!r} "
-                f"with type annotation {prop.type_annotation} where "
-                f"it was both matched as primitive type and enumeration."
+            property_constraints = _constraints_of_annotation(
+                type_anno=type_anno,
+                constraints_by_value=constraints_by_value,
+                what=f"property {prop.name!r} of class {cls.name!r}",
             )
 
-            if is_primitive_type:
-                if constraints.set_of_primitives is not None:
-                    allowed_values = [
-                        (
-                            bytes(literal.value)
-                            if isinstance(literal.value, bytearray)
-                            else literal.value
-                        )
-                        for literal in constraints.set_of_primitives.literals
-                    ]
-
-            elif is_enum:
-                if constraints.set_of_enumeration_literals is not None:
-                    allowed_values = [
-                        literal.value
-                        for literal in constraints.set_of_enumeration_literals.literals
-                    ]
-                else:
-                    assert isinstance(
-                        type_anno, intermediate.OurTypeAnnotation
-                    ) and isinstance(type_anno.our_type, intermediate.Enumeration)
-
-                    allowed_values = [
-                        literal.value for literal in type_anno.our_type.literals
-                    ]
-            else:
-                # NOTE (mristin):
-                # There are no allowed value constraints for non-enums and
-                # non-primitives.
-                pass
+            key_constraints = None
+            key_anno = _json_object_key_annotation(type_anno)
+            if key_anno is not None:
+                key_constraints = _constraints_of_annotation(
+                    type_anno=key_anno,
+                    constraints_by_value=constraints_by_value,
+                    what=f"keys of the property {prop.name!r} of class {cls.name!r}",
+                )
 
             result[cls][prop] = PropertyConstraints(
-                len_constraint=(constraints.len_constraint),
-                patterns=(
-                    [
-                        pattern_constraint.pattern
-                        for pattern_constraint in constraints.patterns
-                    ]
-                    if constraints.patterns is not None
-                    else []
-                ),
-                allowed_values=allowed_values,
+                len_constraint=property_constraints.len_constraint,
+                patterns=property_constraints.patterns,
+                allowed_values=property_constraints.allowed_values,
+                item_constraints=item_constraints,
+                key_constraints=key_constraints,
             )
 
     return result
@@ -261,6 +326,123 @@ assert all(
 
 
 # fmt: on
+
+
+def _check_json_value(value: object, expect: str = "value") -> Optional[List[Error]]:
+    """
+    Check that the value is a JSON-able value.
+
+    The ``expect`` is one of ``"value"``, ``"array"`` or ``"object"``. Duplicate
+    object keys are rejected at every nesting level.
+    """
+    if isinstance(value, preseria.ImmutableJsonObject):
+        if expect == "array":
+            return [
+                Error(
+                    path=Path(segments=[]),
+                    message=f"Expected a JSON array, but got an object: {value!r}.",
+                )
+            ]
+
+        errors = []  # type: List[Error]
+
+        keys = [key for key, _ in value.members]
+        if len(set(keys)) != len(keys):
+            errors.append(
+                Error(
+                    path=Path(segments=[]),
+                    message=f"Expected unique JSON object keys, but got {keys!r}.",
+                )
+            )
+
+        for key, member_value in value.members:
+            if not isinstance(key, str):
+                errors.append(
+                    Error(
+                        path=Path(segments=[]),
+                        message=f"Expected a str as JSON object key, but got {key!r}.",
+                    )
+                )
+                continue
+
+            member_errors = _check_json_value(member_value)
+            if member_errors is not None:
+                for member_error in member_errors:
+                    # noinspection PyProtectedMember
+                    member_error.path._segments.insert(0, key)
+
+                errors.extend(member_errors)
+
+        return errors if len(errors) > 0 else None
+
+    elif isinstance(value, preseria.ImmutableJsonArray):
+        if expect == "object":
+            return [
+                Error(
+                    path=Path(segments=[]),
+                    message=f"Expected a JSON object, but got an array: {value!r}.",
+                )
+            ]
+
+        errors = []
+
+        for i, item in enumerate(value.values):
+            item_errors = _check_json_value(item)
+            if item_errors is not None:
+                for item_error in item_errors:
+                    # noinspection PyProtectedMember
+                    item_error.path._segments.insert(0, i)
+
+                errors.extend(item_errors)
+
+        return errors if len(errors) > 0 else None
+
+    elif isinstance(value, (bool, float, str)) and expect == "value":
+        return None
+
+    else:
+        return [
+            Error(
+                path=Path(segments=[]),
+                message=f"Expected a JSON-able {expect}, but got {value!r}.",
+            )
+        ]
+
+
+@ensure(lambda result: not (result is not None) or len(result) > 0)
+def _check_list_of_primitives(
+    value: preseria.ValueUnion,
+    item_annotation: intermediate.TypeAnnotationExceptOptional,
+    symbol_table: intermediate.SymbolTable,
+    constraints_by_class: ReorganizedConstraintsByClass,
+) -> Optional[List[Error]]:
+    """Check that the value is a list whose items conform to the annotation."""
+    if not isinstance(value, preseria.ListOfPrimitives):
+        return [
+            Error(
+                path=Path(segments=[]),
+                message=f"Expected a list of primitives, but got {value!r}.",
+            )
+        ]
+
+    errors = []  # type: List[Error]
+
+    for i, item_value in enumerate(value.values):
+        item_errors = _check_value_against_type_annotation(
+            value=item_value,
+            type_annotation=item_annotation,
+            symbol_table=symbol_table,
+            constraints_by_class=constraints_by_class,
+        )
+
+        if item_errors is not None:
+            for item_error in item_errors:
+                # noinspection PyProtectedMember
+                item_error.path._segments.insert(0, i)
+
+            errors.extend(item_errors)
+
+    return errors if len(errors) > 0 else None
 
 
 @ensure(lambda result: not (result is not None) or len(result) > 0)
@@ -393,21 +575,70 @@ def _check_value_against_type_annotation(
                 if structural_errors is not None:
                     return structural_errors
 
+            elif isinstance(type_annotation.our_type, intermediate.NamedUnion):
+                union = type_annotation.our_type
+
+                if not isinstance(value, preseria.Instance):
+                    return [
+                        Error(
+                            path=Path(segments=[]),
+                            message=(
+                                f"Expected a pre-serialized instance "
+                                f"of the union {union.name!r}, but got {value!r}."
+                            ),
+                        )
+                    ]
+
+                # NOTE: The implementers are the flattened concrete members.
+                if value.class_name not in {
+                    implementer.name for implementer in union.implementers
+                }:
+                    return [
+                        Error(
+                            path=Path(segments=[]),
+                            message=(
+                                f"Expected a pre-serialized instance of a member "
+                                f"of the union {union.name!r}, "
+                                f"but got an instance of {value.class_name!r}."
+                            ),
+                        )
+                    ]
+
+                structural_errors = check_structural_constraints(
+                    instance=value,
+                    symbol_table=symbol_table,
+                    constraints_by_class=constraints_by_class,
+                )
+
+                if structural_errors is not None:
+                    return structural_errors
+
             else:
                 # noinspection PyTypeChecker
                 assert_never(type_annotation.our_type)
 
         elif isinstance(type_annotation, intermediate.ListTypeAnnotation):
-            assert isinstance(
-                type_annotation.items, intermediate.OurTypeAnnotation
-            ) and isinstance(
-                type_annotation.items.our_type,
-                (intermediate.AbstractClass, intermediate.ConcreteClass),
-            ), (
-                f"NOTE (mristin): We expect only lists of classes "
-                f"at the moment, but got {type_annotation}. "
-                f"Please contact the developers if you need this feature."
-            )
+            item_annotation = intermediate.beneath_optional(type_annotation.items)
+            is_list_of_union = isinstance(
+                item_annotation, intermediate.OurTypeAnnotation
+            ) and isinstance(item_annotation.our_type, intermediate.NamedUnion)
+
+            if not (
+                is_list_of_union
+                or (
+                    isinstance(item_annotation, intermediate.OurTypeAnnotation)
+                    and isinstance(
+                        item_annotation.our_type,
+                        (intermediate.AbstractClass, intermediate.ConcreteClass),
+                    )
+                )
+            ):
+                return _check_list_of_primitives(
+                    value=value,
+                    item_annotation=item_annotation,
+                    symbol_table=symbol_table,
+                    constraints_by_class=constraints_by_class,
+                )
 
             if not isinstance(value, preseria.ListOfInstances):
                 return [
@@ -420,8 +651,58 @@ def _check_value_against_type_annotation(
             errors = []  # type: List[Error]
 
             for i, item in enumerate(value.values):
-                item_errors = check_structural_constraints(
-                    instance=item,
+                if is_list_of_union:
+                    item_errors = _check_value_against_type_annotation(
+                        value=item,
+                        type_annotation=item_annotation,
+                        symbol_table=symbol_table,
+                        constraints_by_class=constraints_by_class,
+                    )
+                else:
+                    item_errors = check_structural_constraints(
+                        instance=item,
+                        symbol_table=symbol_table,
+                        constraints_by_class=constraints_by_class,
+                    )
+
+                if item_errors is not None:
+                    for item_error in item_errors:
+                        # noinspection PyProtectedMember
+                        item_error.path._segments.insert(0, i)
+
+                    errors.extend(item_errors)
+
+            if len(errors) > 0:
+                return errors
+
+        elif isinstance(type_annotation, intermediate.TupleTypeAnnotation):
+            if not isinstance(value, preseria.TupleOfValues):
+                return [
+                    Error(
+                        path=Path(segments=[]),
+                        message=f"Expected a tuple of values, but got {value!r}.",
+                    )
+                ]
+
+            if len(value.values) != len(type_annotation.items):
+                return [
+                    Error(
+                        path=Path(segments=[]),
+                        message=(
+                            f"Expected a tuple of {len(type_annotation.items)} "
+                            f"item(s), but got {len(value.values)}: {value!r}."
+                        ),
+                    )
+                ]
+
+            errors = []
+
+            for i, (item_value, item_annotation) in enumerate(
+                zip(value.values, type_annotation.items)
+            ):
+                item_errors = _check_value_against_type_annotation(
+                    value=item_value,
+                    type_annotation=intermediate.beneath_optional(item_annotation),
                     symbol_table=symbol_table,
                     constraints_by_class=constraints_by_class,
                 )
@@ -436,11 +717,161 @@ def _check_value_against_type_annotation(
             if len(errors) > 0:
                 return errors
 
+        elif isinstance(type_annotation, intermediate.SetTypeAnnotation):
+            if not isinstance(value, preseria.SetOfPrimitives):
+                return [
+                    Error(
+                        path=Path(segments=[]),
+                        message=f"Expected a set of primitives, but got {value!r}.",
+                    )
+                ]
+
+            errors = []
+
+            item_annotation = intermediate.beneath_optional(type_annotation.items)
+
+            for i, item_value in enumerate(value.values):
+                item_errors = _check_value_against_type_annotation(
+                    value=item_value,
+                    type_annotation=item_annotation,
+                    symbol_table=symbol_table,
+                    constraints_by_class=constraints_by_class,
+                )
+
+                if item_errors is not None:
+                    for item_error in item_errors:
+                        # noinspection PyProtectedMember
+                        item_error.path._segments.insert(0, i)
+
+                    errors.extend(item_errors)
+
+            if len(errors) == 0 and len(set(value.values)) != len(value.values):
+                errors.append(
+                    Error(
+                        path=Path(segments=[]),
+                        message=f"Expected unique set items, but got {value!r}.",
+                    )
+                )
+
+            if len(errors) > 0:
+                return errors
+
+        elif isinstance(
+            type_annotation,
+            (
+                intermediate.JsonValueTypeAnnotation,
+                intermediate.JsonArrayTypeAnnotation,
+                intermediate.JsonObjectTypeAnnotation,
+            ),
+        ):
+            expect = (
+                "value"
+                if isinstance(type_annotation, intermediate.JsonValueTypeAnnotation)
+                else (
+                    "array"
+                    if isinstance(type_annotation, intermediate.JsonArrayTypeAnnotation)
+                    else "object"
+                )
+            )
+
+            return _check_json_value(value, expect=expect)
+
         else:
             # noinspection PyTypeChecker
             assert_never(type_annotation)
 
     return None
+
+
+def _find_constraint_problems(
+    value: preseria.PrimitiveValueUnion, constraints: PropertyConstraints
+) -> List[str]:
+    """Describe how the primitive value violates the constraints, if at all."""
+    problems = []  # type: List[str]
+
+    if constraints.len_constraint is not None and isinstance(value, (str, bytes)):
+        if (
+            constraints.len_constraint.min_value is not None
+            and len(value) < constraints.len_constraint.min_value
+        ):
+            problems.append(
+                f"its length {len(value)} is shorter than "
+                f"{constraints.len_constraint.min_value}"
+            )
+
+        if (
+            constraints.len_constraint.max_value is not None
+            and len(value) > constraints.len_constraint.max_value
+        ):
+            problems.append(
+                f"its length {len(value)} is longer than "
+                f"{constraints.len_constraint.max_value}"
+            )
+
+    if isinstance(value, str):
+        for pattern in constraints.patterns:
+            if re.fullmatch(pattern, value) is None:
+                problems.append(f"it does not match the pattern {pattern!r}")
+
+    if (
+        constraints.allowed_value_set is not None
+        and value not in constraints.allowed_value_set
+    ):
+        problems.append("it is not in the set of allowed values")
+
+    return problems
+
+
+def _check_items_against_constraints(
+    property_name: str,
+    class_name: str,
+    items: Sequence[object],
+    constraints: PropertyConstraints,
+) -> List[Error]:
+    """Check the items of a list of primitives against the item constraints."""
+    errors = []  # type: List[Error]
+
+    for i, item in enumerate(items):
+        if not isinstance(item, preseria.PrimitiveValueTuple):
+            continue
+
+        for problem in _find_constraint_problems(item, constraints):
+            errors.append(
+                Error(
+                    path=Path(segments=[property_name, i]),
+                    message=(
+                        f"Item {i} of the property {property_name!r} "
+                        f"of class {class_name}, {item!r}, is invalid: {problem}."
+                    ),
+                )
+            )
+
+    return errors
+
+
+def _check_json_object_keys(
+    path_prefix: Sequence[Union[str, int]],
+    class_name: str,
+    json_object: preseria.ImmutableJsonObject,
+    constraints: PropertyConstraints,
+) -> List[Error]:
+    """Check the keys of the JSON object against the key constraints."""
+    errors = []  # type: List[Error]
+
+    for key, _ in json_object.members:
+        for problem in _find_constraint_problems(key, constraints):
+            errors.append(
+                Error(
+                    path=Path(segments=[*path_prefix, key]),
+                    message=(
+                        f"The key {key!r} of the JSON object at "
+                        f"{'/'.join(str(segment) for segment in path_prefix)!r} "
+                        f"of class {class_name} is invalid: {problem}."
+                    ),
+                )
+            )
+
+    return errors
 
 
 @ensure(lambda result: not (result is not None) or len(result) > 0)
@@ -576,12 +1007,62 @@ def check_structural_constraints(
 
         prop_constraints = constraints_by_prop[prop]
 
+        if prop_constraints.key_constraints is not None:
+            if isinstance(prop_value, preseria.ImmutableJsonObject):
+                errors.extend(
+                    _check_json_object_keys(
+                        path_prefix=[prop.name],
+                        class_name=cls.name,
+                        json_object=prop_value,
+                        constraints=prop_constraints.key_constraints,
+                    )
+                )
+            elif isinstance(prop_value, preseria.ListOfPrimitives):
+                for i, item in enumerate(prop_value.values):
+                    if isinstance(item, preseria.ImmutableJsonObject):
+                        errors.extend(
+                            _check_json_object_keys(
+                                path_prefix=[prop.name, i],
+                                class_name=cls.name,
+                                json_object=item,
+                                constraints=prop_constraints.key_constraints,
+                            )
+                        )
+
+        if prop_constraints.item_constraints is not None and isinstance(
+            prop_value, preseria.ListOfPrimitives
+        ):
+            errors.extend(
+                _check_items_against_constraints(
+                    property_name=prop.name,
+                    class_name=cls.name,
+                    items=prop_value.values,
+                    constraints=prop_constraints.item_constraints,
+                )
+            )
+
         if prop_constraints.len_constraint is not None:
-            if isinstance(prop_value, (str, bytes, preseria.ListOfInstances)):
+            if isinstance(
+                prop_value,
+                (
+                    str,
+                    bytes,
+                    preseria.ListOfInstances,
+                    preseria.SetOfPrimitives,
+                    preseria.ListOfPrimitives,
+                ),
+            ):
                 length: int
                 if isinstance(prop_value, (str, bytes)):
                     length = len(prop_value)
-                elif isinstance(prop_value, preseria.ListOfInstances):
+                elif isinstance(
+                    prop_value,
+                    (
+                        preseria.ListOfInstances,
+                        preseria.SetOfPrimitives,
+                        preseria.ListOfPrimitives,
+                    ),
+                ):
                     length = len(prop_value.values)
                 else:
                     # noinspection PyTypeChecker
@@ -655,7 +1136,15 @@ def check_structural_constraints(
                                 ),
                             )
                         )
-                elif isinstance(prop_value, preseria.ListOfInstances):
+                elif isinstance(
+                    prop_value,
+                    (
+                        preseria.ListOfInstances,
+                        preseria.TupleOfValues,
+                        preseria.SetOfPrimitives,
+                        preseria.ListOfPrimitives,
+                    ),
+                ):
                     continue
 
                 else:

@@ -1,0 +1,14 @@
+<startsWithComparison xmlns="https://admin-shell.io/aas/3/2">
+  <startsWith>
+    <attributeOperand>
+      <attribute>
+        <claimAttribute>
+          <claim>something_4df2f289</claim>
+        </claimAttribute>
+      </attribute>
+    </attributeOperand>
+    <fieldOperand>
+      <field>$smdesc#semanticId.type</field>
+    </fieldOperand>
+  </startsWith>
+</startsWithComparison>

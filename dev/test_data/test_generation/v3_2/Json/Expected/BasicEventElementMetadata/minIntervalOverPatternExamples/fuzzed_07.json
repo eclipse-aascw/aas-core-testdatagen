@@ -1,0 +1,6 @@
+{
+  "direction": "input",
+  "state": "on",
+  "minInterval": "-PT0.332S",
+  "modelType": "BasicEventElementMetadata"
+}

@@ -1,0 +1,11 @@
+<operationHandle xmlns="https://admin-shell.io/aas/3/2">
+  <handleId>
+    <type>ExternalReference</type>
+    <keys>
+      <key>
+        <type>GlobalReference</type>
+        <value>unexpected reference</value>
+      </key>
+    </keys>
+  </handleId>
+</operationHandle>

@@ -225,6 +225,108 @@ class TestIndividualCasesFor3_1(unittest.TestCase):
             self.assertNotEqual(pattern_case.property_name, Identifier("value"))
 
 
+# noinspection PyPep8Naming
+class TestIndividualCasesFor3_2(unittest.TestCase):
+    _instance_generator: ClassVar[Optional[v3_2_generation.InstanceGenerator]]
+
+    @property
+    def instance_generator(self) -> v3_2_generation.InstanceGenerator:
+        """Instance generator initialized for this version."""
+        assert self.__class__._instance_generator is not None, (
+            "Expected the instance generator to be created in setUpClass, "
+            "but either the setUpClass was not called yet "
+            "or setUpClass did not initialize the instance generator"
+        )
+
+        return self.__class__._instance_generator
+
+    @classmethod
+    def setUpClass(cls) -> None:
+        _, _, verificator = _load_or_cache_meta_model(
+            meta_model_path=(
+                _REPO_ROOT / "dev" / "test_data" / "meta_model" / "v3_2.py"
+            )
+        )
+
+        TestIndividualCasesFor3_2._instance_generator = (
+            v3_2_generation.InstanceGenerator(verificator=verificator)
+        )
+
+    def test_list_maximal_no_duplicate_qualifiers(self) -> None:
+        instance = self.instance_generator.generate_maximal_instance(
+            path_hash=common.hash_path(prefix_hash=None, segment_or_segments=[]),
+            cls=self.instance_generator.symbol_table.must_find_concrete_class(
+                Identifier("Submodel_element_list")
+            ),
+        )
+
+        jsonable = jsoning.must_serialize(
+            value=instance,
+            symbol_table=self.instance_generator.symbol_table,
+        )
+
+        assert isinstance(jsonable, collections.abc.Mapping)
+
+        # NOTE (mristin):
+        # We had a problem that a list of qualifiers results in qualifiers with
+        # duplicate types.
+
+        qualifier_types = [qualifier["type"] for qualifier in jsonable["qualifiers"]]
+
+        assert len(set(qualifier_types)) == len(qualifier_types), (
+            f"Expected unique qualifier types, but got duplicates "
+            f"in:\n{json.dumps(jsonable['qualifiers'], indent=2)}"
+        )
+
+    def test_referable_display_name_valid(self) -> None:
+        instance = self.instance_generator.generate_maximal_instance(
+            path_hash=common.hash_path(prefix_hash=None, segment_or_segments=[]),
+            cls=self.instance_generator.symbol_table.must_find_abstract_class(
+                Identifier("Referable")
+            ),
+        )
+
+        assert "display_name" in instance.properties
+
+        display_name = instance.properties[Identifier("display_name")]
+
+        assert isinstance(display_name, preseria.ListOfInstances)
+
+        assert all(
+            lang_string.must_str("language").startswith("en-")
+            for lang_string in display_name.values
+        ), (
+            "All language strings in display name should be valid "
+            "English language BCP 47 tags."
+        )
+
+    def test_no_pattern_cases_for_property_value(self) -> None:
+        # NOTE (mristin):
+        # The implementation of the case generator for patterns was buggy, so we wrote
+        # this test to speed up the development. We leave the test here for future
+        # regressions.
+
+        instance_generator = self.instance_generator
+
+        case_generator = generation.CaseGeneratorForSchemaConstraints(
+            instance_generator=instance_generator,
+            min_max_case_registry=generation.build_min_max_case_registry(
+                instance_generator=instance_generator
+            ),
+        )
+
+        pattern_cases = list(
+            case_generator._generate_positive_and_negative_pattern_examples(
+                cls=instance_generator.symbol_table.must_find_concrete_class(
+                    Identifier("Property")
+                )
+            )
+        )
+
+        for pattern_case in pattern_cases:
+            self.assertNotEqual(pattern_case.property_name, Identifier("value"))
+
+
 class TestAgainstRecorded(unittest.TestCase):
     def test_against_meta_models(self) -> None:
         test_data_dir = _REPO_ROOT / "dev" / "test_data"

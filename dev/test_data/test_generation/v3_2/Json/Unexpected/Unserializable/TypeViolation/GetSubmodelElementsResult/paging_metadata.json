@@ -1,0 +1,13 @@
+{
+  "paging_metadata": "Unexpected string value",
+  "result": [
+    {
+      "idShort": "fULCVpULCVq",
+      "modelType": "Capability"
+    },
+    {
+      "idShort": "P7gn",
+      "modelType": "File"
+    }
+  ]
+}

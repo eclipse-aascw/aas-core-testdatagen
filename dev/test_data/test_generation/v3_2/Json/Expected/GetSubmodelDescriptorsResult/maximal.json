@@ -1,0 +1,33 @@
+{
+  "paging_metadata": {},
+  "result": [
+    {
+      "endpoints": [
+        {
+          "protocolInformation": {
+            "href": "something_1a8f5f52"
+          },
+          "interface": "0"
+        }
+      ],
+      "id": "J5"
+    },
+    {
+      "endpoints": [
+        {
+          "protocolInformation": {
+            "href": "something_5c6192cf"
+          },
+          "interface": "11\u00d5\u00d1\ud803\udee8\u00b4K\udbca\udf2de<\udb45\uddde\u00a8ngA"
+        },
+        {
+          "protocolInformation": {
+            "href": "something_a0d1bab3"
+          },
+          "interface": "\u00db\u0103<P\udb63\udc7d\u00b2|dn\u009c\u00de\u00ae"
+        }
+      ],
+      "id": "[\\h$\ud90b\ude9f\u00ec\u00d6\u010b\u008a1\u00bf"
+    }
+  ]
+}

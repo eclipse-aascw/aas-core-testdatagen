@@ -1,0 +1,23 @@
+<queryFilter xmlns="https://admin-shell.io/aas/3/2">
+  <fragment>
+    <type>ExternalReference</type>
+    <keys>
+      <key>
+        <type>GlobalReference</type>
+        <value>unexpected reference</value>
+      </key>
+    </keys>
+  </fragment>
+  <condition>
+    <greaterThanOrEqualComparison>
+      <ge>
+        <hexLiteral>
+          <hexVal>16#1</hexVal>
+        </hexLiteral>
+        <hexLiteral>
+          <hexVal>16#1F</hexVal>
+        </hexLiteral>
+      </ge>
+    </greaterThanOrEqualComparison>
+  </condition>
+</queryFilter>

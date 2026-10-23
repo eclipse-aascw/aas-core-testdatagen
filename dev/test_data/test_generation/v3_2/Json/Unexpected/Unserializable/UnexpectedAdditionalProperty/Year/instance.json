@@ -1,0 +1,6 @@
+{
+  "$year": {
+    "$dateTimeVal": "2023-01-01T24:00:00"
+  },
+  "unexpectedAdditionalProperty": "UNEXPECTED-ADDITIONAL-PROPERTY"
+}

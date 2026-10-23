@@ -1,0 +1,7 @@
+<booleanCast xmlns="https://admin-shell.io/aas/3/2">
+  <boolCast>
+    <stringLiteral>
+      <strVal>something_a3fe9637</strVal>
+    </stringLiteral>
+  </boolCast>
+</booleanCast>

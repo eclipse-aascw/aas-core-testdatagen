@@ -1,0 +1,4 @@
+<claimAttribute xmlns="https://admin-shell.io/aas/3/2">
+  <claim>something_a8aab6e9</claim>
+  <unexpectedAdditionalProperty>UNEXPECTED-ADDITIONAL-PROPERTY</unexpectedAdditionalProperty>
+</claimAttribute>

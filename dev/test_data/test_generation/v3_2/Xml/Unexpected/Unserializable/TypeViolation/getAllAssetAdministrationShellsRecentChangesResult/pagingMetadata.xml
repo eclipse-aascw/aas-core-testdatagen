@@ -1,0 +1,15 @@
+<getAllAssetAdministrationShellsRecentChangesResult xmlns="https://admin-shell.io/aas/3/2">
+  <pagingMetadata>Unexpected string value</pagingMetadata>
+  <result>
+    <assetAdministrationShellRecentChange>
+      <createdAt>2022-04-01T24:00:00-00:00</createdAt>
+      <updatedAt>2022-04-01T24:00:00-00:00</updatedAt>
+      <id>0</id>
+    </assetAdministrationShellRecentChange>
+    <assetAdministrationShellRecentChange>
+      <createdAt>2022-04-01T00:00:00Z</createdAt>
+      <updatedAt>2022-04-01T00:00:00Z</updatedAt>
+      <id>11ÕÑ𐻨´K􂬭e&lt;󡗞¨ngA</id>
+    </assetAdministrationShellRecentChange>
+  </result>
+</getAllAssetAdministrationShellsRecentChangesResult>

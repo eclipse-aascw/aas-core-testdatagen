@@ -1,0 +1,11 @@
+<getSubmodelsResult xmlns="https://admin-shell.io/aas/3/2">
+  <pagingMetadata>Unexpected string value</pagingMetadata>
+  <result>
+    <submodel>
+      <id>6</id>
+    </submodel>
+    <submodel>
+      <id>öĖa􍣡|</id>
+    </submodel>
+  </result>
+</getSubmodelsResult>

@@ -1,0 +1,12 @@
+<stringCast xmlns="https://admin-shell.io/aas/3/2">
+  <strCast>
+    <attributeOperand>
+      <attribute>
+        <globalAttribute>
+          <kind>ANONYMOUS</kind>
+        </globalAttribute>
+      </attribute>
+    </attributeOperand>
+  </strCast>
+  <unexpectedAdditionalProperty>UNEXPECTED-ADDITIONAL-PROPERTY</unexpectedAdditionalProperty>
+</stringCast>

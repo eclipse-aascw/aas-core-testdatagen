@@ -1,0 +1,13 @@
+<securityAttributeObject xmlns="https://admin-shell.io/aas/3/2">
+  <type>W3C_DID</type>
+  <key>
+    <type>ExternalReference</type>
+    <keys>
+      <key>
+        <type>GlobalReference</type>
+        <value>unexpected reference</value>
+      </key>
+    </keys>
+  </key>
+  <value>something_472688c5</value>
+</securityAttributeObject>

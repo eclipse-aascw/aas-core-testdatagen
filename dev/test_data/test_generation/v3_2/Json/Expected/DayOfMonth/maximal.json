@@ -1,0 +1,7 @@
+{
+  "$dayOfMonth": {
+    "$attribute": {
+      "GLOBAL": "LOCALNOW"
+    }
+  }
+}

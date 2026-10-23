@@ -1,0 +1,32 @@
+{
+  "first": {
+    "type": "ExternalReference",
+    "keys": [
+      {
+        "type": "GlobalReference",
+        "value": "urn:an-example:07:f74c3f33"
+      }
+    ]
+  },
+  "second": {
+    "type": "ExternalReference",
+    "keys": [
+      {
+        "type": "GlobalReference",
+        "value": "urn:example:00:9301d0e0"
+      }
+    ]
+  },
+  "annotations": {
+    "\u007f15": "something_7e4e401e",
+    "tWC": 17240976.11,
+    "EO5DYAe": false,
+    "a----------------b": [
+      "something_56d756a6",
+      35366450.02,
+      {
+        "nested": false
+      }
+    ]
+  }
+}

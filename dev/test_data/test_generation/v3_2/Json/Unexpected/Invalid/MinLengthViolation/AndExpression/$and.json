@@ -1,0 +1,14 @@
+{
+  "$and": [
+    {
+      "$contains": [
+        {
+          "$field": "$aas#idShort"
+        },
+        {
+          "$field": "$aasdesc#endpoints[0].protocolinformation.href"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,23 @@
+{
+  "paging_metadata": {},
+  "result": [
+    {
+      "type": "ExternalReference",
+      "keys": [
+        {
+          "type": "GlobalReference",
+          "value": "urn:yet-another-company:00:1e454a20"
+        }
+      ]
+    },
+    {
+      "type": "ExternalReference",
+      "keys": [
+        {
+          "type": "GlobalReference",
+          "value": "urn:an-example:08:46556cf0"
+        }
+      ]
+    }
+  ]
+}

@@ -9,6 +9,8 @@ from typing import Iterable, Tuple
 from aas_core_testdatagen.xs_typing import (
     compare,
     Comparison,
+    is_xs_double,
+    is_xs_float,
     parse_date_time_to_seconds_since_epoch,
     value_consistent_with_xsd_type,
 )
@@ -1299,6 +1301,33 @@ class TestValueConsistentWithXsdType(unittest.TestCase):
                 ("", False, "empty string invalid"),
             ],
         )
+
+
+class TestOverflow(unittest.TestCase):
+    def test_xs_float(self) -> None:
+        for text in (
+            "3.4028235e38",
+            "3.4028235677973366e38",
+            "-3.4028235e38",
+            "1e-400",
+        ):
+            self.assertTrue(is_xs_float(text), text)
+
+        for text in ("3.4028235677973367e38", "3.5e38", "1e400", "-1e400"):
+            self.assertFalse(is_xs_float(text), text)
+
+        for text in ("INF", "-INF", "NaN"):
+            self.assertTrue(is_xs_float(text), text)
+
+    def test_xs_double(self) -> None:
+        for text in ("1.7976931348623157e308", "1.797693134862315807e308", "1e-400"):
+            self.assertTrue(is_xs_double(text), text)
+
+        for text in ("1.797693134862315808e308", "1.8e308", "1e400", "-1e400"):
+            self.assertFalse(is_xs_double(text), text)
+
+        for text in ("INF", "-INF", "NaN"):
+            self.assertTrue(is_xs_double(text), text)
 
 
 if __name__ == "__main__":

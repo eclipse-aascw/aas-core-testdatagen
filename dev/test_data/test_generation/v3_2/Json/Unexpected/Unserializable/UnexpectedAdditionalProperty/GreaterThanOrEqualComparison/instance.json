@@ -1,0 +1,11 @@
+{
+  "$ge": [
+    {
+      "$hexVal": "16#1"
+    },
+    {
+      "$hexVal": "16#00"
+    }
+  ],
+  "unexpectedAdditionalProperty": "UNEXPECTED-ADDITIONAL-PROPERTY"
+}

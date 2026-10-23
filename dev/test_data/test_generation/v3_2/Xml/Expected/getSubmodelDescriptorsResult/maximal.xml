@@ -1,0 +1,33 @@
+<getSubmodelDescriptorsResult xmlns="https://admin-shell.io/aas/3/2">
+  <pagingMetadata />
+  <result>
+    <submodelDescriptor>
+      <endpoints>
+        <endpoint>
+          <protocolInformation>
+            <href>something_1a8f5f52</href>
+          </protocolInformation>
+          <interface>0</interface>
+        </endpoint>
+      </endpoints>
+      <id>J5</id>
+    </submodelDescriptor>
+    <submodelDescriptor>
+      <endpoints>
+        <endpoint>
+          <protocolInformation>
+            <href>something_5c6192cf</href>
+          </protocolInformation>
+          <interface>11ÕÑ𐻨´K􂬭e&lt;󡗞¨ngA</interface>
+        </endpoint>
+        <endpoint>
+          <protocolInformation>
+            <href>something_a0d1bab3</href>
+          </protocolInformation>
+          <interface>Ûă&lt;P󨱽²|dnÞ®</interface>
+        </endpoint>
+      </endpoints>
+      <id>[\h$񒺟ìÖċ1¿</id>
+    </submodelDescriptor>
+  </result>
+</getSubmodelDescriptorsResult>

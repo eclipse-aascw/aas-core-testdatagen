@@ -1,0 +1,13 @@
+{
+  "$not": {
+    "$lt": [
+      {
+        "$dateTimeVal": "2023-06-15T08:30:00-05:00"
+      },
+      {
+        "$dateTimeVal": "2023-01-01T24:00:00"
+      }
+    ]
+  },
+  "unexpectedAdditionalProperty": "UNEXPECTED-ADDITIONAL-PROPERTY"
+}

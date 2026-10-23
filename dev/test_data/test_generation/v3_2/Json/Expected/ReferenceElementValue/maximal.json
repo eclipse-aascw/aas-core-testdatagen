@@ -1,0 +1,22 @@
+{
+  "type": "ExternalReference",
+  "keys": [
+    {
+      "type": "Entity",
+      "value": "0"
+    },
+    {
+      "type": "RelationshipElement",
+      "value": "\u00db\u0103<P\udb63\udc7d\u00b2|dn\u009c\u00de\u00ae"
+    }
+  ],
+  "referredSemanticId": {
+    "type": "ExternalReference",
+    "keys": [
+      {
+        "type": "GlobalReference",
+        "value": "urn:another-example:00:3fff168c"
+      }
+    ]
+  }
+}

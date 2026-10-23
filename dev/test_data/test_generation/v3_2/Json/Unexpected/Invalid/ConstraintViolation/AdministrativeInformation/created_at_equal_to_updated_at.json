@@ -1,0 +1,85 @@
+{
+  "embeddedDataSpecifications": [
+    {
+      "dataSpecification": {
+        "type": "ExternalReference",
+        "keys": [
+          {
+            "type": "GlobalReference",
+            "value": "urn:another-example:15:bafb75bf"
+          }
+        ]
+      },
+      "dataSpecificationContent": {
+        "preferredName": [
+          {
+            "language": "en-JM-x-4138dab8",
+            "text": "[\\h$\ud90b\ude9f\u00ec\u00d6\u010b\u008a1\u00bf"
+          }
+        ],
+        "symbol": "0",
+        "modelType": "DataSpecificationUom"
+      }
+    },
+    {
+      "dataSpecification": {
+        "type": "ExternalReference",
+        "keys": [
+          {
+            "type": "GlobalReference",
+            "value": "urn:something:06:8c675c7e"
+          }
+        ]
+      },
+      "dataSpecificationContent": {
+        "preferredName": [
+          {
+            "language": "en-JM-x-ed3d945d",
+            "text": "\ud842\udd224\ud842\udd22"
+          }
+        ],
+        "symbol": "\uda51\udc4cM\ud86a\udc07\ud82d\udd0a\ud9c8\udd32",
+        "modelType": "DataSpecificationUom"
+      }
+    },
+    {
+      "dataSpecification": {
+        "type": "ExternalReference",
+        "keys": [
+          {
+            "type": "GlobalReference",
+            "value": "urn:yet-another-company:00:6a4b9a64"
+          }
+        ]
+      },
+      "dataSpecificationContent": {
+        "preferredName": [
+          {
+            "language": "en-JM-x-03ed72b5",
+            "text": "J5"
+          },
+          {
+            "language": "en-JM-x-f78bd480",
+            "text": "11\u00d5\u00d1\ud803\udee8\u00b4K\udbca\udf2de<\udb45\uddde\u00a8ngA"
+          }
+        ],
+        "symbol": "<\u0103<P\udb63\udc7d\u00b2|dn\u009c\u00de\u00ae",
+        "modelType": "DataSpecificationUom"
+      }
+    }
+  ],
+  "version": "116",
+  "revision": "7",
+  "creator": {
+    "type": "ExternalReference",
+    "keys": [
+      {
+        "type": "GlobalReference",
+        "value": "urn:another-example:09:31c8656d"
+      }
+    ]
+  },
+  "createdAt": "2022-04-01T12:00:00Z",
+  "updatedAt": "2022-04-01T12:00:00Z",
+  "templateId": "\u00db\u0103<P\udb63\udc7d\u00b2|dn\u009c\u00de\u00ae"
+}

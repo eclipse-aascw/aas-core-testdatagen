@@ -1,0 +1,253 @@
+{
+  "extensions": [
+    {
+      "name": "\u00f6\u0116a\udbf6\udce1\u0099|"
+    },
+    {
+      "name": "\u00f6\u0116a\udbf6\udce1\u0099|"
+    },
+    {
+      "name": "6"
+    }
+  ],
+  "category": "[\\h$\ud90b\ude9f\u00ec\u00d6\u010b\u008a1\u00bf",
+  "idShort": "nRdRe",
+  "displayName": [
+    {
+      "language": "en-JM-x-21f819f7",
+      "text": "\uda51\udc4cM\ud86a\udc07\ud82d\udd0a\ud9c8\udd32"
+    }
+  ],
+  "description": [
+    {
+      "language": "en-JM-x-c751e85c",
+      "text": "<\u0103<P\udb63\udc7d\u00b2|dn\u009c\u00de\u00ae"
+    },
+    {
+      "language": "en-JM-x-cd9da822",
+      "text": "J5"
+    },
+    {
+      "language": "en-JM-x-d7110718",
+      "text": "\u00f6\u0116a\udbf6\udce1\u0099|"
+    }
+  ],
+  "semanticId": {
+    "type": "ExternalReference",
+    "keys": [
+      {
+        "type": "GlobalReference",
+        "value": "urn:example:02:1d98e782"
+      }
+    ]
+  },
+  "supplementalSemanticIds": [
+    {
+      "type": "ExternalReference",
+      "keys": [
+        {
+          "type": "GlobalReference",
+          "value": "urn:another-company:02:927e8052"
+        }
+      ]
+    },
+    {
+      "type": "ExternalReference",
+      "keys": [
+        {
+          "type": "GlobalReference",
+          "value": "urn:another-company:06:bbe8c87a"
+        }
+      ]
+    },
+    {
+      "type": "ExternalReference",
+      "keys": [
+        {
+          "type": "GlobalReference",
+          "value": "urn:example:14:db468b42"
+        }
+      ]
+    }
+  ],
+  "qualifiers": [
+    {
+      "type": "something_9cc1f176",
+      "valueType": "xs:byte"
+    }
+  ],
+  "embeddedDataSpecifications": [
+    {
+      "dataSpecification": {
+        "type": "ExternalReference",
+        "keys": [
+          {
+            "type": "GlobalReference",
+            "value": "urn:some-company:16:482dd448"
+          }
+        ]
+      },
+      "dataSpecificationContent": {
+        "preferredName": [
+          {
+            "language": "en-JM-x-e74745ad",
+            "text": "11\u00d5\u00d1\ud803\udee8\u00b4K\udbca\udf2de<\udb45\uddde\u00a8ngA"
+          }
+        ],
+        "modelType": "DataSpecificationIec61360"
+      }
+    },
+    {
+      "dataSpecification": {
+        "type": "ExternalReference",
+        "keys": [
+          {
+            "type": "GlobalReference",
+            "value": "urn:yet-another-company:19:a343b913"
+          }
+        ]
+      },
+      "dataSpecificationContent": {
+        "preferredName": [
+          {
+            "language": "en-JM-x-915e0391",
+            "text": "J5"
+          },
+          {
+            "language": "en-JM-x-00896050",
+            "text": "\ud842\udd224\ud842\udd22"
+          },
+          {
+            "language": "en-JM-x-f65f2fa5",
+            "text": "\ud842\udd224\ud842\udd22"
+          }
+        ],
+        "symbol": "\u00f6\u0116a\udbf6\udce1\u0099|",
+        "modelType": "DataSpecificationUom"
+      }
+    },
+    {
+      "dataSpecification": {
+        "type": "ExternalReference",
+        "keys": [
+          {
+            "type": "GlobalReference",
+            "value": "urn:another-example:09:8891546d"
+          }
+        ]
+      },
+      "dataSpecificationContent": {
+        "preferredName": [
+          {
+            "language": "en-JM-x-f075c583",
+            "text": "J5"
+          },
+          {
+            "language": "en-JM-x-65d445a2",
+            "text": "<\u0103<P\udb63\udc7d\u00b2|dn\u009c\u00de\u00ae"
+          }
+        ],
+        "symbol": "11\u00d5\u00d1\ud803\udee8\u00b4K\udbca\udf2de<\udb45\uddde\u00a8ngA",
+        "modelType": "DataSpecificationUom"
+      }
+    }
+  ],
+  "inputVariables": [
+    {
+      "value": {
+        "idShort": "something79d4e197",
+        "semanticIdListElement": {
+          "type": "ExternalReference",
+          "keys": [
+            {
+              "type": "GlobalReference",
+              "value": "urn:yet-another-company:10:245e0e92"
+            }
+          ]
+        },
+        "typeValueListElement": "Property",
+        "valueTypeListElement": "xs:boolean",
+        "value": [
+          {
+            "semanticId": {
+              "type": "ExternalReference",
+              "keys": [
+                {
+                  "type": "GlobalReference",
+                  "value": "urn:yet-another-company:10:245e0e92"
+                }
+              ]
+            },
+            "valueType": "xs:boolean",
+            "modelType": "Property"
+          },
+          {
+            "semanticId": {
+              "type": "ExternalReference",
+              "keys": [
+                {
+                  "type": "GlobalReference",
+                  "value": "urn:yet-another-company:10:245e0e92"
+                }
+              ]
+            },
+            "valueType": "xs:boolean",
+            "modelType": "Property"
+          }
+        ],
+        "modelType": "SubmodelElementList"
+      }
+    }
+  ],
+  "outputVariables": [
+    {
+      "value": {
+        "idShort": "somethingba65a561",
+        "modelType": "AnnotatedRelationshipElement"
+      }
+    },
+    {
+      "value": {
+        "idShort": "something29fb2981",
+        "valueType": "xs:short",
+        "modelType": "Property"
+      }
+    }
+  ],
+  "inoutputVariables": [
+    {
+      "value": {
+        "idShort": "something188049ba",
+        "modelType": "SubmodelElementCollection"
+      }
+    },
+    {
+      "value": {
+        "idShort": "something858a70e7",
+        "observed": {
+          "type": "ModelReference",
+          "keys": [
+            {
+              "type": "Submodel",
+              "value": "urn:another-example:04:8f67344c"
+            },
+            {
+              "type": "Property",
+              "value": "something5457ae10"
+            }
+          ]
+        },
+        "direction": "output",
+        "state": "off",
+        "modelType": "BasicEventElement"
+      }
+    },
+    {
+      "value": {
+        "idShort": "something04769ab1",
+        "modelType": "RelationshipElement"
+      }
+    }
+  ],
+  "modelType": "Operation"
+}

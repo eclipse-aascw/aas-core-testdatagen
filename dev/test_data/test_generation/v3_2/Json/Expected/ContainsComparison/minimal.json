@@ -1,0 +1,12 @@
+{
+  "$contains": [
+    {
+      "$attribute": {
+        "CLAIM": "something_aa87dee6"
+      }
+    },
+    {
+      "$field": "$sme.list[3].prop#valueType"
+    }
+  ]
+}

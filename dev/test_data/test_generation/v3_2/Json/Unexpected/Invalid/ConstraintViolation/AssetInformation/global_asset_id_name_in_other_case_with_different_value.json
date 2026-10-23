@@ -1,0 +1,10 @@
+{
+  "assetKind": "NotApplicable",
+  "globalAssetId": "urn:global:asset",
+  "specificAssetIds": [
+    {
+      "name": "GlobalAssetId",
+      "value": "urn:other"
+    }
+  ]
+}

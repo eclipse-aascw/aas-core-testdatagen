@@ -1,0 +1,6 @@
+{
+  "direction": "input",
+  "state": "on",
+  "maxInterval": "P1Y-1M",
+  "modelType": "BasicEventElementMetadata"
+}

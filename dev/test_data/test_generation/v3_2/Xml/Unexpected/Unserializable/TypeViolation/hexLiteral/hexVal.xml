@@ -1,0 +1,11 @@
+<hexLiteral xmlns="https://admin-shell.io/aas/3/2">
+  <hexVal>
+    <type>ExternalReference</type>
+    <keys>
+      <key>
+        <type>GlobalReference</type>
+        <value>unexpected reference</value>
+      </key>
+    </keys>
+  </hexVal>
+</hexLiteral>

@@ -1,0 +1,5 @@
+<message xmlns="https://admin-shell.io/aas/3/2">
+  <messageType>Exception</messageType>
+  <text>something_2c25e1c4</text>
+  <correlationId>J5</correlationId>
+</message>

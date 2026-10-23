@@ -1,0 +1,9 @@
+<dayOfMonth xmlns="https://admin-shell.io/aas/3/2">
+  <dayOfMonth>
+    <dateTimeAttributeOperand>
+      <attribute>
+        <kind>LOCALNOW</kind>
+      </attribute>
+    </dateTimeAttributeOperand>
+  </dayOfMonth>
+</dayOfMonth>

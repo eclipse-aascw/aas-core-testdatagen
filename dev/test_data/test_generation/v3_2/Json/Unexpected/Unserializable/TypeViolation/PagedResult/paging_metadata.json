@@ -1,0 +1,11 @@
+{
+  "result": [
+    {
+      "modelType": "AnnotatedRelationshipElementMetadata"
+    },
+    {
+      "modelType": "AnnotatedRelationshipElement"
+    }
+  ],
+  "paging_metadata": "Unexpected string value"
+}

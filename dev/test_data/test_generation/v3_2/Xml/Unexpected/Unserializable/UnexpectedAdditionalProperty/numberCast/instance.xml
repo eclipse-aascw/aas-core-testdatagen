@@ -1,0 +1,8 @@
+<numberCast xmlns="https://admin-shell.io/aas/3/2">
+  <numCast>
+    <timeLiteral>
+      <timeVal>12:00:00+01:00</timeVal>
+    </timeLiteral>
+  </numCast>
+  <unexpectedAdditionalProperty>UNEXPECTED-ADDITIONAL-PROPERTY</unexpectedAdditionalProperty>
+</numberCast>
