@@ -1,0 +1,3 @@
+<operationRequest xmlns="https://admin-shell.io/aas/3/2">
+  <clientTimeoutDuration>some free form text</clientTimeoutDuration>
+</operationRequest>

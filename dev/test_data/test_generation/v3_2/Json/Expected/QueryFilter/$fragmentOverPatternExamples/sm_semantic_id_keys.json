@@ -1,0 +1,13 @@
+{
+  "$fragment": "$sm#semanticId.keys[0]",
+  "$condition": {
+    "$le": [
+      {
+        "$hexVal": "16#1"
+      },
+      {
+        "$hexVal": "16#1F"
+      }
+    ]
+  }
+}

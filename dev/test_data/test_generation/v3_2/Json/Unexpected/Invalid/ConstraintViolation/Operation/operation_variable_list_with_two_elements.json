@@ -122,7 +122,8 @@
             "text": "\ud842\udd224\ud842\udd22"
           }
         ],
-        "modelType": "DataSpecificationIec61360"
+        "symbol": "\u00f6\u0116a\udbf6\udce1\u0099|",
+        "modelType": "DataSpecificationUom"
       }
     },
     {
@@ -146,7 +147,8 @@
             "text": "<\u0103<P\udb63\udc7d\u00b2|dn\u009c\u00de\u00ae"
           }
         ],
-        "modelType": "DataSpecificationIec61360"
+        "symbol": "11\u00d5\u00d1\ud803\udee8\u00b4K\udbca\udf2de<\udb45\uddde\u00a8ngA",
+        "modelType": "DataSpecificationUom"
       }
     }
   ],

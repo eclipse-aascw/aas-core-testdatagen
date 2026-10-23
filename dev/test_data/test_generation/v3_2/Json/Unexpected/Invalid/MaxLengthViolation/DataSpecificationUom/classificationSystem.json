@@ -1,0 +1,34 @@
+{
+  "preferredName": [
+    {
+      "language": "en-JM-x-c7dddb5b",
+      "text": "6"
+    }
+  ],
+  "symbol": "11\u00d5\u00d1\ud803\udee8\u00b4K\udbca\udf2de<\udb45\uddde\u00a8ngA",
+  "specificUnitId": "11\u00d5\u00d1\ud803\udee8\u00b4K\udbca\udf2de<\udb45\uddde\u00a8ngA",
+  "definition": [
+    {
+      "language": "en-JM-x-b7bc1552",
+      "text": "11\u00d5\u00d1\ud803\udee8\u00b4K\udbca\udf2de<\udb45\uddde\u00a8ngA"
+    }
+  ],
+  "preferredNameQuantity": [
+    {
+      "language": "en-JM-x-86de9a4b",
+      "text": "<\u0103<P\udb63\udc7d\u00b2|dn\u009c\u00de\u00ae"
+    },
+    {
+      "language": "en-JM-x-9bd9cd32",
+      "text": "\ud842\udd224\ud842\udd22"
+    },
+    {
+      "language": "en-JM-x-3d2061f3",
+      "text": "J5"
+    }
+  ],
+  "quantityId": "11\u00d5\u00d1\ud803\udee8\u00b4K\udbca\udf2de<\udb45\uddde\u00a8ngA",
+  "classificationSystem": "<\u0103<P\udb63\udc7d\u00b2|dn\u009c\u00de\u00ae12345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345",
+  "classificationSystemVersion": "11\u00d5\u00d1\ud803\udee8\u00b4K\udbca\udf2de<\udb45\uddde\u00a8ngA",
+  "modelType": "DataSpecificationUom"
+}

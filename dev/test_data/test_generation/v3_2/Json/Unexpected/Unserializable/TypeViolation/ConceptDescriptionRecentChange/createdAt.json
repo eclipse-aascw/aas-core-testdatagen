@@ -1,0 +1,13 @@
+{
+  "createdAt": {
+    "type": "ExternalReference",
+    "keys": [
+      {
+        "type": "GlobalReference",
+        "value": "unexpected reference"
+      }
+    ]
+  },
+  "updatedAt": "2022-04-01T24:00:00Z",
+  "id": "0"
+}

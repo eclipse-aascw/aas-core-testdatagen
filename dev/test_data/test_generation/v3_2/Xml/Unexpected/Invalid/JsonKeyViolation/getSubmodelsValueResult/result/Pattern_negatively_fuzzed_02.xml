@@ -1,0 +1,48 @@
+<getSubmodelsValueResult xmlns="https://admin-shell.io/aas/3/2">
+  <pagingMetadata />
+  <result>
+    <member xmlns="">
+      <name>15</name>
+      <value>
+        <string>something_674111b6</string>
+      </value>
+    </member>
+    <member xmlns="">
+      <name>nRdRe</name>
+      <value>
+        <double>19940151.74</double>
+      </value>
+    </member>
+    <member xmlns="">
+      <name>P7gn</name>
+      <value>
+        <boolean>0</boolean>
+      </value>
+    </member>
+    <member xmlns="">
+      <name>AopQejF</name>
+      <value>
+        <array>
+          <data>
+            <value>
+              <string>something_b80208ec</string>
+            </value>
+            <value>
+              <double>20105121.76</double>
+            </value>
+            <value>
+              <struct>
+                <member>
+                  <name>nested</name>
+                  <value>
+                    <boolean>1</boolean>
+                  </value>
+                </member>
+              </struct>
+            </value>
+          </data>
+        </array>
+      </value>
+    </member>
+  </result>
+</getSubmodelsValueResult>

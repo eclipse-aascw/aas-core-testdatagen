@@ -1,0 +1,21 @@
+<annotatedRelationshipElementValue xmlns="https://admin-shell.io/aas/3/2">
+  <first>
+    <type>ExternalReference</type>
+    <keys>
+      <key>
+        <type>GlobalReference</type>
+        <value>urn:an-example:07:f74c3f33</value>
+      </key>
+    </keys>
+  </first>
+  <second>
+    <type>ExternalReference</type>
+    <keys>
+      <key>
+        <type>GlobalReference</type>
+        <value>urn:example:00:9301d0e0</value>
+      </key>
+    </keys>
+  </second>
+  <annotations>Unexpected string value</annotations>
+</annotatedRelationshipElementValue>

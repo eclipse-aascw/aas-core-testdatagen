@@ -1,0 +1,4 @@
+<hexLiteral xmlns="https://admin-shell.io/aas/3/2">
+  <hexVal>16#1</hexVal>
+  <unexpectedAdditionalProperty>UNEXPECTED-ADDITIONAL-PROPERTY</unexpectedAdditionalProperty>
+</hexLiteral>

@@ -1,0 +1,8 @@
+<year xmlns="https://admin-shell.io/aas/3/2">
+  <year>
+    <dateTimeLiteral>
+      <dateTimeVal>2023-01-01T24:00:00</dateTimeVal>
+    </dateTimeLiteral>
+  </year>
+  <unexpectedAdditionalProperty>UNEXPECTED-ADDITIONAL-PROPERTY</unexpectedAdditionalProperty>
+</year>

@@ -1,0 +1,6 @@
+{
+  "$dateTimeCast": {
+    "$strVal": "something_431540db"
+  },
+  "unexpectedAdditionalProperty": "UNEXPECTED-ADDITIONAL-PROPERTY"
+}

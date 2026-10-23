@@ -1,0 +1,93 @@
+<operationRequestAsyncValueOnly xmlns="https://admin-shell.io/aas/3/2">
+  <inputArguments>
+    <member xmlns="">
+      <name>xF2bO_Uje6</name>
+      <value>
+        <string>something_bbde819d</string>
+      </value>
+    </member>
+    <member xmlns="">
+      <name>nRdRe</name>
+      <value>
+        <double>31697300.43</double>
+      </value>
+    </member>
+    <member xmlns="">
+      <name>a-_-_-_-_-_</name>
+      <value>
+        <boolean>1</boolean>
+      </value>
+    </member>
+    <member xmlns="">
+      <name>pVz10Vz10vZZNO9hM</name>
+      <value>
+        <array>
+          <data>
+            <value>
+              <string>something_410ccad8</string>
+            </value>
+            <value>
+              <double>28056891.92</double>
+            </value>
+            <value>
+              <struct>
+                <member>
+                  <name>nested</name>
+                  <value>
+                    <boolean>0</boolean>
+                  </value>
+                </member>
+              </struct>
+            </value>
+          </data>
+        </array>
+      </value>
+    </member>
+  </inputArguments>
+  <inoutputArguments>
+    <member xmlns="">
+      <name>15</name>
+      <value>
+        <string>something_ab23bd21</string>
+      </value>
+    </member>
+    <member xmlns="">
+      <name>EO5DYAe</name>
+      <value>
+        <double>37181367.93</double>
+      </value>
+    </member>
+    <member xmlns="">
+      <name>aa</name>
+      <value>
+        <boolean>1</boolean>
+      </value>
+    </member>
+    <member xmlns="">
+      <name>a-_</name>
+      <value>
+        <array>
+          <data>
+            <value>
+              <string>something_7829b778</string>
+            </value>
+            <value>
+              <double>8436010.71</double>
+            </value>
+            <value>
+              <struct>
+                <member>
+                  <name>nested</name>
+                  <value>
+                    <boolean>0</boolean>
+                  </value>
+                </member>
+              </struct>
+            </value>
+          </data>
+        </array>
+      </value>
+    </member>
+  </inoutputArguments>
+  <clientTimeoutDuration>P5Y36660767143M</clientTimeoutDuration>
+</operationRequestAsyncValueOnly>

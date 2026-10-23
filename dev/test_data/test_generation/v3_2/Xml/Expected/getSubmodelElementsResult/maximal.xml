@@ -1,0 +1,11 @@
+<getSubmodelElementsResult xmlns="https://admin-shell.io/aas/3/2">
+  <pagingMetadata />
+  <result>
+    <capability>
+      <idShort>fULCVpULCVq</idShort>
+    </capability>
+    <file>
+      <idShort>P7gn</idShort>
+    </file>
+  </result>
+</getSubmodelElementsResult>

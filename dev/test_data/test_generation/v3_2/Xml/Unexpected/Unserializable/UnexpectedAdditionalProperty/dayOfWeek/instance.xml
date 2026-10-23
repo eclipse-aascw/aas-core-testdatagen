@@ -1,0 +1,8 @@
+<dayOfWeek xmlns="https://admin-shell.io/aas/3/2">
+  <dayOfWeek>
+    <dateTimeLiteral>
+      <dateTimeVal>2023-12-31T23:59</dateTimeVal>
+    </dateTimeLiteral>
+  </dayOfWeek>
+  <unexpectedAdditionalProperty>UNEXPECTED-ADDITIONAL-PROPERTY</unexpectedAdditionalProperty>
+</dayOfWeek>

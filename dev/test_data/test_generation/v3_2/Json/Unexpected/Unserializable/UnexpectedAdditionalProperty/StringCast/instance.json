@@ -1,0 +1,8 @@
+{
+  "$strCast": {
+    "$attribute": {
+      "GLOBAL": "ANONYMOUS"
+    }
+  },
+  "unexpectedAdditionalProperty": "UNEXPECTED-ADDITIONAL-PROPERTY"
+}

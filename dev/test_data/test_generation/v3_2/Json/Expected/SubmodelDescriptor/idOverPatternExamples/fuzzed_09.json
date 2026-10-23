@@ -1,0 +1,23 @@
+{
+  "endpoints": [
+    {
+      "protocolInformation": {
+        "href": "something_9e563111"
+      },
+      "interface": "<\u0103<P\udb63\udc7d\u00b2|dn\u009c\u00de\u00ae"
+    },
+    {
+      "protocolInformation": {
+        "href": "something_5dae1086"
+      },
+      "interface": "<\u0103<P\udb63\udc7d\u00b2|dn\u009c\u00de\u00ae"
+    },
+    {
+      "protocolInformation": {
+        "href": "something_b8ea5b5e"
+      },
+      "interface": "<\u0103<P\udb63\udc7d\u00b2|dn\u009c\u00de\u00ae"
+    }
+  ],
+  "id": "<\u0103<P\udb63\udc7d\u00b2|dn\u009c\u00de\u00ae"
+}

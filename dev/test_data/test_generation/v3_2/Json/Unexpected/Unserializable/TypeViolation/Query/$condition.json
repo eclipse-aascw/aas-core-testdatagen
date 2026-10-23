@@ -1,0 +1,49 @@
+{
+  "$select": "id",
+  "$condition": "Unexpected string value",
+  "$filters": [
+    {
+      "$fragment": "$sme",
+      "$condition": {
+        "$regex": [
+          {
+            "$attribute": {
+              "GLOBAL": "UTCNOW"
+            }
+          },
+          {
+            "$attribute": {
+              "CLAIM": "something_64e5a93b"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "$fragment": "$sme.prop#value",
+      "$condition": {
+        "$regex": [
+          {
+            "$strVal": "something_4962fdb9"
+          },
+          {
+            "$strVal": "something_933fd2a5"
+          }
+        ]
+      }
+    },
+    {
+      "$fragment": "$sme.prop#value",
+      "$condition": {
+        "$gt": [
+          {
+            "$hexVal": "16#1"
+          },
+          {
+            "$hexVal": "16#00"
+          }
+        ]
+      }
+    }
+  ]
+}

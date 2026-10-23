@@ -1,0 +1,14 @@
+<utterlyInvalid xmlns="https://admin-shell.io/aas/3/2">
+  <contains>
+    <attributeOperand>
+      <attribute>
+        <claimAttribute>
+          <claim>something_aa87dee6</claim>
+        </claimAttribute>
+      </attribute>
+    </attributeOperand>
+    <fieldOperand>
+      <field>$sme.list[3].prop#valueType</field>
+    </fieldOperand>
+  </contains>
+</utterlyInvalid>

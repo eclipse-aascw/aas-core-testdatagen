@@ -1,0 +1,43 @@
+{
+  "executionState": "Running",
+  "messages": [
+    {
+      "messageType": "Warning",
+      "text": "something_fc5e4647"
+    },
+    {
+      "messageType": "Error",
+      "text": "something_ff32f5c8"
+    }
+  ],
+  "success": false,
+  "outputArguments": [
+    {
+      "value": {
+        "idShort": "somethingd6d6ab05",
+        "valueType": "xs:string",
+        "modelType": "Range"
+      }
+    },
+    {
+      "value": {
+        "idShort": "something702c736e",
+        "modelType": "Entity"
+      }
+    },
+    {
+      "value": {
+        "idShort": "something63bf5473",
+        "modelType": "File"
+      }
+    }
+  ],
+  "inoutputArguments": [
+    {
+      "value": {
+        "idShort": "something291e2566",
+        "modelType": "SubmodelElementCollection"
+      }
+    }
+  ]
+}

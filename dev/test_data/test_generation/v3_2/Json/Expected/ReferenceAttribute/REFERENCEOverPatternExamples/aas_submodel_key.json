@@ -1,0 +1,3 @@
+{
+  "REFERENCE": "$aas(\"urn:aas:1\")#submodels[0].keys[0].value"
+}

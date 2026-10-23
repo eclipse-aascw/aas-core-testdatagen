@@ -1,0 +1,12 @@
+{
+  "messages": [
+    {
+      "messageType": "Warning",
+      "text": "something_fc5e4647"
+    },
+    {
+      "messageType": "Error",
+      "text": "something_ff32f5c8"
+    }
+  ]
+}

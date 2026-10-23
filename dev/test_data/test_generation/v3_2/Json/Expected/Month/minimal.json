@@ -1,0 +1,7 @@
+{
+  "$month": {
+    "$attribute": {
+      "GLOBAL": "CLIENTNOW"
+    }
+  }
+}

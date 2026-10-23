@@ -1,0 +1,34 @@
+{
+  "executionState": "Running",
+  "messages": "Unexpected string value",
+  "success": false,
+  "outputArguments": [
+    {
+      "value": {
+        "idShort": "somethingd6d6ab05",
+        "valueType": "xs:string",
+        "modelType": "Range"
+      }
+    },
+    {
+      "value": {
+        "idShort": "something702c736e",
+        "modelType": "Entity"
+      }
+    },
+    {
+      "value": {
+        "idShort": "something63bf5473",
+        "modelType": "File"
+      }
+    }
+  ],
+  "inoutputArguments": [
+    {
+      "value": {
+        "idShort": "something291e2566",
+        "modelType": "SubmodelElementCollection"
+      }
+    }
+  ]
+}

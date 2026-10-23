@@ -1,0 +1,17 @@
+{
+  "entityType": "CoManagedEntity",
+  "globalAssetId": "0",
+  "specificAssetIds": [],
+  "statements": {
+    "aa": "something_ef8d35ae",
+    "a-_-_-_-_-_": 14955386.36,
+    "fULCVpULCVq": false,
+    "strange-name_": [
+      "something_a6bc72af",
+      40013686.16,
+      {
+        "nested": true
+      }
+    ]
+  }
+}

@@ -1,0 +1,14 @@
+<andExpression xmlns="https://admin-shell.io/aas/3/2">
+  <andOperands>
+    <containsComparison>
+      <contains>
+        <fieldOperand>
+          <field>$aas#idShort</field>
+        </fieldOperand>
+        <fieldOperand>
+          <field>$aasdesc#endpoints[0].protocolinformation.href</field>
+        </fieldOperand>
+      </contains>
+    </containsComparison>
+  </andOperands>
+</andExpression>

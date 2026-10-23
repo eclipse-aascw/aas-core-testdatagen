@@ -1,0 +1,3 @@
+{
+  "REFERENCE": "$sme(\"sm1\").coll.list[0].prop#valueType"
+}

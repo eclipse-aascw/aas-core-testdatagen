@@ -1,0 +1,7 @@
+<pagedResult xmlns="https://admin-shell.io/aas/3/2">
+  <result>
+    <annotatedRelationshipElementMetadata />
+    <annotatedRelationshipElement />
+  </result>
+  <pagingMetadata>Unexpected string value</pagingMetadata>
+</pagedResult>

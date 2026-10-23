@@ -1,0 +1,11 @@
+{
+  "observed": {
+    "type": "ExternalReference",
+    "keys": [
+      {
+        "type": "GlobalReference",
+        "value": "urn:yet-another-company:02:3262900a"
+      }
+    ]
+  }
+}

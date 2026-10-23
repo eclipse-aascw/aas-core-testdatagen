@@ -1,0 +1,14 @@
+<orExpression xmlns="https://admin-shell.io/aas/3/2">
+  <orOperands>
+    <lessThanOrEqualComparison>
+      <le>
+        <hexLiteral>
+          <hexVal>16#DEADBEEF</hexVal>
+        </hexLiteral>
+        <hexLiteral>
+          <hexVal>16#00</hexVal>
+        </hexLiteral>
+      </le>
+    </lessThanOrEqualComparison>
+  </orOperands>
+</orExpression>

@@ -1,0 +1,6 @@
+{
+  "$attribute": {
+    "GLOBAL": "CLIENTNOW"
+  },
+  "unexpectedAdditionalProperty": "UNEXPECTED-ADDITIONAL-PROPERTY"
+}

@@ -1,0 +1,10 @@
+<equalComparison xmlns="https://admin-shell.io/aas/3/2">
+  <eq>
+    <dateTimeLiteral>
+      <dateTimeVal>2023-01-01T24:00:00</dateTimeVal>
+    </dateTimeLiteral>
+    <dateTimeLiteral>
+      <dateTimeVal>2023-01-01T00:00:00.123+01:00</dateTimeVal>
+    </dateTimeLiteral>
+  </eq>
+</equalComparison>

@@ -1,0 +1,28 @@
+<operationRequestAsync xmlns="https://admin-shell.io/aas/3/2">
+  <inputArguments>
+    <operationVariable>
+      <value>
+        <range>
+          <idShort>something01a52cdc</idShort>
+          <valueType>xs:hexBinary</valueType>
+        </range>
+      </value>
+    </operationVariable>
+    <operationVariable>
+      <value>
+        <file>
+          <idShort>something854a0297</idShort>
+        </file>
+      </value>
+    </operationVariable>
+    <operationVariable>
+      <value>
+        <blob>
+          <idShort>something433fbada</idShort>
+        </blob>
+      </value>
+    </operationVariable>
+  </inputArguments>
+  <inoutputArguments>Unexpected string value</inoutputArguments>
+  <clientTimeoutDuration>P5Y36660767143M</clientTimeoutDuration>
+</operationRequestAsync>

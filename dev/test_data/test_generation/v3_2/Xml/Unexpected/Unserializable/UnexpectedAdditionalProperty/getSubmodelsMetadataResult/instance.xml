@@ -1,0 +1,4 @@
+<getSubmodelsMetadataResult xmlns="https://admin-shell.io/aas/3/2">
+  <pagingMetadata />
+  <unexpectedAdditionalProperty>UNEXPECTED-ADDITIONAL-PROPERTY</unexpectedAdditionalProperty>
+</getSubmodelsMetadataResult>

@@ -1,0 +1,4 @@
+<timeLiteral xmlns="https://admin-shell.io/aas/3/2">
+  <timeVal>12:00:00+01:00</timeVal>
+  <unexpectedAdditionalProperty>UNEXPECTED-ADDITIONAL-PROPERTY</unexpectedAdditionalProperty>
+</timeLiteral>

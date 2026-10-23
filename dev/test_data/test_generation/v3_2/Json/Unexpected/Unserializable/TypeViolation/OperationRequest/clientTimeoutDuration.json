@@ -1,0 +1,40 @@
+{
+  "inputArguments": [
+    {
+      "value": {
+        "idShort": "something01a52cdc",
+        "valueType": "xs:hexBinary",
+        "modelType": "Range"
+      }
+    },
+    {
+      "value": {
+        "idShort": "something854a0297",
+        "modelType": "File"
+      }
+    },
+    {
+      "value": {
+        "idShort": "something433fbada",
+        "modelType": "Blob"
+      }
+    }
+  ],
+  "inoutputArguments": [
+    {
+      "value": {
+        "idShort": "something291e2566",
+        "modelType": "SubmodelElementCollection"
+      }
+    }
+  ],
+  "clientTimeoutDuration": {
+    "type": "ExternalReference",
+    "keys": [
+      {
+        "type": "GlobalReference",
+        "value": "unexpected reference"
+      }
+    ]
+  }
+}

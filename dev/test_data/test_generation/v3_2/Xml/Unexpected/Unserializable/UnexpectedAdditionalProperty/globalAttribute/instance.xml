@@ -1,0 +1,4 @@
+<globalAttribute xmlns="https://admin-shell.io/aas/3/2">
+  <kind>ANONYMOUS</kind>
+  <unexpectedAdditionalProperty>UNEXPECTED-ADDITIONAL-PROPERTY</unexpectedAdditionalProperty>
+</globalAttribute>

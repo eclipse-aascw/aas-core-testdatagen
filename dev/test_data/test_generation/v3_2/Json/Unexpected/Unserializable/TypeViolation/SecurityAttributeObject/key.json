@@ -1,0 +1,13 @@
+{
+  "type": "W3C_DID",
+  "key": {
+    "type": "ExternalReference",
+    "keys": [
+      {
+        "type": "GlobalReference",
+        "value": "unexpected reference"
+      }
+    ]
+  },
+  "value": "something_472688c5"
+}
