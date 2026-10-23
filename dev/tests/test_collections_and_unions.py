@@ -453,6 +453,48 @@ class TestToyMetaModel(unittest.TestCase):
         anything = maximal.properties[Identifier("anything")]
         self.assertIsInstance(anything, preseria.JsonObject)
 
+    def test_json_key_violations(self) -> None:
+        generator = _ToyGenerator(self.verificator)
+        cls = self.symbol_table.must_find_concrete_class(Identifier("Bag"))
+        path_hash = common.hash_path(prefix_hash=None, segment_or_segments=[])
+        maximal = generator.generate_maximal_concrete_instance(path_hash, cls)
+
+        constraints = self.verificator.constraints_by_class[cls]
+        mapping = cls.properties_by_name[Identifier("mapping")]
+
+        violations = generation.generate_json_key_violations(
+            instance=maximal,
+            property_name=Identifier("mapping"),
+            key_constraints=constraints[mapping].key_constraints,
+        )
+        self.assertEqual(
+            ["MaxLength", "MinLength"], sorted(name for name, _ in violations)
+        )
+        for name, instance in violations:
+            self.assertIsNotNone(self._errors(instance), name)
+
+        # The keys of 'anything' are unconstrained: nothing to violate.
+        anything = cls.properties_by_name[Identifier("anything")]
+        self.assertEqual(
+            [],
+            generation.generate_json_key_violations(
+                instance=maximal,
+                property_name=Identifier("anything"),
+                key_constraints=constraints[anything].key_constraints,
+            ),
+        )
+
+        # The items of a list of JSON objects are mutated as well.
+        many = cls.properties_by_name[Identifier("many")]
+        violations = generation.generate_json_key_violations(
+            instance=maximal,
+            property_name=Identifier("many"),
+            key_constraints=constraints[many].key_constraints,
+        )
+        self.assertEqual(2, len(violations))
+        for name, instance in violations:
+            self.assertIsNotNone(self._errors(instance), name)
+
     def test_generation_of_list_of_primitives(self) -> None:
         generator = _ToyGenerator(self.verificator)
         cls = self.symbol_table.must_find_concrete_class(Identifier("Named"))

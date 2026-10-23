@@ -110,6 +110,24 @@ class CasePatternViolation(NegativeCase):
         self.example_name = example_name
 
 
+class CaseJsonKeyViolation(NegativeCase):
+    """Represent a test case where a key of a JSON object violates its constraints."""
+
+    property_name: Final[Identifier]
+    example_name: Final[Filenameable]
+
+    def __init__(
+        self,
+        instance: preseria.ImmutableInstance,
+        property_name: Identifier,
+        example_name: Filenameable,
+    ) -> None:
+        """Initialize with the given values."""
+        super().__init__(instance=instance)
+        self.property_name = property_name
+        self.example_name = example_name
+
+
 class CaseRequiredViolation(NegativeCase):
     """Represent a test case where a required property is missing."""
 
@@ -319,6 +337,7 @@ CaseUnion: TypeAlias = Union[
     CaseTypeViolation,
     CasePositivePatternExample,
     CasePatternViolation,
+    CaseJsonKeyViolation,
     CaseRequiredViolation,
     CaseMinLengthViolation,
     CaseMaxLengthViolation,
