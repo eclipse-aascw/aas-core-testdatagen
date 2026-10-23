@@ -39,6 +39,21 @@ _NO_CONSTRAINTS: Final = verification.PropertyConstraints(
 )
 
 
+def _order_created_at_before_updated_at(instance: preseria.Instance) -> None:
+    """
+    Make ``created_at`` strictly precede ``updated_at``, if both are set.
+
+    Since V3.2, the creation time of administrative information must be before its
+    update time, whereas the independently generated values are often equal.
+    """
+    created_at = Identifier("created_at")
+    updated_at = Identifier("updated_at")
+
+    if created_at in instance.properties and updated_at in instance.properties:
+        instance.properties[created_at] = "2022-04-01T12:00:00Z"
+        instance.properties[updated_at] = "2022-04-02T12:00:00Z"
+
+
 class InstanceGenerator(abc.ABC):
     """Define the generation of instances of classes for the given meta-model."""
 
@@ -538,7 +553,11 @@ class InstanceGenerator(abc.ABC):
                 constraints=constraints_by_property[prop],
             )
 
-        return preseria.Instance(properties=preseria_properties, class_name=cls.name)
+        instance = preseria.Instance(
+            properties=preseria_properties, class_name=cls.name
+        )
+        _order_created_at_before_updated_at(instance)
+        return instance
 
     def _make_instance_maximal_in_situ(
         self, path_hash: common.CanHash, instance: preseria.Instance
@@ -559,6 +578,8 @@ class InstanceGenerator(abc.ABC):
                 type_annotation=intermediate.beneath_optional(prop.type_annotation),
                 constraints=constraints_by_property[prop],
             )
+
+        _order_created_at_before_updated_at(instance)
 
     def _with_single_element_lists(self, element: preseria.Instance) -> None:
         """Make all the submodel element lists in the tree have exactly one element."""

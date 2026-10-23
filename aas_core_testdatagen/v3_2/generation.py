@@ -294,6 +294,42 @@ class CaseGenerator(generation.CaseGenerator):
             name=generation.test_name_from_function_name(),
         )
 
+    def _administrative_information_with_dates(
+        self, created_at: str, updated_at: str
+    ) -> preseria.Instance:
+        """Generate administrative information with the given creation/update times."""
+        instance = self.instance_generator.generate_maximal_concrete_instance(
+            path_hash=common.hash_path(None, ["administrative_information"]),
+            cls=self.symbol_table.must_find_concrete_class(
+                Identifier("Administrative_information")
+            ),
+        )
+
+        instance.properties[Identifier("created_at")] = created_at
+        instance.properties[Identifier("updated_at")] = updated_at
+
+        return instance
+
+    def _generate_created_at_equal_to_updated_at(
+        self,
+    ) -> Iterator[casing.CaseConstraintViolation]:
+        yield casing.CaseConstraintViolation(
+            instance=self._administrative_information_with_dates(
+                "2022-04-01T12:00:00Z", "2022-04-01T12:00:00Z"
+            ),
+            name=generation.test_name_from_function_name(),
+        )
+
+    def _generate_created_at_after_updated_at(
+        self,
+    ) -> Iterator[casing.CaseConstraintViolation]:
+        yield casing.CaseConstraintViolation(
+            instance=self._administrative_information_with_dates(
+                "2022-04-02T12:00:00Z", "2022-04-01T12:00:00Z"
+            ),
+            name=generation.test_name_from_function_name(),
+        )
+
     def generate(self) -> Iterator[casing.CaseUnion]:
         """Generate the cases."""
         for sub_generator in self._sub_generators:
@@ -312,6 +348,8 @@ class CaseGenerator(generation.CaseGenerator):
             self._generate_external_reference_with_property_key,
             self._generate_operation_variable_list_with_two_elements,
             self._generate_operation_variable_list_without_elements,
+            self._generate_created_at_equal_to_updated_at,
+            self._generate_created_at_after_updated_at,
         ]
 
         for bound_generate_method in bound_generate_methods:
