@@ -1,7 +1,7 @@
 """Generate the test data assuming the logic based on pillars of the meta-model V3.2."""
 
 import collections
-from typing import Final, Iterator, Sequence, Callable
+from typing import Final, Iterator, Optional, Sequence, Callable
 
 from aas_core_codegen import intermediate
 from aas_core_codegen.common import Identifier
