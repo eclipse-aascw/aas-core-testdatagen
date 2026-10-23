@@ -1,0 +1,11 @@
+<utterlyInvalid xmlns="https://admin-shell.io/aas/3/2">
+  <strCast>
+    <attributeOperand>
+      <attribute>
+        <globalAttribute>
+          <kind>ANONYMOUS</kind>
+        </globalAttribute>
+      </attribute>
+    </attributeOperand>
+  </strCast>
+</utterlyInvalid>

@@ -1,0 +1,10 @@
+<utterlyInvalid xmlns="https://admin-shell.io/aas/3/2">
+  <ne>
+    <dateTimeLiteral>
+      <dateTimeVal>2023-06-15T08:30:00-05:00</dateTimeVal>
+    </dateTimeLiteral>
+    <dateTimeLiteral>
+      <dateTimeVal>2024-02-29T12:00:00Z</dateTimeVal>
+    </dateTimeLiteral>
+  </ne>
+</utterlyInvalid>

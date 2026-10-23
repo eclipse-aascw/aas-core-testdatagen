@@ -1,0 +1,10 @@
+<month xmlns="https://admin-shell.io/aas/3/2">
+  <month>
+    <dateTimeAttributeOperand>
+      <attribute>
+        <kind>CLIENTNOW</kind>
+      </attribute>
+    </dateTimeAttributeOperand>
+  </month>
+  <unexpectedAdditionalProperty>UNEXPECTED-ADDITIONAL-PROPERTY</unexpectedAdditionalProperty>
+</month>

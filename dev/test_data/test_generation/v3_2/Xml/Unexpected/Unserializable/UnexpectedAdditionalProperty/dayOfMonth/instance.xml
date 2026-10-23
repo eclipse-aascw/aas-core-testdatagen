@@ -1,0 +1,10 @@
+<dayOfMonth xmlns="https://admin-shell.io/aas/3/2">
+  <dayOfMonth>
+    <dateTimeAttributeOperand>
+      <attribute>
+        <kind>LOCALNOW</kind>
+      </attribute>
+    </dateTimeAttributeOperand>
+  </dayOfMonth>
+  <unexpectedAdditionalProperty>UNEXPECTED-ADDITIONAL-PROPERTY</unexpectedAdditionalProperty>
+</dayOfMonth>

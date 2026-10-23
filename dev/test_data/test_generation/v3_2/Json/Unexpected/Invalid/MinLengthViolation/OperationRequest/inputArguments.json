@@ -1,0 +1,12 @@
+{
+  "inputArguments": [],
+  "inoutputArguments": [
+    {
+      "value": {
+        "idShort": "something291e2566",
+        "modelType": "SubmodelElementCollection"
+      }
+    }
+  ],
+  "clientTimeoutDuration": "P5Y36660767143M"
+}

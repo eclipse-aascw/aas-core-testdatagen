@@ -1,0 +1,25 @@
+{
+  "inputArguments": [
+    {
+      "value": {
+        "idShort": "something01a52cdc",
+        "valueType": "xs:hexBinary",
+        "modelType": "Range"
+      }
+    },
+    {
+      "value": {
+        "idShort": "something854a0297",
+        "modelType": "File"
+      }
+    },
+    {
+      "value": {
+        "idShort": "something433fbada",
+        "modelType": "Blob"
+      }
+    }
+  ],
+  "inoutputArguments": "Unexpected string value",
+  "clientTimeoutDuration": "P5Y36660767143M"
+}

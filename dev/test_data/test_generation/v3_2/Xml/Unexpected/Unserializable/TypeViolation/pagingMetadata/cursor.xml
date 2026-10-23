@@ -1,0 +1,11 @@
+<pagingMetadata xmlns="https://admin-shell.io/aas/3/2">
+  <cursor>
+    <type>ExternalReference</type>
+    <keys>
+      <key>
+        <type>GlobalReference</type>
+        <value>unexpected reference</value>
+      </key>
+    </keys>
+  </cursor>
+</pagingMetadata>

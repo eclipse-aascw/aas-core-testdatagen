@@ -1,0 +1,14 @@
+<query xmlns="https://admin-shell.io/aas/3/2">
+  <condition>
+    <greaterThanOrEqualComparison>
+      <ge>
+        <hexLiteral>
+          <hexVal>16#1</hexVal>
+        </hexLiteral>
+        <hexLiteral>
+          <hexVal>16#1F</hexVal>
+        </hexLiteral>
+      </ge>
+    </greaterThanOrEqualComparison>
+  </condition>
+</query>

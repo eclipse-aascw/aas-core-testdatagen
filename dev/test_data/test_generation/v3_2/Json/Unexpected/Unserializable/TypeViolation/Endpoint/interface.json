@@ -1,0 +1,14 @@
+{
+  "protocolInformation": {
+    "href": "something_72d646a9"
+  },
+  "interface": {
+    "type": "ExternalReference",
+    "keys": [
+      {
+        "type": "GlobalReference",
+        "value": "unexpected reference"
+      }
+    ]
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "type": {
+    "type": "ExternalReference",
+    "keys": [
+      {
+        "type": "GlobalReference",
+        "value": "unexpected reference"
+      }
+    ]
+  },
+  "key": "something_18d259b9",
+  "value": "something_472688c5"
+}

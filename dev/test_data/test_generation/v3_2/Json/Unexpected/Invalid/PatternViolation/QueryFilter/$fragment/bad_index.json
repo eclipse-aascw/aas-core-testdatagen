@@ -1,0 +1,13 @@
+{
+  "$fragment": "$aas#submodels[x]",
+  "$condition": {
+    "$le": [
+      {
+        "$hexVal": "16#1"
+      },
+      {
+        "$hexVal": "16#1F"
+      }
+    ]
+  }
+}

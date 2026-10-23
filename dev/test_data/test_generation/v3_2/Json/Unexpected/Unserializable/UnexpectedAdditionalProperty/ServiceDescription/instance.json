@@ -1,0 +1,7 @@
+{
+  "profiles": [
+    "https://admin-shell.io/aas/API/3/0/SubmodelRegistryServiceSpecification/SSP-002",
+    "https://admin-shell.io/aas/API/3/2/AasxFileServerServiceSpecification/SSP-002"
+  ],
+  "unexpectedAdditionalProperty": "UNEXPECTED-ADDITIONAL-PROPERTY"
+}

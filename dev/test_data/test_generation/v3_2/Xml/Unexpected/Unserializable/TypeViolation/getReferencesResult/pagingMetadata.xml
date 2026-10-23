@@ -1,0 +1,23 @@
+<getReferencesResult xmlns="https://admin-shell.io/aas/3/2">
+  <pagingMetadata>Unexpected string value</pagingMetadata>
+  <result>
+    <reference>
+      <type>ExternalReference</type>
+      <keys>
+        <key>
+          <type>GlobalReference</type>
+          <value>urn:yet-another-company:00:1e454a20</value>
+        </key>
+      </keys>
+    </reference>
+    <reference>
+      <type>ExternalReference</type>
+      <keys>
+        <key>
+          <type>GlobalReference</type>
+          <value>urn:an-example:08:46556cf0</value>
+        </key>
+      </keys>
+    </reference>
+  </result>
+</getReferencesResult>

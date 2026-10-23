@@ -1,0 +1,11 @@
+<basicEventElementValue xmlns="https://admin-shell.io/aas/3/2">
+  <observed>
+    <type>ExternalReference</type>
+    <keys>
+      <key>
+        <type>GlobalReference</type>
+        <value>urn:yet-another-company:02:3262900a</value>
+      </key>
+    </keys>
+  </observed>
+</basicEventElementValue>

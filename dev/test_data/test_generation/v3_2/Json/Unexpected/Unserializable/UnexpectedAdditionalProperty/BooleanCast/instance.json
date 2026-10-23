@@ -1,0 +1,6 @@
+{
+  "$boolCast": {
+    "$strVal": "something_a3fe9637"
+  },
+  "unexpectedAdditionalProperty": "UNEXPECTED-ADDITIONAL-PROPERTY"
+}

@@ -1,0 +1,11 @@
+{
+  "$timeVal": {
+    "type": "ExternalReference",
+    "keys": [
+      {
+        "type": "GlobalReference",
+        "value": "unexpected reference"
+      }
+    ]
+  }
+}

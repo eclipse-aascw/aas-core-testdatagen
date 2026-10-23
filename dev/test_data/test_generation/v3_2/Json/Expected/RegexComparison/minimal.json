@@ -1,0 +1,12 @@
+{
+  "$regex": [
+    {
+      "$strVal": "something_72aad79d"
+    },
+    {
+      "$attribute": {
+        "CLAIM": "something_3bebb210"
+      }
+    }
+  ]
+}

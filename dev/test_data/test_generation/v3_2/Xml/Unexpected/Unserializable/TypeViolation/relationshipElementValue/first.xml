@@ -1,0 +1,12 @@
+<relationshipElementValue xmlns="https://admin-shell.io/aas/3/2">
+  <first>Unexpected string value</first>
+  <second>
+    <type>ExternalReference</type>
+    <keys>
+      <key>
+        <type>GlobalReference</type>
+        <value>urn:example:00:9301d0e0</value>
+      </key>
+    </keys>
+  </second>
+</relationshipElementValue>

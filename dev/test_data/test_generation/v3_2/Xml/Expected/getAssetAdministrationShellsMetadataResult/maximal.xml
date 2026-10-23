@@ -1,0 +1,11 @@
+<getAssetAdministrationShellsMetadataResult xmlns="https://admin-shell.io/aas/3/2">
+  <pagingMetadata />
+  <result>
+    <assetAdministrationShellMetadata>
+      <id>6</id>
+    </assetAdministrationShellMetadata>
+    <assetAdministrationShellMetadata>
+      <id>öĖa􍣡|</id>
+    </assetAdministrationShellMetadata>
+  </result>
+</getAssetAdministrationShellsMetadataResult>

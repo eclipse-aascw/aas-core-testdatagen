@@ -1,0 +1,12 @@
+{
+  "first": "Unexpected string value",
+  "second": {
+    "type": "ExternalReference",
+    "keys": [
+      {
+        "type": "GlobalReference",
+        "value": "urn:example:00:9301d0e0"
+      }
+    ]
+  }
+}

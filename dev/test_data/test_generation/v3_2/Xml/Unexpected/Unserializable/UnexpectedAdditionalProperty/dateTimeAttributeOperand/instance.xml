@@ -1,0 +1,6 @@
+<dateTimeAttributeOperand xmlns="https://admin-shell.io/aas/3/2">
+  <attribute>
+    <kind>CLIENTNOW</kind>
+  </attribute>
+  <unexpectedAdditionalProperty>UNEXPECTED-ADDITIONAL-PROPERTY</unexpectedAdditionalProperty>
+</dateTimeAttributeOperand>

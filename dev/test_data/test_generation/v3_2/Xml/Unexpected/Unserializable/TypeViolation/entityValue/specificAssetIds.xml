@@ -1,0 +1,50 @@
+<entityValue xmlns="https://admin-shell.io/aas/3/2">
+  <entityType>CoManagedEntity</entityType>
+  <globalAssetId>0</globalAssetId>
+  <specificAssetIds>Unexpected string value</specificAssetIds>
+  <statements>
+    <member xmlns="">
+      <name>aa</name>
+      <value>
+        <string>something_ef8d35ae</string>
+      </value>
+    </member>
+    <member xmlns="">
+      <name>a-_-_-_-_-_</name>
+      <value>
+        <double>14955386.36</double>
+      </value>
+    </member>
+    <member xmlns="">
+      <name>fULCVpULCVq</name>
+      <value>
+        <boolean>0</boolean>
+      </value>
+    </member>
+    <member xmlns="">
+      <name>strange-name_</name>
+      <value>
+        <array>
+          <data>
+            <value>
+              <string>something_a6bc72af</string>
+            </value>
+            <value>
+              <double>40013686.16</double>
+            </value>
+            <value>
+              <struct>
+                <member>
+                  <name>nested</name>
+                  <value>
+                    <boolean>1</boolean>
+                  </value>
+                </member>
+              </struct>
+            </value>
+          </data>
+        </array>
+      </value>
+    </member>
+  </statements>
+</entityValue>

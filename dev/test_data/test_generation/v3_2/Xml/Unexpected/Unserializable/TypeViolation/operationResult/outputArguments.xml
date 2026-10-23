@@ -1,0 +1,24 @@
+<operationResult xmlns="https://admin-shell.io/aas/3/2">
+  <executionState>Running</executionState>
+  <messages>
+    <message>
+      <messageType>Warning</messageType>
+      <text>something_fc5e4647</text>
+    </message>
+    <message>
+      <messageType>Error</messageType>
+      <text>something_ff32f5c8</text>
+    </message>
+  </messages>
+  <success>false</success>
+  <outputArguments>Unexpected string value</outputArguments>
+  <inoutputArguments>
+    <operationVariable>
+      <value>
+        <submodelElementCollection>
+          <idShort>something291e2566</idShort>
+        </submodelElementCollection>
+      </value>
+    </operationVariable>
+  </inoutputArguments>
+</operationResult>

@@ -1,0 +1,19 @@
+<getAssetAdministrationShellsResult xmlns="https://admin-shell.io/aas/3/2">
+  <pagingMetadata>Unexpected string value</pagingMetadata>
+  <result>
+    <assetAdministrationShell>
+      <id>6</id>
+      <assetInformation>
+        <assetKind>Instance</assetKind>
+        <globalAssetId>11ÕÑ𐻨´K􂬭e&lt;󡗞¨ngA</globalAssetId>
+      </assetInformation>
+    </assetAdministrationShell>
+    <assetAdministrationShell>
+      <id>öĖa􍣡|</id>
+      <assetInformation>
+        <assetKind>NotApplicable</assetKind>
+        <globalAssetId>򤑌M𪠇𛔊򂄲</globalAssetId>
+      </assetInformation>
+    </assetAdministrationShell>
+  </result>
+</getAssetAdministrationShellsResult>

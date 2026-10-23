@@ -1,0 +1,15 @@
+{
+  "messageType": "Exception",
+  "text": "something_24bc8444",
+  "code": "something_ee3c0402",
+  "correlationId": "\uda51\udc4cM\ud86a\udc07\ud82d\udd0a\ud9c8\udd32",
+  "timestamp": {
+    "type": "ExternalReference",
+    "keys": [
+      {
+        "type": "GlobalReference",
+        "value": "unexpected reference"
+      }
+    ]
+  }
+}

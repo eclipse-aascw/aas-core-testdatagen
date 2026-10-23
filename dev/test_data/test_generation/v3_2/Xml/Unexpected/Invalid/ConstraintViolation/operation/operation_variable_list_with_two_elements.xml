@@ -109,22 +109,23 @@
         </keys>
       </dataSpecification>
       <dataSpecificationContent>
-        <dataSpecificationIec61360>
+        <dataSpecificationUom>
           <preferredName>
-            <langStringPreferredNameTypeIec61360>
+            <langStringUom>
               <language>en-JM-x-915e0391</language>
               <text>J5</text>
-            </langStringPreferredNameTypeIec61360>
-            <langStringPreferredNameTypeIec61360>
+            </langStringUom>
+            <langStringUom>
               <language>en-JM-x-00896050</language>
               <text>𠤢4𠤢</text>
-            </langStringPreferredNameTypeIec61360>
-            <langStringPreferredNameTypeIec61360>
+            </langStringUom>
+            <langStringUom>
               <language>en-JM-x-f65f2fa5</language>
               <text>𠤢4𠤢</text>
-            </langStringPreferredNameTypeIec61360>
+            </langStringUom>
           </preferredName>
-        </dataSpecificationIec61360>
+          <symbol>öĖa􍣡|</symbol>
+        </dataSpecificationUom>
       </dataSpecificationContent>
     </embeddedDataSpecification>
     <embeddedDataSpecification>
@@ -138,18 +139,19 @@
         </keys>
       </dataSpecification>
       <dataSpecificationContent>
-        <dataSpecificationIec61360>
+        <dataSpecificationUom>
           <preferredName>
-            <langStringPreferredNameTypeIec61360>
+            <langStringUom>
               <language>en-JM-x-f075c583</language>
               <text>J5</text>
-            </langStringPreferredNameTypeIec61360>
-            <langStringPreferredNameTypeIec61360>
+            </langStringUom>
+            <langStringUom>
               <language>en-JM-x-65d445a2</language>
               <text>&lt;ă&lt;P󨱽²|dnÞ®</text>
-            </langStringPreferredNameTypeIec61360>
+            </langStringUom>
           </preferredName>
-        </dataSpecificationIec61360>
+          <symbol>11ÕÑ𐻨´K􂬭e&lt;󡗞¨ngA</symbol>
+        </dataSpecificationUom>
       </dataSpecificationContent>
     </embeddedDataSpecification>
   </embeddedDataSpecifications>

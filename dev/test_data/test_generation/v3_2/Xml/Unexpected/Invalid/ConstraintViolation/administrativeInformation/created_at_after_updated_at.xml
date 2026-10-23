@@ -11,14 +11,15 @@
         </keys>
       </dataSpecification>
       <dataSpecificationContent>
-        <dataSpecificationIec61360>
+        <dataSpecificationUom>
           <preferredName>
-            <langStringPreferredNameTypeIec61360>
+            <langStringUom>
               <language>en-JM-x-4138dab8</language>
               <text>[\h$񒺟ìÖċ1¿</text>
-            </langStringPreferredNameTypeIec61360>
+            </langStringUom>
           </preferredName>
-        </dataSpecificationIec61360>
+          <symbol>0</symbol>
+        </dataSpecificationUom>
       </dataSpecificationContent>
     </embeddedDataSpecification>
     <embeddedDataSpecification>
@@ -32,14 +33,15 @@
         </keys>
       </dataSpecification>
       <dataSpecificationContent>
-        <dataSpecificationIec61360>
+        <dataSpecificationUom>
           <preferredName>
-            <langStringPreferredNameTypeIec61360>
+            <langStringUom>
               <language>en-JM-x-ed3d945d</language>
               <text>𠤢4𠤢</text>
-            </langStringPreferredNameTypeIec61360>
+            </langStringUom>
           </preferredName>
-        </dataSpecificationIec61360>
+          <symbol>򤑌M𪠇𛔊򂄲</symbol>
+        </dataSpecificationUom>
       </dataSpecificationContent>
     </embeddedDataSpecification>
     <embeddedDataSpecification>
@@ -53,18 +55,19 @@
         </keys>
       </dataSpecification>
       <dataSpecificationContent>
-        <dataSpecificationIec61360>
+        <dataSpecificationUom>
           <preferredName>
-            <langStringPreferredNameTypeIec61360>
+            <langStringUom>
               <language>en-JM-x-03ed72b5</language>
               <text>J5</text>
-            </langStringPreferredNameTypeIec61360>
-            <langStringPreferredNameTypeIec61360>
+            </langStringUom>
+            <langStringUom>
               <language>en-JM-x-f78bd480</language>
               <text>11ÕÑ𐻨´K􂬭e&lt;󡗞¨ngA</text>
-            </langStringPreferredNameTypeIec61360>
+            </langStringUom>
           </preferredName>
-        </dataSpecificationIec61360>
+          <symbol>&lt;ă&lt;P󨱽²|dnÞ®</symbol>
+        </dataSpecificationUom>
       </dataSpecificationContent>
     </embeddedDataSpecification>
   </embeddedDataSpecifications>

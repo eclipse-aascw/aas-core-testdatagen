@@ -1,0 +1,4 @@
+<queryFilter xmlns="https://admin-shell.io/aas/3/2">
+  <fragment>$aas#submodels</fragment>
+  <condition>Unexpected string value</condition>
+</queryFilter>

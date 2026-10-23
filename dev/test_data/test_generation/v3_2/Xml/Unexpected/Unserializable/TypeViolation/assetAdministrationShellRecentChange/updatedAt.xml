@@ -1,0 +1,28 @@
+<assetAdministrationShellRecentChange xmlns="https://admin-shell.io/aas/3/2">
+  <createdAt>2022-04-01T12:00:00Z</createdAt>
+  <updatedAt>
+    <type>ExternalReference</type>
+    <keys>
+      <key>
+        <type>GlobalReference</type>
+        <value>unexpected reference</value>
+      </key>
+    </keys>
+  </updatedAt>
+  <id>0</id>
+  <globalAssetId>0</globalAssetId>
+  <specificAssetIds>
+    <specificAssetId>
+      <name>𠤢4𠤢</name>
+      <value>𠤢4𠤢</value>
+    </specificAssetId>
+    <specificAssetId>
+      <name>0</name>
+      <value>0</value>
+    </specificAssetId>
+    <specificAssetId>
+      <name>6</name>
+      <value>11ÕÑ𐻨´K􂬭e&lt;󡗞¨ngA</value>
+    </specificAssetId>
+  </specificAssetIds>
+</assetAdministrationShellRecentChange>

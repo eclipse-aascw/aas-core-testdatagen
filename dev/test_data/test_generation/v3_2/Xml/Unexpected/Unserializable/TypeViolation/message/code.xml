@@ -1,0 +1,15 @@
+<message xmlns="https://admin-shell.io/aas/3/2">
+  <messageType>Exception</messageType>
+  <text>something_24bc8444</text>
+  <code>
+    <type>ExternalReference</type>
+    <keys>
+      <key>
+        <type>GlobalReference</type>
+        <value>unexpected reference</value>
+      </key>
+    </keys>
+  </code>
+  <correlationId>򤑌M𪠇𛔊򂄲</correlationId>
+  <timestamp>123456789012345678901234567-04-01T00:00:00Z</timestamp>
+</message>

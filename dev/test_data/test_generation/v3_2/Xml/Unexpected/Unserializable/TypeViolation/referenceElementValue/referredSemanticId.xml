@@ -1,0 +1,14 @@
+<referenceElementValue xmlns="https://admin-shell.io/aas/3/2">
+  <type>ExternalReference</type>
+  <keys>
+    <key>
+      <type>Entity</type>
+      <value>0</value>
+    </key>
+    <key>
+      <type>RelationshipElement</type>
+      <value>Ûă&lt;P󨱽²|dnÞ®</value>
+    </key>
+  </keys>
+  <referredSemanticId>Unexpected string value</referredSemanticId>
+</referenceElementValue>

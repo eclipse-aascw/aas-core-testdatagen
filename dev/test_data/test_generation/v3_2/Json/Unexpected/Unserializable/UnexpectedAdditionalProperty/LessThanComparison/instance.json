@@ -1,0 +1,11 @@
+{
+  "$lt": [
+    {
+      "$hexVal": "16#1F"
+    },
+    {
+      "$hexVal": "16#1"
+    }
+  ],
+  "unexpectedAdditionalProperty": "UNEXPECTED-ADDITIONAL-PROPERTY"
+}

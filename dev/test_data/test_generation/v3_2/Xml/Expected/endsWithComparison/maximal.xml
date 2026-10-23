@@ -1,0 +1,14 @@
+<endsWithComparison xmlns="https://admin-shell.io/aas/3/2">
+  <endsWith>
+    <attributeOperand>
+      <attribute>
+        <referenceAttribute>
+          <reference>$sm("a\"b")#id</reference>
+        </referenceAttribute>
+      </attribute>
+    </attributeOperand>
+    <fieldOperand>
+      <field>$aas#assetInformation.assetKind</field>
+    </fieldOperand>
+  </endsWith>
+</endsWithComparison>

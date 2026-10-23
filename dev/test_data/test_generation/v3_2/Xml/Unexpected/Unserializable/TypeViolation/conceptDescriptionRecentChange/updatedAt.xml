@@ -1,0 +1,13 @@
+<conceptDescriptionRecentChange xmlns="https://admin-shell.io/aas/3/2">
+  <createdAt>2022-04-01T12:00:00Z</createdAt>
+  <updatedAt>
+    <type>ExternalReference</type>
+    <keys>
+      <key>
+        <type>GlobalReference</type>
+        <value>unexpected reference</value>
+      </key>
+    </keys>
+  </updatedAt>
+  <id>0</id>
+</conceptDescriptionRecentChange>

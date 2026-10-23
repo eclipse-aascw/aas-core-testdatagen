@@ -1,0 +1,7 @@
+<utterlyInvalid xmlns="https://admin-shell.io/aas/3/2">
+  <hexCast>
+    <fieldOperand>
+      <field>$sme.list[3].prop#valueType</field>
+    </fieldOperand>
+  </hexCast>
+</utterlyInvalid>

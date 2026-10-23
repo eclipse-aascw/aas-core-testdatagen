@@ -1,0 +1,16 @@
+<queryFilter xmlns="https://admin-shell.io/aas/3/2">
+  <fragment>$aas#submodels</fragment>
+  <condition>
+    <lessThanOrEqualComparison>
+      <le>
+        <hexLiteral>
+          <hexVal>16#1</hexVal>
+        </hexLiteral>
+        <hexLiteral>
+          <hexVal>16#1F</hexVal>
+        </hexLiteral>
+      </le>
+    </lessThanOrEqualComparison>
+  </condition>
+  <unexpectedAdditionalProperty>UNEXPECTED-ADDITIONAL-PROPERTY</unexpectedAdditionalProperty>
+</queryFilter>

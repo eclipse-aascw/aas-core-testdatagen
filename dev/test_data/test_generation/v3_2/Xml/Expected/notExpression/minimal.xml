@@ -1,0 +1,14 @@
+<notExpression xmlns="https://admin-shell.io/aas/3/2">
+  <notOperand>
+    <lessThanComparison>
+      <lt>
+        <dateTimeLiteral>
+          <dateTimeVal>2023-06-15T08:30:00-05:00</dateTimeVal>
+        </dateTimeLiteral>
+        <dateTimeLiteral>
+          <dateTimeVal>2023-01-01T24:00:00</dateTimeVal>
+        </dateTimeLiteral>
+      </lt>
+    </lessThanComparison>
+  </notOperand>
+</notExpression>
