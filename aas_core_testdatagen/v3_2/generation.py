@@ -20,9 +20,36 @@ from aas_core_testdatagen import (
 class InstanceGenerator(generation.InstanceGenerator):
     """Generate instances specific for the meta-model V3.2."""
 
-    # NOTE (mristin):
-    # So far, we have not found any constraints which we had to
-    # account for in V3.2.
+    @override
+    def generate_maximal_concrete_instance(
+        self,
+        path_hash: common.CanHash,
+        cls: intermediate.ConcreteClass,
+    ) -> preseria.Instance:
+        """Generate a maximal instance, accounting for the V3.2 constraints."""
+        instance = super().generate_maximal_concrete_instance(path_hash, cls)
+
+        if cls.name == "Get_submodel_elements_result":
+            result = instance.properties[Identifier("result")]
+            assert isinstance(result, preseria.ListOfInstances)
+
+            for i, item in enumerate(result.values):
+                # ID-shorts need to be defined for all the items of the result.
+                if "ID_short" in item.properties:
+                    continue
+
+                item_cls = self.symbol_table.must_find_concrete_class(item.class_name)
+                id_short_prop = item_cls.properties_by_name[Identifier("ID_short")]
+
+                item.properties[Identifier("ID_short")] = self.generate_value(
+                    path_hash=common.hash_path(path_hash, ["result", i, "ID_short"]),
+                    type_annotation=intermediate.beneath_optional(
+                        id_short_prop.type_annotation
+                    ),
+                    constraints=self.constraints_by_class[item_cls][id_short_prop],
+                )
+
+        return instance
 
 
 class CaseGenerator(generation.CaseGenerator):
