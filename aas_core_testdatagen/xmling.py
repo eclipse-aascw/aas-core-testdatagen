@@ -16,7 +16,7 @@ from aas_core_codegen import intermediate
 from aas_core_codegen.common import assert_never, Identifier
 from icontract import ensure, require, invariant
 
-from aas_core_testdatagen import preseria, casing, generation, seria, common
+from aas_core_testdatagen import preseria, casing, generation, seria, common, names
 from aas_core_testdatagen.casing import NegativeCase
 
 
@@ -42,9 +42,9 @@ class _Xmlizer:
         self._stream = stream
 
         self._indent_level = 0
-        self._pending_open = None  # type: Optional[Identifier]
+        self._pending_open = None  # type: Optional[str]
 
-        self._open_stack = []  # type: List[Identifier]
+        self._open_stack = []  # type: List[str]
 
         self._last_write = None  # type: Optional[_LastWrite]
 
@@ -89,7 +89,7 @@ class _Xmlizer:
         self._pending_open = None
 
     @ensure(lambda self, name: self._pending_open == name)
-    def enqueue_open(self, name: Identifier) -> None:
+    def enqueue_open(self, name: str) -> None:
         """
         Enqueue the open element for writing.
 
@@ -101,7 +101,7 @@ class _Xmlizer:
         self._pending_open = name
         self._open_stack.append(self._pending_open)
 
-    def write_close(self, name: Identifier) -> None:
+    def write_close(self, name: str) -> None:
         """
         Write the close element to the stream, handling any pending open element first.
 
@@ -227,9 +227,8 @@ class _Xmlizer:
 
 
 def _serialize_primitive_property(
-    xmlizer: _Xmlizer, name: Identifier, value: preseria.PrimitiveValueUnion
+    xmlizer: _Xmlizer, xml_prop_name: str, value: preseria.PrimitiveValueUnion
 ) -> None:
-    xml_prop_name = aas_core_codegen.naming.xml_property(name)
 
     xmlizer.enqueue_open(xml_prop_name)
 
@@ -254,15 +253,13 @@ def _serialize_primitive_property(
 
 def _serialize_instance_property(
     xmlizer: _Xmlizer,
-    name: Identifier,
+    xml_prop_name: str,
     instance: preseria.ImmutableInstance,
     symbol_table: intermediate.SymbolTable,
     force_class_element: bool = False,
 ) -> None:
     cls = symbol_table.must_find_concrete_class(instance.class_name)
     with_class_element = force_class_element or cls.serialization.with_model_type
-
-    xml_prop_name = aas_core_codegen.naming.xml_property(name)
 
     xmlizer.enqueue_open(xml_prop_name)
 
@@ -283,11 +280,10 @@ def _serialize_instance_property(
 
 def _serialize_list_of_instances_property(
     xmlizer: _Xmlizer,
-    name: Identifier,
+    xml_prop_name: str,
     list_of_instances: preseria.SequenceOfImmutableInstances,
     symbol_table: intermediate.SymbolTable,
 ) -> None:
-    xml_prop_name = aas_core_codegen.naming.xml_property(name)
 
     xmlizer.enqueue_open(xml_prop_name)
 
@@ -307,7 +303,7 @@ def _serialize_list_of_instances_property(
 
 def _serialize_tuple_property(
     xmlizer: _Xmlizer,
-    name: Identifier,
+    xml_prop_name: str,
     tuple_of_values: preseria.TupleOfImmutableValues,
     symbol_table: intermediate.SymbolTable,
 ) -> None:
@@ -317,7 +313,6 @@ def _serialize_tuple_property(
     The primitive items are named ``v1``, ``v2``, *etc.* (counting only primitives),
     while the instances are named after their classes.
     """
-    xml_prop_name = aas_core_codegen.naming.xml_property(name)
 
     xmlizer.enqueue_open(xml_prop_name)
 
@@ -328,7 +323,7 @@ def _serialize_tuple_property(
             primitive_count += 1
 
             _serialize_primitive_property(
-                xmlizer=xmlizer, name=Identifier(f"v{primitive_count}"), value=item
+                xmlizer=xmlizer, xml_prop_name=f"v{primitive_count}", value=item
             )
 
         elif isinstance(item, preseria.ImmutableInstance):
@@ -352,7 +347,7 @@ def _serialize_tuple_property(
         ):
             raise NotImplementedError(
                 f"XML serialization of nested lists, tuples and sets in the tuple "
-                f"property {name!r} is not defined yet."
+                f"property {xml_prop_name!r} is not defined yet."
             )
 
         else:
@@ -364,16 +359,15 @@ def _serialize_tuple_property(
 
 def _serialize_set_property(
     xmlizer: _Xmlizer,
-    name: Identifier,
+    xml_prop_name: str,
     set_of_primitives: preseria.SetOfImmutablePrimitives,
 ) -> None:
     """Serialize the sorted items of the set as ``<v>`` elements."""
-    xml_prop_name = aas_core_codegen.naming.xml_property(name)
 
     xmlizer.enqueue_open(xml_prop_name)
 
     for item in preseria.sorted_set_items(set_of_primitives.values):
-        _serialize_primitive_property(xmlizer=xmlizer, name=Identifier("v"), value=item)
+        _serialize_primitive_property(xmlizer=xmlizer, xml_prop_name="v", value=item)
 
     xmlizer.write_close(xml_prop_name)
 
@@ -397,9 +391,11 @@ def _serialize_instance_as_sequence(
     for prop_name in expected_property_order:
         prop_value = instance.properties[prop_name]
 
+        xml_prop_name = names.xml_property(symbol_table, cls.name, prop_name)
+
         if isinstance(prop_value, preseria.PrimitiveValueTuple):
             _serialize_primitive_property(
-                xmlizer=xmlizer, name=prop_name, value=prop_value
+                xmlizer=xmlizer, xml_prop_name=xml_prop_name, value=prop_value
             )
 
         elif isinstance(prop_value, preseria.ImmutableInstance):
@@ -408,7 +404,7 @@ def _serialize_instance_as_sequence(
             )
             _serialize_instance_property(
                 xmlizer=xmlizer,
-                name=prop_name,
+                xml_prop_name=xml_prop_name,
                 instance=prop_value,
                 symbol_table=symbol_table,
                 force_class_element=(
@@ -446,7 +442,7 @@ def _serialize_instance_as_sequence(
 
             _serialize_list_of_instances_property(
                 xmlizer=xmlizer,
-                name=prop_name,
+                xml_prop_name=xml_prop_name,
                 list_of_instances=prop_value,
                 symbol_table=symbol_table,
             )
@@ -454,14 +450,16 @@ def _serialize_instance_as_sequence(
         elif isinstance(prop_value, preseria.TupleOfImmutableValues):
             _serialize_tuple_property(
                 xmlizer=xmlizer,
-                name=prop_name,
+                xml_prop_name=xml_prop_name,
                 tuple_of_values=prop_value,
                 symbol_table=symbol_table,
             )
 
         elif isinstance(prop_value, preseria.SetOfImmutablePrimitives):
             _serialize_set_property(
-                xmlizer=xmlizer, name=prop_name, set_of_primitives=prop_value
+                xmlizer=xmlizer,
+                xml_prop_name=xml_prop_name,
+                set_of_primitives=prop_value,
             )
 
         else:
@@ -497,7 +495,9 @@ def serialize(
     and result.parts[-1].endswith(".xml")
 )
 @ensure(lambda result: not result.is_absolute())
-def _determine_relative_path(case: casing.CaseUnion) -> pathlib.Path:
+def _determine_relative_path(
+    case: casing.CaseUnion, symbol_table: intermediate.SymbolTable
+) -> pathlib.Path:
     """Determine the relative path for a test case."""
     xml_class_name = aas_core_codegen.naming.xml_class_name(
         aas_core_codegen.common.Identifier(case.instance.class_name)
@@ -509,14 +509,18 @@ def _determine_relative_path(case: casing.CaseUnion) -> pathlib.Path:
         elif isinstance(case, casing.CaseMaximal):
             case_path_component = pathlib.Path("maximal.xml")
         elif isinstance(case, casing.CasePositivePatternExample):
-            xml_prop_name = aas_core_codegen.naming.xml_property(case.property_name)
+            xml_prop_name = names.xml_property(
+                symbol_table, case.instance.class_name, case.property_name
+            )
 
             case_path_component = (
                 pathlib.Path(f"{xml_prop_name}OverPatternExamples")
                 / f"{case.example_name}.xml"
             )
         elif isinstance(case, casing.CasePositiveValueExample):
-            xml_prop_name = aas_core_codegen.naming.xml_property(case.property_name)
+            xml_prop_name = names.xml_property(
+                symbol_table, case.instance.class_name, case.property_name
+            )
             case_path_component = (
                 pathlib.Path(f"{xml_prop_name}OverValueExamples")
                 / f"{case.value_type_name}_{case.example_name}.xml"
@@ -536,7 +540,9 @@ def _determine_relative_path(case: casing.CaseUnion) -> pathlib.Path:
 
     elif isinstance(case, NegativeCase):
         if isinstance(case, casing.CaseTypeViolation):
-            xml_prop_name = aas_core_codegen.naming.xml_property(case.property_name)
+            xml_prop_name = names.xml_property(
+                symbol_table, case.instance.class_name, case.property_name
+            )
             return (
                 pathlib.Path("Xml")
                 / "Unexpected"
@@ -551,7 +557,9 @@ def _determine_relative_path(case: casing.CaseUnion) -> pathlib.Path:
             # If you change this part, make sure you also update
             # _make_null_violation_out_of_required_violation.
 
-            xml_prop_name = aas_core_codegen.naming.xml_property(case.property_name)
+            xml_prop_name = names.xml_property(
+                symbol_table, case.instance.class_name, case.property_name
+            )
             return (
                 pathlib.Path("Xml")
                 / "Unexpected"
@@ -572,7 +580,9 @@ def _determine_relative_path(case: casing.CaseUnion) -> pathlib.Path:
             )
 
         elif isinstance(case, casing.CaseEnumerationViolation):
-            xml_prop_name = aas_core_codegen.naming.xml_property(case.property_name)
+            xml_prop_name = names.xml_property(
+                symbol_table, case.instance.class_name, case.property_name
+            )
             return (
                 pathlib.Path("Xml")
                 / "Unexpected"
@@ -583,7 +593,9 @@ def _determine_relative_path(case: casing.CaseUnion) -> pathlib.Path:
             )
 
         elif isinstance(case, casing.CasePatternViolation):
-            xml_prop_name = aas_core_codegen.naming.xml_property(case.property_name)
+            xml_prop_name = names.xml_property(
+                symbol_table, case.instance.class_name, case.property_name
+            )
             return (
                 pathlib.Path("Xml")
                 / "Unexpected"
@@ -595,7 +607,9 @@ def _determine_relative_path(case: casing.CaseUnion) -> pathlib.Path:
             )
 
         elif isinstance(case, casing.CaseMinLengthViolation):
-            xml_prop_name = aas_core_codegen.naming.xml_property(case.property_name)
+            xml_prop_name = names.xml_property(
+                symbol_table, case.instance.class_name, case.property_name
+            )
             return (
                 pathlib.Path("Xml")
                 / "Unexpected"
@@ -606,7 +620,9 @@ def _determine_relative_path(case: casing.CaseUnion) -> pathlib.Path:
             )
 
         elif isinstance(case, casing.CaseMaxLengthViolation):
-            xml_prop_name = aas_core_codegen.naming.xml_property(case.property_name)
+            xml_prop_name = names.xml_property(
+                symbol_table, case.instance.class_name, case.property_name
+            )
             return (
                 pathlib.Path("Xml")
                 / "Unexpected"
@@ -617,7 +633,9 @@ def _determine_relative_path(case: casing.CaseUnion) -> pathlib.Path:
             )
 
         elif isinstance(case, casing.CaseEnumerationViolation):
-            xml_prop_name = aas_core_codegen.naming.xml_property(case.property_name)
+            xml_prop_name = names.xml_property(
+                symbol_table, case.instance.class_name, case.property_name
+            )
             return (
                 pathlib.Path("Xml")
                 / "Unexpected"
@@ -628,7 +646,9 @@ def _determine_relative_path(case: casing.CaseUnion) -> pathlib.Path:
             )
 
         elif isinstance(case, casing.CaseSetViolation):
-            xml_prop_name = aas_core_codegen.naming.xml_property(case.property_name)
+            xml_prop_name = names.xml_property(
+                symbol_table, case.instance.class_name, case.property_name
+            )
             return (
                 pathlib.Path("Xml")
                 / "Unexpected"
@@ -639,7 +659,9 @@ def _determine_relative_path(case: casing.CaseUnion) -> pathlib.Path:
             )
 
         elif isinstance(case, casing.CaseDateTimeUtcViolationOnFebruary29th):
-            xml_prop_name = aas_core_codegen.naming.xml_property(case.property_name)
+            xml_prop_name = names.xml_property(
+                symbol_table, case.instance.class_name, case.property_name
+            )
             return (
                 pathlib.Path("Xml")
                 / "Unexpected"
@@ -650,7 +672,9 @@ def _determine_relative_path(case: casing.CaseUnion) -> pathlib.Path:
             )
 
         elif isinstance(case, casing.CaseInvalidValueExample):
-            xml_prop_name = aas_core_codegen.naming.xml_property(case.property_name)
+            xml_prop_name = names.xml_property(
+                symbol_table, case.instance.class_name, case.property_name
+            )
             return (
                 pathlib.Path("Xml")
                 / "Unexpected"
@@ -767,7 +791,7 @@ def generate_test_data(case_generator: generation.CaseGenerator) -> Iterator[Out
     relative_path_asserter = seria.RelativePathAsserter()
 
     for case in case_generator.generate():
-        relative_path = _determine_relative_path(case)
+        relative_path = _determine_relative_path(case, case_generator.symbol_table)
 
         relative_path_asserter.assert_and_add(relative_path)
 
