@@ -655,6 +655,249 @@ BY_PATTERN: Mapping[str, Examples] = collections.OrderedDict(
                 ),
             ),
         ),
+        # matches_path_item
+        (
+            "^(([A-Za-z][A-Za-z0-9_]+)|(\\[[0-9]+\\]))((\\.[A-Za-z][A-Za-z0-9_]+)|(\\[[0-9]+\\])){0,}$",
+            Examples(
+                positives=collections.OrderedDict(
+                    [
+                        (Filenameable("id_short"), "sme1"),
+                        (Filenameable("nested"), "sme1.sme2[0].p1"),
+                        (Filenameable("index_only"), "[0]"),
+                        (Filenameable("index_then_id_short"), "[8].ABJ0MB8T"),
+                        (Filenameable("fuzzed_01"), "[88607]"),
+                        (Filenameable("fuzzed_02"), "A0"),
+                        (Filenameable("fuzzed_03"), "[2004][688]"),
+                    ]
+                ),
+                negatives=collections.OrderedDict(
+                    [
+                        (Filenameable("single_character_id_short"), "a"),
+                        (Filenameable("trailing_dot"), "sme1."),
+                        (Filenameable("leading_dot"), ".sme1"),
+                        (Filenameable("unclosed_index"), "sme1[0"),
+                        (Filenameable("empty_index"), "sme1[]"),
+                        (Filenameable("leading_digit"), "1sme"),
+                        (Filenameable("negatively_fuzzed_01"), "t!"),
+                        (Filenameable("negatively_fuzzed_02"), "F2\x1b"),
+                        (Filenameable("negatively_fuzzed_03"), "wºã"),
+                    ]
+                ),
+            ),
+        ),
+        # matches_field_identifier
+        (
+            "^(\\$aas#(idShort|id|assetInformation\\.assetKind|assetInformation\\.assetType|assetInformation\\.globalAssetId|assetInformation\\.specificAssetIds\\[(0|[1-9][0-9]*)?\\]\\.(name|value|externalSubjectId(\\.(type|keys\\[(0|[1-9][0-9]*)?\\]\\.(type|value)))?)|submodels\\[(0|[1-9][0-9]*)?\\](\\.(type|keys\\[(0|[1-9][0-9]*)?\\]\\.(type|value)))?)|\\$sm#(semanticId(\\.(type|keys\\[(0|[1-9][0-9]*)?\\]\\.(type|value)))?|supplementalSemanticIds(\\[(0|[1-9][0-9]*)?\\])?(\\.(type|keys\\[(0|[1-9][0-9]*)?\\]\\.(type|value)))?|idShort|id)|\\$sme(\\.[A-Za-z]([A-Za-z0-9_-]*[A-Za-z0-9_])?(\\[(0|[1-9][0-9]*)?\\])*(\\.[A-Za-z]([A-Za-z0-9_-]*[A-Za-z0-9_])?(\\[(0|[1-9][0-9]*)?\\])*)*)?#(semanticId(\\.(type|keys\\[(0|[1-9][0-9]*)?\\]\\.(type|value)))?|supplementalSemanticIds(\\[(0|[1-9][0-9]*)?\\])?(\\.(type|keys\\[(0|[1-9][0-9]*)?\\]\\.(type|value)))?|idShort|value|valueType|language)|\\$cd#(idShort|id)|\\$aasdesc#(idShort|id|assetKind|assetType|globalAssetId|specificAssetIds\\[(0|[1-9][0-9]*)?\\]\\.(name|value|externalSubjectId(\\.(type|keys\\[(0|[1-9][0-9]*)?\\]\\.(type|value)))?)|endpoints\\[(0|[1-9][0-9]*)?\\]\\.(interface|protocolinformation\\.href)|submodelDescriptors\\[(0|[1-9][0-9]*)?\\]\\.(semanticId(\\.(type|keys\\[(0|[1-9][0-9]*)?\\]\\.(type|value)))?|supplementalSemanticIds(\\[(0|[1-9][0-9]*)?\\])?(\\.(type|keys\\[(0|[1-9][0-9]*)?\\]\\.(type|value)))?|idShort|id|endpoints\\[(0|[1-9][0-9]*)?\\]\\.(interface|protocolinformation\\.href)))|\\$smdesc#(semanticId(\\.(type|keys\\[(0|[1-9][0-9]*)?\\]\\.(type|value)))?|supplementalSemanticIds(\\[(0|[1-9][0-9]*)?\\])?(\\.(type|keys\\[(0|[1-9][0-9]*)?\\]\\.(type|value)))?|idShort|id|endpoints\\[(0|[1-9][0-9]*)?\\]\\.(interface|protocolinformation\\.href)))$",
+            Examples(
+                positives=collections.OrderedDict(
+                    [
+                        (Filenameable("aas_id_short"), "$aas#idShort"),
+                        (
+                            Filenameable("aas_asset_kind"),
+                            "$aas#assetInformation.assetKind",
+                        ),
+                        (
+                            Filenameable("aas_specific_asset_id_name"),
+                            "$aas#assetInformation.specificAssetIds[0].name",
+                        ),
+                        (
+                            Filenameable("aas_submodel_key_value"),
+                            "$aas#submodels[].keys[1].value",
+                        ),
+                        (
+                            Filenameable("sm_semantic_id"),
+                            "$sm#semanticId.keys[0].value",
+                        ),
+                        (
+                            Filenameable("sme_with_path"),
+                            "$sme.someCollection.someProperty#value",
+                        ),
+                        (
+                            Filenameable("sme_with_index"),
+                            "$sme.list[3].prop#valueType",
+                        ),
+                        (Filenameable("sme_root"), "$sme#idShort"),
+                        (Filenameable("cd_id"), "$cd#id"),
+                        (
+                            Filenameable("aasdesc_endpoint"),
+                            "$aasdesc#endpoints[0].protocolinformation.href",
+                        ),
+                        (Filenameable("smdesc_semantic_id"), "$smdesc#semanticId.type"),
+                    ]
+                ),
+                negatives=collections.OrderedDict(
+                    [
+                        (Filenameable("unknown_root"), "$xyz#idShort"),
+                        (Filenameable("missing_attribute"), "$aas"),
+                        (Filenameable("wrong_attribute"), "$cd#value"),
+                        (Filenameable("bare_index"), "$aas#submodels[a]"),
+                        (Filenameable("leading_zero_index"), "$aas#submodels[01]"),
+                        (Filenameable("id_short_path_trailing_dot"), "$sme.a.#value"),
+                        (Filenameable("no_hash"), "$sm.idShort"),
+                        (Filenameable("empty"), ""),
+                    ]
+                ),
+            ),
+        ),
+        # matches_fragment_field_identifier
+        (
+            "^(\\$aas#(idShort|assetInformation\\.assetType|assetInformation\\.globalAssetId|assetInformation\\.specificAssetIds(\\[(0|[1-9][0-9]*)?\\](\\.externalSubjectId(\\.keys(\\[(0|[1-9][0-9]*)?\\])?)?)?)?|submodels(\\[(0|[1-9][0-9]*)?\\](\\.keys(\\[(0|[1-9][0-9]*)?\\])?)?)?)|\\$sm#(semanticId(\\.keys(\\[(0|[1-9][0-9]*)?\\])?)?|supplementalSemanticIds(\\[(0|[1-9][0-9]*)?\\](\\.keys(\\[(0|[1-9][0-9]*)?\\])?)?)?|idShort)|\\$sme(\\.[A-Za-z]([A-Za-z0-9_-]*[A-Za-z0-9_])?(\\[(0|[1-9][0-9]*)?\\])*(\\.[A-Za-z]([A-Za-z0-9_-]*[A-Za-z0-9_])?(\\[(0|[1-9][0-9]*)?\\])*)*)?(#(semanticId(\\.keys(\\[(0|[1-9][0-9]*)?\\])?)?|supplementalSemanticIds(\\[(0|[1-9][0-9]*)?\\](\\.keys(\\[(0|[1-9][0-9]*)?\\])?)?)?|idShort|value|valueType|language))?|\\$cd#idShort|\\$aasdesc#(idShort|description|displayName|extension|administration|assetKind|assetType|globalAssetId|specificAssetIds(\\[(0|[1-9][0-9]*)?\\](\\.externalSubjectId(\\.keys(\\[(0|[1-9][0-9]*)?\\])?)?)?)?|endpoints(\\[(0|[1-9][0-9]*)?\\])?|submodelDescriptors(\\[(0|[1-9][0-9]*)?\\](\\.(semanticId(\\.keys(\\[(0|[1-9][0-9]*)?\\])?)?|supplementalSemanticIds(\\[(0|[1-9][0-9]*)?\\](\\.keys(\\[(0|[1-9][0-9]*)?\\])?)?)?|idShort|endpoints(\\[(0|[1-9][0-9]*)?\\])?))?)?)|\\$smdesc#(semanticId(\\.keys(\\[(0|[1-9][0-9]*)?\\])?)?|supplementalSemanticIds(\\[(0|[1-9][0-9]*)?\\](\\.keys(\\[(0|[1-9][0-9]*)?\\])?)?)?|idShort|endpoints(\\[(0|[1-9][0-9]*)?\\])?))$",
+            Examples(
+                positives=collections.OrderedDict(
+                    [
+                        (
+                            Filenameable("aas_specific_asset_ids"),
+                            "$aas#assetInformation.specificAssetIds[]",
+                        ),
+                        (Filenameable("aas_submodels"), "$aas#submodels"),
+                        (
+                            Filenameable("sm_semantic_id_keys"),
+                            "$sm#semanticId.keys[0]",
+                        ),
+                        (Filenameable("sme_only_path"), "$sme.someCollection"),
+                        (Filenameable("sme_root"), "$sme"),
+                        (Filenameable("sme_value"), "$sme.prop#value"),
+                        (Filenameable("cd_id_short"), "$cd#idShort"),
+                        (Filenameable("aasdesc_description"), "$aasdesc#description"),
+                        (
+                            Filenameable("aasdesc_sm_descriptors"),
+                            "$aasdesc#submodelDescriptors[1].idShort",
+                        ),
+                        (Filenameable("smdesc_endpoints"), "$smdesc#endpoints[]"),
+                    ]
+                ),
+                negatives=collections.OrderedDict(
+                    [
+                        (Filenameable("unknown_root"), "$xyz#idShort"),
+                        (Filenameable("cd_id"), "$cd#id"),
+                        (Filenameable("sm_id"), "$sm#id"),
+                        (Filenameable("bad_index"), "$aas#submodels[x]"),
+                        (Filenameable("empty"), ""),
+                        (Filenameable("trailing_dot"), "$sme.a."),
+                        (Filenameable("missing_root"), "#idShort"),
+                    ]
+                ),
+            ),
+        ),
+        # matches_hex_literal
+        (
+            "^16#[0-9A-F]+$",
+            Examples(
+                positives=collections.OrderedDict(
+                    [
+                        (Filenameable("one_digit"), "16#1"),
+                        (Filenameable("upper"), "16#1F"),
+                        (Filenameable("long"), "16#DEADBEEF"),
+                        (Filenameable("zeros"), "16#00"),
+                    ]
+                ),
+                negatives=collections.OrderedDict(
+                    [
+                        (Filenameable("no_prefix"), "1F"),
+                        (Filenameable("lower_case"), "16#1f"),
+                        (Filenameable("empty_digits"), "16#"),
+                        (Filenameable("other_base"), "8#17"),
+                        (Filenameable("not_hex"), "16#G1"),
+                    ]
+                ),
+            ),
+        ),
+        # matches_date_time_literal
+        (
+            "^(([0-9]{4}-((0[13578]|1[02])-(0[1-9]|[12][0-9]|3[01])|(0[469]|11)-(0[1-9]|[12][0-9]|30)|02-(0[1-9]|1[0-9]|2[0-8])))|(([0-9]{2}(0[48]|[2468][048]|[13579][26])|([02468][048]|[13579][26])00)-02-29))T?(([01][0-9]|2[0-3]):[0-5][0-9](:[0-5][0-9])?(\\.[0-9]+)?|24:00(:00)?(\\.0+)?)(Z|[+-]((0[0-9]|1[0-3]):[0-5][0-9]|14:00))?$",
+            Examples(
+                positives=collections.OrderedDict(
+                    [
+                        (Filenameable("utc"), "2024-02-29T12:00:00Z"),
+                        (Filenameable("no_separator"), "2024-03-0112:00:00Z"),
+                        (Filenameable("no_seconds"), "2023-12-31T23:59"),
+                        (
+                            Filenameable("with_fraction"),
+                            "2023-01-01T00:00:00.123+01:00",
+                        ),
+                        (Filenameable("midnight_24"), "2023-01-01T24:00:00"),
+                        (Filenameable("negative_offset"), "2023-06-15T08:30:00-05:00"),
+                    ]
+                ),
+                negatives=collections.OrderedDict(
+                    [
+                        (Filenameable("no_leap_year"), "2023-02-29T12:00:00Z"),
+                        (Filenameable("no_time"), "2024-01-01"),
+                        (Filenameable("bad_month"), "2024-13-01T12:00:00Z"),
+                        (Filenameable("bad_hour"), "2024-01-01T25:00:00Z"),
+                        (Filenameable("bad_offset"), "2024-01-01T12:00:00+15:00"),
+                        (Filenameable("empty"), ""),
+                    ]
+                ),
+            ),
+        ),
+        # matches_time_literal
+        (
+            "^(([01][0-9]|2[0-3]):[0-5][0-9](:[0-5][0-9])?(\\.[0-9]+)?|24:00(:00)?(\\.0+)?)(Z|[+-]((0[0-9]|1[0-3]):[0-5][0-9]|14:00))?$",
+            Examples(
+                positives=collections.OrderedDict(
+                    [
+                        (Filenameable("hours_minutes"), "12:30"),
+                        (Filenameable("with_seconds"), "12:00:00"),
+                        (Filenameable("with_zone"), "12:00:00+01:00"),
+                        (Filenameable("utc"), "23:59:59Z"),
+                        (Filenameable("fraction"), "00:00:00.5"),
+                        (Filenameable("end_of_day"), "24:00"),
+                    ]
+                ),
+                negatives=collections.OrderedDict(
+                    [
+                        (Filenameable("bad_hour"), "25:00"),
+                        (Filenameable("bad_minute"), "12:60"),
+                        (Filenameable("missing_minutes"), "12"),
+                        (Filenameable("bad_offset"), "12:00+14:30"),
+                        (Filenameable("date"), "2024-01-01"),
+                        (Filenameable("empty"), ""),
+                    ]
+                ),
+            ),
+        ),
+        # matches_reference_identifier
+        (
+            '^(\\$aas\\("([\\x09\\x0A\\x0D\\x20-\\x21\\x23-\\x5B\\x5D-\\uD7FF\\uE000-\\uFFFD\\U00010000-\\U0010FFFF]|\\\\["\\\\])+"\\)#(idShort|id|assetInformation\\.assetKind|assetInformation\\.assetType|assetInformation\\.globalAssetId|assetInformation\\.specificAssetIds\\[(0|[1-9][0-9]*)?\\]\\.(name|value|externalSubjectId(\\.(type|keys\\[(0|[1-9][0-9]*)?\\]\\.(type|value)))?)|submodels\\[(0|[1-9][0-9]*)?\\](\\.(type|keys\\[(0|[1-9][0-9]*)?\\]\\.(type|value)))?)|\\$sm\\("([\\x09\\x0A\\x0D\\x20-\\x21\\x23-\\x5B\\x5D-\\uD7FF\\uE000-\\uFFFD\\U00010000-\\U0010FFFF]|\\\\["\\\\])+"\\)#(semanticId(\\.(type|keys\\[(0|[1-9][0-9]*)?\\]\\.(type|value)))?|supplementalSemanticIds(\\[(0|[1-9][0-9]*)?\\])?(\\.(type|keys\\[(0|[1-9][0-9]*)?\\]\\.(type|value)))?|idShort|id)|\\$cd\\("([\\x09\\x0A\\x0D\\x20-\\x21\\x23-\\x5B\\x5D-\\uD7FF\\uE000-\\uFFFD\\U00010000-\\U0010FFFF]|\\\\["\\\\])+"\\)#(idShort|id)|\\$sme\\("([\\x09\\x0A\\x0D\\x20-\\x21\\x23-\\x5B\\x5D-\\uD7FF\\uE000-\\uFFFD\\U00010000-\\U0010FFFF]|\\\\["\\\\])+"\\)\\.[A-Za-z]([A-Za-z0-9_-]*[A-Za-z0-9_])?(\\[(0|[1-9][0-9]*)?\\])*(\\.[A-Za-z]([A-Za-z0-9_-]*[A-Za-z0-9_])?(\\[(0|[1-9][0-9]*)?\\])*)*#(semanticId(\\.(type|keys\\[(0|[1-9][0-9]*)?\\]\\.(type|value)))?|supplementalSemanticIds(\\[(0|[1-9][0-9]*)?\\])?(\\.(type|keys\\[(0|[1-9][0-9]*)?\\]\\.(type|value)))?|idShort|value|valueType|language))$',
+            Examples(
+                positives=collections.OrderedDict(
+                    [
+                        (
+                            Filenameable("sm_id_short"),
+                            '$sm("https://example.com/sm")#idShort',
+                        ),
+                        (Filenameable("aas_id"), '$aas("urn:aas:1")#id'),
+                        (
+                            Filenameable("sme_value"),
+                            '$sme("https://example.com/sm").someProperty#value',
+                        ),
+                        (
+                            Filenameable("sme_nested"),
+                            '$sme("sm1").coll.list[0].prop#valueType',
+                        ),
+                        (Filenameable("cd_id_short"), '$cd("cd1")#idShort'),
+                        (Filenameable("escaped_quote"), '$sm("a\\"b")#id'),
+                        (Filenameable("escaped_backslash"), '$sm("a\\\\b")#id'),
+                        (
+                            Filenameable("aas_submodel_key"),
+                            '$aas("urn:aas:1")#submodels[0].keys[0].value',
+                        ),
+                    ]
+                ),
+                negatives=collections.OrderedDict(
+                    [
+                        (Filenameable("empty_identifier"), '$sm("")#idShort'),
+                        (Filenameable("unescaped_quote"), '$sm("a"b")#id'),
+                        (Filenameable("missing_path"), '$sme("sm1")#value'),
+                        (Filenameable("missing_parens"), "$sm#idShort"),
+                        (Filenameable("unknown_root"), '$xyz("a")#idShort'),
+                        (Filenameable("cd_value"), '$cd("a")#value'),
+                        (Filenameable("empty"), ""),
+                    ]
+                ),
+            ),
+        ),
     ]
 )
 
