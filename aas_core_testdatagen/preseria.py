@@ -31,6 +31,7 @@ ValueUnion = Union[
     "ListOfInstances",
     "TupleOfValues",
     "SetOfPrimitives",
+    "ListOfPrimitives",
 ]
 
 
@@ -40,6 +41,7 @@ ImmutableValueUnion = Union[
     "SequenceOfImmutableInstances",
     "TupleOfImmutableValues",
     "SetOfImmutablePrimitives",
+    "SequenceOfImmutablePrimitives",
 ]
 
 
@@ -86,6 +88,16 @@ class TupleOfImmutableValues(abc.ABC):
     @abc.abstractmethod
     def values(self) -> Sequence["ImmutableValueUnion"]:
         """The items of the tuple."""
+        raise NotImplementedError()
+
+
+class SequenceOfImmutablePrimitives(abc.ABC):
+    """Represent an immutable, ordered list of primitive values."""
+
+    @property
+    @abc.abstractmethod
+    def values(self) -> Sequence[PrimitiveValueUnion]:
+        """The items of the list."""
         raise NotImplementedError()
 
 
@@ -254,6 +266,23 @@ class TupleOfValues(TupleOfImmutableValues):
         self._values = values
 
 
+class ListOfPrimitives(SequenceOfImmutablePrimitives):
+    """Represent a list of primitive values."""
+
+    @property
+    @override
+    def values(self) -> List[PrimitiveValueUnion]:
+        return self._values
+
+    @values.setter
+    def values(self, values: List[PrimitiveValueUnion]) -> None:
+        self._values = values
+
+    def __init__(self, values: List[PrimitiveValueUnion]) -> None:
+        """Initialize with the given values."""
+        self._values = values
+
+
 class SetOfPrimitives(SetOfImmutablePrimitives):
     """Represent a set of primitive values."""
 
@@ -310,6 +339,8 @@ def _to_jsonable(value: ImmutableValueUnion) -> Any:
     elif isinstance(value, TupleOfImmutableValues):
         return [_to_jsonable(item) for item in value.values]
     elif isinstance(value, SetOfImmutablePrimitives):
+        return [_to_jsonable(item) for item in value.values]
+    elif isinstance(value, SequenceOfImmutablePrimitives):
         return [_to_jsonable(item) for item in value.values]
     else:
         # noinspection PyTypeChecker

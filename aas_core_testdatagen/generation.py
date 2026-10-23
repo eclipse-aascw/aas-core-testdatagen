@@ -132,15 +132,13 @@ class InstanceGenerator(abc.ABC):
                 assert_never(type_annotation.our_type)
 
         elif isinstance(type_annotation, intermediate.ListTypeAnnotation):
-            assert isinstance(
-                type_annotation.items, intermediate.OurTypeAnnotation
+            item_annotation = intermediate.beneath_optional(type_annotation.items)
+
+            is_list_of_instances = isinstance(
+                item_annotation, intermediate.OurTypeAnnotation
             ) and isinstance(
-                type_annotation.items.our_type,
+                item_annotation.our_type,
                 (intermediate.AbstractClass, intermediate.ConcreteClass),
-            ), (
-                "We handle at the moment only lists of class instances, but you "
-                f"want to sample from {type_annotation}. Please contact "
-                "the developers if you need this feature."
             )
 
             # NOTE (mristin):
@@ -171,6 +169,32 @@ class InstanceGenerator(abc.ABC):
                 path_hash=path_hash, minimum=minimum_len, maximum=maximum_len
             )
 
+            if not is_list_of_instances:
+                primitive_items = []  # type: List[preseria.PrimitiveValueUnion]
+                for i in range(length):
+                    item = self.generate_value(
+                        path_hash=common.hash_path(
+                            prefix_hash=path_hash, segment_or_segments=i
+                        ),
+                        type_annotation=item_annotation,
+                        constraints=(
+                            constraints.item_constraints
+                            if constraints.item_constraints is not None
+                            else _NO_CONSTRAINTS
+                        ),
+                    )
+                    assert isinstance(item, preseria.PrimitiveValueTuple)
+                    primitive_items.append(item)
+
+                return preseria.ListOfPrimitives(primitive_items)
+
+            assert isinstance(
+                item_annotation, intermediate.OurTypeAnnotation
+            ) and isinstance(
+                item_annotation.our_type,
+                (intermediate.AbstractClass, intermediate.ConcreteClass),
+            )
+
             values = []  # type: List[preseria.Instance]
             for i in range(length):
                 values.append(
@@ -178,7 +202,7 @@ class InstanceGenerator(abc.ABC):
                         path_hash=common.hash_path(
                             prefix_hash=path_hash, segment_or_segments=i
                         ),
-                        cls=type_annotation.items.our_type,
+                        cls=item_annotation.our_type,
                     )
                 )
 
@@ -1699,14 +1723,19 @@ class CaseGeneratorForSchemaConstraints(CaseGenerator):
                 instance = maximal_case.instance.mutable_copy()
 
                 prop_value = instance.properties[prop.name]
-                assert isinstance(prop_value, (str, bytes, preseria.ListOfInstances)), (
+                assert isinstance(
+                    prop_value,
+                    (str, bytes, preseria.ListOfInstances, preseria.ListOfPrimitives),
+                ), (
                     f"Only strings, bytes and lists expected with length constraints, "
                     f"but got type {type(prop_value)} "
                     f"for instance: {preseria.dump(instance)}"
                 )
 
                 new_prop_value: Optional[
-                    Union[str, bytes, preseria.ListOfInstances]
+                    Union[
+                        str, bytes, preseria.ListOfInstances, preseria.ListOfPrimitives
+                    ]
                 ] = None
 
                 if isinstance(prop_value, (str, bytes)):
@@ -1719,6 +1748,10 @@ class CaseGeneratorForSchemaConstraints(CaseGenerator):
 
                 elif isinstance(prop_value, preseria.ListOfInstances):
                     new_prop_value = preseria.ListOfInstances(
+                        values=prop_value.values[: (len_constraint.min_value - 1)]
+                    )
+                elif isinstance(prop_value, preseria.ListOfPrimitives):
+                    new_prop_value = preseria.ListOfPrimitives(
                         values=prop_value.values[: (len_constraint.min_value - 1)]
                     )
                 else:
@@ -1744,7 +1777,10 @@ class CaseGeneratorForSchemaConstraints(CaseGenerator):
                 instance = maximal_case.instance.mutable_copy()
 
                 prop_value = instance.properties[prop.name]
-                assert isinstance(prop_value, (str, bytes, preseria.ListOfInstances)), (
+                assert isinstance(
+                    prop_value,
+                    (str, bytes, preseria.ListOfInstances, preseria.ListOfPrimitives),
+                ), (
                     f"Only strings, bytes and lists expected with "
                     f"length constraints, but got type {type(prop_value)} "
                     f"for instance: {preseria.dump(instance)}"
@@ -1788,6 +1824,21 @@ class CaseGeneratorForSchemaConstraints(CaseGenerator):
                             # the constraint. While this will certainly violate
                             # the length constraint, it might violate other
                             # constraints as well.
+                            + [prop_value.values[-1]]
+                            * (len_constraint.max_value - len(prop_value.values) + 1)
+                        )
+                    )
+
+                elif isinstance(prop_value, preseria.ListOfPrimitives):
+                    assert len(prop_value.values) >= 1, (
+                        f"Maximal instance expected to have non-empty lists "
+                        f"for property {prop.name!r}, "
+                        f"but got: {preseria.dump(instance)}"
+                    )
+
+                    new_prop_value = preseria.ListOfPrimitives(
+                        values=(
+                            prop_value.values
                             + [prop_value.values[-1]]
                             * (len_constraint.max_value - len(prop_value.values) + 1)
                         )
