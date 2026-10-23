@@ -305,6 +305,59 @@ def _serialize_list_of_instances_property(
     xmlizer.write_close(xml_prop_name)
 
 
+def _serialize_tuple_property(
+    xmlizer: _Xmlizer,
+    name: Identifier,
+    tuple_of_values: preseria.TupleOfImmutableValues,
+    symbol_table: intermediate.SymbolTable,
+) -> None:
+    """
+    Serialize the tuple as the property with one element per item.
+
+    The primitive items are named ``v1``, ``v2``, *etc.* (counting only primitives),
+    while the instances are named after their classes.
+    """
+    xml_prop_name = aas_core_codegen.naming.xml_property(name)
+
+    xmlizer.enqueue_open(xml_prop_name)
+
+    primitive_count = 0
+
+    for item in tuple_of_values.values:
+        if isinstance(item, preseria.PrimitiveValueTuple):
+            primitive_count += 1
+
+            _serialize_primitive_property(
+                xmlizer=xmlizer, name=Identifier(f"v{primitive_count}"), value=item
+            )
+
+        elif isinstance(item, preseria.ImmutableInstance):
+            xml_cls_name = aas_core_codegen.naming.xml_class_name(item.class_name)
+
+            xmlizer.enqueue_open(xml_cls_name)
+
+            _serialize_instance_as_sequence(
+                xmlizer=xmlizer, instance=item, symbol_table=symbol_table
+            )
+
+            xmlizer.write_close(xml_cls_name)
+
+        elif isinstance(
+            item,
+            (preseria.SequenceOfImmutableInstances, preseria.TupleOfImmutableValues),
+        ):
+            raise NotImplementedError(
+                f"XML serialization of nested lists and tuples in the tuple "
+                f"property {name!r} is not defined yet."
+            )
+
+        else:
+            # noinspection PyTypeChecker
+            assert_never(item)
+
+    xmlizer.write_close(xml_prop_name)
+
+
 def _serialize_instance_as_sequence(
     xmlizer: _Xmlizer,
     instance: preseria.ImmutableInstance,
@@ -375,6 +428,14 @@ def _serialize_instance_as_sequence(
                 xmlizer=xmlizer,
                 name=prop_name,
                 list_of_instances=prop_value,
+                symbol_table=symbol_table,
+            )
+
+        elif isinstance(prop_value, preseria.TupleOfImmutableValues):
+            _serialize_tuple_property(
+                xmlizer=xmlizer,
+                name=prop_name,
+                tuple_of_values=prop_value,
                 symbol_table=symbol_table,
             )
 

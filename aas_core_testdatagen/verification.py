@@ -474,6 +474,48 @@ def _check_value_against_type_annotation(
             if len(errors) > 0:
                 return errors
 
+        elif isinstance(type_annotation, intermediate.TupleTypeAnnotation):
+            if not isinstance(value, preseria.TupleOfValues):
+                return [
+                    Error(
+                        path=Path(segments=[]),
+                        message=f"Expected a tuple of values, but got {value!r}.",
+                    )
+                ]
+
+            if len(value.values) != len(type_annotation.items):
+                return [
+                    Error(
+                        path=Path(segments=[]),
+                        message=(
+                            f"Expected a tuple of {len(type_annotation.items)} "
+                            f"item(s), but got {len(value.values)}: {value!r}."
+                        ),
+                    )
+                ]
+
+            errors = []
+
+            for i, (item_value, item_annotation) in enumerate(
+                zip(value.values, type_annotation.items)
+            ):
+                item_errors = _check_value_against_type_annotation(
+                    value=item_value,
+                    type_annotation=intermediate.beneath_optional(item_annotation),
+                    symbol_table=symbol_table,
+                    constraints_by_class=constraints_by_class,
+                )
+
+                if item_errors is not None:
+                    for item_error in item_errors:
+                        # noinspection PyProtectedMember
+                        item_error.path._segments.insert(0, i)
+
+                    errors.extend(item_errors)
+
+            if len(errors) > 0:
+                return errors
+
         else:
             # noinspection PyTypeChecker
             assert_never(type_annotation)
@@ -693,7 +735,9 @@ def check_structural_constraints(
                                 ),
                             )
                         )
-                elif isinstance(prop_value, preseria.ListOfInstances):
+                elif isinstance(
+                    prop_value, (preseria.ListOfInstances, preseria.TupleOfValues)
+                ):
                     continue
 
                 else:

@@ -126,6 +126,25 @@ def serialize(
 
         return json_list, None
 
+    elif isinstance(value, preseria.TupleOfImmutableValues):
+        json_tuple = []  # type: List[Any]
+
+        for i, tuple_item in enumerate(value.values):
+            json_item, serialization_error = serialize(
+                value=tuple_item, symbol_table=symbol_table
+            )
+
+            if serialization_error is not None:
+                return None, (
+                    f"Failed to serialize the tuple item {i}: {serialization_error}"
+                )
+
+            assert json_item is not None
+
+            json_tuple.append(json_item)
+
+        return json_tuple, None
+
     else:
         # noinspection PyTypeChecker
         assert_never(value)

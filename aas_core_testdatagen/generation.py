@@ -33,6 +33,11 @@ from aas_core_testdatagen.frozen_examples import (
 )
 
 
+_NO_CONSTRAINTS: Final = verification.PropertyConstraints(
+    len_constraint=None, patterns=[], allowed_values=None
+)
+
+
 class InstanceGenerator(abc.ABC):
     """Define the generation of instances of classes for the given meta-model."""
 
@@ -156,6 +161,20 @@ class InstanceGenerator(abc.ABC):
                 )
 
             return preseria.ListOfInstances(values)
+
+        elif isinstance(type_annotation, intermediate.TupleTypeAnnotation):
+            return preseria.TupleOfValues(
+                [
+                    self.generate_value(
+                        path_hash=common.hash_path(
+                            prefix_hash=path_hash, segment_or_segments=i
+                        ),
+                        type_annotation=intermediate.beneath_optional(item_annotation),
+                        constraints=_NO_CONSTRAINTS,
+                    )
+                    for i, item_annotation in enumerate(type_annotation.items)
+                ]
+            )
 
         else:
             # noinspection PyTypeChecker

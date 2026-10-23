@@ -25,11 +25,14 @@ PrimitiveValueTuple = (bool, int, float, str, bytes)
 assert PrimitiveValueTuple == get_args(PrimitiveValueUnion)
 
 
-ValueUnion = Union[PrimitiveValueUnion, "Instance", "ListOfInstances"]
+ValueUnion = Union[PrimitiveValueUnion, "Instance", "ListOfInstances", "TupleOfValues"]
 
 
 ImmutableValueUnion = Union[
-    PrimitiveValueUnion, "ImmutableInstance", "SequenceOfImmutableInstances"
+    PrimitiveValueUnion,
+    "ImmutableInstance",
+    "SequenceOfImmutableInstances",
+    "TupleOfImmutableValues",
 ]
 
 
@@ -66,6 +69,16 @@ class SequenceOfImmutableInstances(abc.ABC):
     @abc.abstractmethod
     def values(self) -> Sequence["ImmutableInstance"]:
         """The items of the list."""
+        raise NotImplementedError()
+
+
+class TupleOfImmutableValues(abc.ABC):
+    """Represent an immutable, fixed-length tuple of heterogeneous values."""
+
+    @property
+    @abc.abstractmethod
+    def values(self) -> Sequence["ImmutableValueUnion"]:
+        """The items of the tuple."""
         raise NotImplementedError()
 
 
@@ -202,6 +215,23 @@ class ListOfInstances(SequenceOfImmutableInstances):
         self._values = values
 
 
+class TupleOfValues(TupleOfImmutableValues):
+    """Represent a tuple of values."""
+
+    @property
+    @override
+    def values(self) -> List[ValueUnion]:
+        return self._values
+
+    @values.setter
+    def values(self, values: List[ValueUnion]) -> None:
+        self._values = values
+
+    def __init__(self, values: List[ValueUnion]) -> None:
+        """Initialize with the given values."""
+        self._values = values
+
+
 def _to_jsonable(value: ImmutableValueUnion) -> Any:
     """
     Represent the ``value`` as a JSON-able object.
@@ -225,6 +255,8 @@ def _to_jsonable(value: ImmutableValueUnion) -> Any:
 
         return obj
     elif isinstance(value, SequenceOfImmutableInstances):
+        return [_to_jsonable(item) for item in value.values]
+    elif isinstance(value, TupleOfImmutableValues):
         return [_to_jsonable(item) for item in value.values]
     else:
         # noinspection PyTypeChecker
