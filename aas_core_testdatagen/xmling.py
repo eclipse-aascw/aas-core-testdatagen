@@ -342,6 +342,7 @@ def _serialize_tuple_property(
             (
                 preseria.SequenceOfImmutableInstances,
                 preseria.TupleOfImmutableValues,
+                preseria.SequenceOfImmutablePrimitives,
                 preseria.SetOfImmutablePrimitives,
             ),
         ):
@@ -461,6 +462,14 @@ def _serialize_instance_as_sequence(
                 xml_prop_name=xml_prop_name,
                 set_of_primitives=prop_value,
             )
+
+        elif isinstance(prop_value, preseria.SequenceOfImmutablePrimitives):
+            xmlizer.enqueue_open(xml_prop_name)
+            for item in prop_value.values:
+                _serialize_primitive_property(
+                    xmlizer=xmlizer, xml_prop_name="v", value=item
+                )
+            xmlizer.write_close(xml_prop_name)
 
         else:
             # noinspection PyTypeChecker

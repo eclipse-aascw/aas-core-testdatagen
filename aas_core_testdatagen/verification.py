@@ -43,6 +43,9 @@ class PropertyConstraints:
     allowed_values: Final[Optional[Sequence[preseria.PrimitiveValueUnion]]]
     allowed_value_set: Final[Optional[Set[preseria.PrimitiveValueUnion]]]
 
+    # Constraints on the items, if the property is a list of primitives
+    item_constraints: Final[Optional["PropertyConstraints"]]
+
     # fmt: off
     @require(
         lambda allowed_values:
@@ -55,7 +58,9 @@ class PropertyConstraints:
         len_constraint: Optional[infer_for_schema.LenConstraint],
         patterns: Sequence[str],
         allowed_values: Optional[Sequence[preseria.PrimitiveValueUnion]],
+        item_constraints: Optional["PropertyConstraints"] = None,
     ) -> None:
+        self.item_constraints = item_constraints
         self.len_constraint = len_constraint
         self.patterns = patterns
         self.allowed_values = allowed_values
@@ -67,6 +72,81 @@ class PropertyConstraints:
 ReorganizedConstraintsByClass: TypeAlias = Mapping[
     intermediate.ClassUnion, Mapping[intermediate.Property, PropertyConstraints]
 ]
+
+
+def _is_class_annotation(type_anno: intermediate.TypeAnnotationUnion) -> bool:
+    """Check that the annotation, ignoring optional, refers to a class."""
+    type_anno = intermediate.beneath_optional(type_anno)
+    return isinstance(type_anno, intermediate.OurTypeAnnotation) and isinstance(
+        type_anno.our_type,
+        (intermediate.AbstractClass, intermediate.ConcreteClass),
+    )
+
+
+def _constraints_of_annotation(
+    type_anno: intermediate.TypeAnnotationExceptOptional,
+    constraints_by_value: infer_for_schema.ConstraintsByValue,
+    what: str,
+) -> PropertyConstraints:
+    """Translate the schema constraints of the annotation to property constraints."""
+    constraints = constraints_by_value.get(type_anno, None)
+
+    if constraints is None:
+        return PropertyConstraints(
+            len_constraint=None, patterns=[], allowed_values=None
+        )
+
+    allowed_values: Optional[Sequence[preseria.PrimitiveValueUnion]] = None
+
+    is_primitive_type = intermediate.try_primitive_type(type_anno) is not None
+
+    is_enum = isinstance(type_anno, intermediate.OurTypeAnnotation) and isinstance(
+        type_anno.our_type, intermediate.Enumeration
+    )
+
+    assert not (is_primitive_type and is_enum), (
+        f"Unexpected {what} with type annotation {type_anno} where "
+        f"it was both matched as primitive type and enumeration."
+    )
+
+    if is_primitive_type:
+        if constraints.set_of_primitives is not None:
+            allowed_values = [
+                (
+                    bytes(literal.value)
+                    if isinstance(literal.value, bytearray)
+                    else literal.value
+                )
+                for literal in constraints.set_of_primitives.literals
+            ]
+
+    elif is_enum:
+        if constraints.set_of_enumeration_literals is not None:
+            allowed_values = [
+                literal.value
+                for literal in constraints.set_of_enumeration_literals.literals
+            ]
+        else:
+            assert isinstance(type_anno, intermediate.OurTypeAnnotation) and isinstance(
+                type_anno.our_type, intermediate.Enumeration
+            )
+
+            allowed_values = [literal.value for literal in type_anno.our_type.literals]
+    else:
+        # NOTE (empwilli):
+        # There are no allowed value constraints for non-enums and
+        # non-primitives.
+        pass
+
+    return PropertyConstraints(
+        len_constraint=constraints.len_constraint,
+        patterns=(
+            [pattern_constraint.pattern for pattern_constraint in constraints.patterns]
+            if constraints.patterns is not None
+            else []
+        ),
+        allowed_values=allowed_values,
+    )
 
 
 def reorganize_schema_constraints_by_properties(
@@ -94,72 +174,27 @@ def reorganize_schema_constraints_by_properties(
         for prop in cls.properties:
             type_anno = intermediate.beneath_optional(prop.type_annotation)
 
-            constraints = constraints_by_value.get(type_anno, None)
-
-            if constraints is None:
-                result[cls][prop] = PropertyConstraints(
-                    len_constraint=None,
-                    patterns=[],
-                    allowed_values=None,
+            item_constraints = None
+            if isinstance(
+                type_anno, intermediate.ListTypeAnnotation
+            ) and not _is_class_annotation(type_anno.items):
+                item_constraints = _constraints_of_annotation(
+                    type_anno=intermediate.beneath_optional(type_anno.items),
+                    constraints_by_value=constraints_by_value,
+                    what=f"items of the property {prop.name!r} of class {cls.name!r}",
                 )
-                continue
 
-            allowed_values: Optional[Sequence[preseria.PrimitiveValueUnion]] = None
-
-            is_primitive_type = intermediate.try_primitive_type(type_anno) is not None
-
-            is_enum = isinstance(
-                type_anno, intermediate.OurTypeAnnotation
-            ) and isinstance(type_anno.our_type, intermediate.Enumeration)
-
-            assert not (is_primitive_type and is_enum), (
-                f"Unexpected property {prop.name!r} of class {cls.name!r} "
-                f"with type annotation {prop.type_annotation} where "
-                f"it was both matched as primitive type and enumeration."
+            property_constraints = _constraints_of_annotation(
+                type_anno=type_anno,
+                constraints_by_value=constraints_by_value,
+                what=f"property {prop.name!r} of class {cls.name!r}",
             )
 
-            if is_primitive_type:
-                if constraints.set_of_primitives is not None:
-                    allowed_values = [
-                        (
-                            bytes(literal.value)
-                            if isinstance(literal.value, bytearray)
-                            else literal.value
-                        )
-                        for literal in constraints.set_of_primitives.literals
-                    ]
-
-            elif is_enum:
-                if constraints.set_of_enumeration_literals is not None:
-                    allowed_values = [
-                        literal.value
-                        for literal in constraints.set_of_enumeration_literals.literals
-                    ]
-                else:
-                    assert isinstance(
-                        type_anno, intermediate.OurTypeAnnotation
-                    ) and isinstance(type_anno.our_type, intermediate.Enumeration)
-
-                    allowed_values = [
-                        literal.value for literal in type_anno.our_type.literals
-                    ]
-            else:
-                # NOTE (mristin):
-                # There are no allowed value constraints for non-enums and
-                # non-primitives.
-                pass
-
             result[cls][prop] = PropertyConstraints(
-                len_constraint=(constraints.len_constraint),
-                patterns=(
-                    [
-                        pattern_constraint.pattern
-                        for pattern_constraint in constraints.patterns
-                    ]
-                    if constraints.patterns is not None
-                    else []
-                ),
-                allowed_values=allowed_values,
+                len_constraint=property_constraints.len_constraint,
+                patterns=property_constraints.patterns,
+                allowed_values=property_constraints.allowed_values,
+                item_constraints=item_constraints,
             )
 
     return result
@@ -261,6 +296,42 @@ assert all(
 
 
 # fmt: on
+
+
+@ensure(lambda result: not (result is not None) or len(result) > 0)
+def _check_list_of_primitives(
+    value: preseria.ValueUnion,
+    item_annotation: intermediate.TypeAnnotationExceptOptional,
+    symbol_table: intermediate.SymbolTable,
+    constraints_by_class: ReorganizedConstraintsByClass,
+) -> Optional[List[Error]]:
+    """Check that the value is a list whose items conform to the annotation."""
+    if not isinstance(value, preseria.ListOfPrimitives):
+        return [
+            Error(
+                path=Path(segments=[]),
+                message=f"Expected a list of primitives, but got {value!r}.",
+            )
+        ]
+
+    errors = []  # type: List[Error]
+
+    for i, item_value in enumerate(value.values):
+        item_errors = _check_value_against_type_annotation(
+            value=item_value,
+            type_annotation=item_annotation,
+            symbol_table=symbol_table,
+            constraints_by_class=constraints_by_class,
+        )
+
+        if item_errors is not None:
+            for item_error in item_errors:
+                # noinspection PyProtectedMember
+                item_error.path._segments.insert(0, i)
+
+            errors.extend(item_errors)
+
+    return errors if len(errors) > 0 else None
 
 
 @ensure(lambda result: not (result is not None) or len(result) > 0)
@@ -436,6 +507,21 @@ def _check_value_against_type_annotation(
                 assert_never(type_annotation.our_type)
 
         elif isinstance(type_annotation, intermediate.ListTypeAnnotation):
+            item_annotation = intermediate.beneath_optional(type_annotation.items)
+            if not (
+                isinstance(item_annotation, intermediate.OurTypeAnnotation)
+                and isinstance(
+                    item_annotation.our_type,
+                    (intermediate.AbstractClass, intermediate.ConcreteClass),
+                )
+            ):
+                return _check_list_of_primitives(
+                    value=value,
+                    item_annotation=item_annotation,
+                    symbol_table=symbol_table,
+                    constraints_by_class=constraints_by_class,
+                )
+
             assert isinstance(
                 type_annotation.items, intermediate.OurTypeAnnotation
             ) and isinstance(
@@ -577,6 +663,62 @@ def _check_value_against_type_annotation(
     return None
 
 
+def _check_items_against_constraints(
+    property_name: str,
+    class_name: str,
+    items: Sequence[preseria.PrimitiveValueUnion],
+    constraints: PropertyConstraints,
+) -> List[Error]:
+    """Check the items of a list of primitives against the item constraints."""
+    errors = []  # type: List[Error]
+
+    for i, item in enumerate(items):
+        problems = []  # type: List[str]
+
+        if constraints.len_constraint is not None and isinstance(item, (str, bytes)):
+            if (
+                constraints.len_constraint.min_value is not None
+                and len(item) < constraints.len_constraint.min_value
+            ):
+                problems.append(
+                    f"its length {len(item)} is shorter than "
+                    f"{constraints.len_constraint.min_value}"
+                )
+
+            if (
+                constraints.len_constraint.max_value is not None
+                and len(item) > constraints.len_constraint.max_value
+            ):
+                problems.append(
+                    f"its length {len(item)} is longer than "
+                    f"{constraints.len_constraint.max_value}"
+                )
+
+        if isinstance(item, str):
+            for pattern in constraints.patterns:
+                if re.fullmatch(pattern, item) is None:
+                    problems.append(f"it does not match the pattern {pattern!r}")
+
+        if (
+            constraints.allowed_value_set is not None
+            and item not in constraints.allowed_value_set
+        ):
+            problems.append("it is not in the set of allowed values")
+
+        for problem in problems:
+            errors.append(
+                Error(
+                    path=Path(segments=[property_name, i]),
+                    message=(
+                        f"Item {i} of the property {property_name!r} "
+                        f"of class {class_name}, {item!r}, is invalid: {problem}."
+                    ),
+                )
+            )
+
+    return errors
+
+
 @ensure(lambda result: not (result is not None) or len(result) > 0)
 def check_structural_constraints(
     instance: preseria.Instance,
@@ -710,16 +852,39 @@ def check_structural_constraints(
 
         prop_constraints = constraints_by_prop[prop]
 
+        if prop_constraints.item_constraints is not None and isinstance(
+            prop_value, preseria.ListOfPrimitives
+        ):
+            errors.extend(
+                _check_items_against_constraints(
+                    property_name=prop.name,
+                    class_name=cls.name,
+                    items=prop_value.values,
+                    constraints=prop_constraints.item_constraints,
+                )
+            )
+
         if prop_constraints.len_constraint is not None:
             if isinstance(
                 prop_value,
-                (str, bytes, preseria.ListOfInstances, preseria.SetOfPrimitives),
+                (
+                    str,
+                    bytes,
+                    preseria.ListOfInstances,
+                    preseria.SetOfPrimitives,
+                    preseria.ListOfPrimitives,
+                ),
             ):
                 length: int
                 if isinstance(prop_value, (str, bytes)):
                     length = len(prop_value)
                 elif isinstance(
-                    prop_value, (preseria.ListOfInstances, preseria.SetOfPrimitives)
+                    prop_value,
+                    (
+                        preseria.ListOfInstances,
+                        preseria.SetOfPrimitives,
+                        preseria.ListOfPrimitives,
+                    ),
                 ):
                     length = len(prop_value.values)
                 else:
@@ -800,6 +965,7 @@ def check_structural_constraints(
                         preseria.ListOfInstances,
                         preseria.TupleOfValues,
                         preseria.SetOfPrimitives,
+                        preseria.ListOfPrimitives,
                     ),
                 ):
                     continue

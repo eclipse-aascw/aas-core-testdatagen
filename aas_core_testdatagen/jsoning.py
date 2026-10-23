@@ -164,6 +164,25 @@ def serialize(
 
         return json_set, None
 
+    elif isinstance(value, preseria.SequenceOfImmutablePrimitives):
+        json_primitives = []  # type: List[Any]
+
+        for i, primitive_item in enumerate(value.values):
+            json_item, serialization_error = serialize(
+                value=primitive_item, symbol_table=symbol_table
+            )
+
+            if serialization_error is not None:
+                return None, (
+                    f"Failed to serialize the item {i}: {serialization_error}"
+                )
+
+            assert json_item is not None
+
+            json_primitives.append(json_item)
+
+        return json_primitives, None
+
     else:
         # noinspection PyTypeChecker
         assert_never(value)
