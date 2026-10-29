@@ -1,0 +1,76 @@
+{
+  "description": [
+    {
+      "language": "en-JM-x-7ca6ed73",
+      "text": "\u00db\u0103<P\udb63\udc7d\u00b2|dn\u009c\u00de\u00ae"
+    },
+    {
+      "language": "en-JM-x-588ccbcc",
+      "text": "\ud842\udd224\ud842\udd22"
+    }
+  ],
+  "displayName": [
+    {
+      "language": "en-JM-x-99426152",
+      "text": "[\\h$\ud90b\ude9f\u00ec\u00d6\u010b\u008a1\u00bf"
+    },
+    {
+      "language": "en-JM-x-431996fc",
+      "text": "<\u0103<P\udb63\udc7d\u00b2|dn\u009c\u00de\u00ae"
+    }
+  ],
+  "extensions": [
+    {
+      "name": "11\u00d5\u00d1\ud803\udee8\u00b4K\udbca\udf2de<\udb45\uddde\u00a8ngA"
+    },
+    {
+      "name": "6"
+    }
+  ],
+  "id": "0",
+  "administration": {},
+  "assetKind": "Batch",
+  "assetType": "\u00db\u0103<P\udb63\udc7d\u00b2|dn\u009c\u00de\u00ae",
+  "endpoints": [
+    {
+      "protocolInformation": {
+        "href": "something_9e563111"
+      },
+      "interface": "<\u0103<P\udb63\udc7d\u00b2|dn\u009c\u00de\u00ae"
+    },
+    {
+      "protocolInformation": {
+        "href": "something_5dae1086"
+      },
+      "interface": "<\u0103<P\udb63\udc7d\u00b2|dn\u009c\u00de\u00ae"
+    },
+    {
+      "protocolInformation": {
+        "href": "something_b8ea5b5e"
+      },
+      "interface": "<\u0103<P\udb63\udc7d\u00b2|dn\u009c\u00de\u00ae"
+    }
+  ],
+  "globalAssetId": "0",
+  "idShort": "<\u0103<P\udb63\udc7d\u00b2|dn\u009c\u00de\u00ae",
+  "specificAssetIds": [],
+  "submodelDescriptors": [
+    {
+      "endpoints": [
+        {
+          "protocolInformation": {
+            "href": "something_c2cd76b7"
+          },
+          "interface": "\u00f6\u0116a\udbf6\udce1\u0099|"
+        },
+        {
+          "protocolInformation": {
+            "href": "something_b9ed23d9"
+          },
+          "interface": "6"
+        }
+      ],
+      "id": "11\u00d5\u00d1\ud803\udee8\u00b4K\udbca\udf2de<\udb45\uddde\u00a8ngA"
+    }
+  ]
+}

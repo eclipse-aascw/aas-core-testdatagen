@@ -1,0 +1,11 @@
+<getAssetAdministrationShellDescriptorsResult xmlns="https://admin-shell.io/aas/3/2">
+  <pagingMetadata>Unexpected string value</pagingMetadata>
+  <result>
+    <assetAdministrationShellDescriptor>
+      <id>6</id>
+    </assetAdministrationShellDescriptor>
+    <assetAdministrationShellDescriptor>
+      <id>öĖa􍣡|</id>
+    </assetAdministrationShellDescriptor>
+  </result>
+</getAssetAdministrationShellDescriptorsResult>

@@ -1,0 +1,6 @@
+{
+  "$timeCast": {
+    "$strVal": "something_d032619c"
+  },
+  "unexpectedAdditionalProperty": "UNEXPECTED-ADDITIONAL-PROPERTY"
+}

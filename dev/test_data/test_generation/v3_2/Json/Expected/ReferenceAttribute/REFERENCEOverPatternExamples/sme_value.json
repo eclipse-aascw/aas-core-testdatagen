@@ -1,0 +1,3 @@
+{
+  "REFERENCE": "$sme(\"https://example.com/sm\").someProperty#value"
+}

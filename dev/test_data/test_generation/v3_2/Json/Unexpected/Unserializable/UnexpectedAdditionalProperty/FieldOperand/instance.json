@@ -1,0 +1,4 @@
+{
+  "$field": "$sme.someCollection.someProperty#value",
+  "unexpectedAdditionalProperty": "UNEXPECTED-ADDITIONAL-PROPERTY"
+}

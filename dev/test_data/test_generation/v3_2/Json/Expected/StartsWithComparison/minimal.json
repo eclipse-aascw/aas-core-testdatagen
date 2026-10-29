@@ -1,0 +1,12 @@
+{
+  "$starts-with": [
+    {
+      "$attribute": {
+        "CLAIM": "something_4df2f289"
+      }
+    },
+    {
+      "$field": "$smdesc#semanticId.type"
+    }
+  ]
+}

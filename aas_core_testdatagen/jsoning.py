@@ -13,7 +13,7 @@ from aas_core_codegen import intermediate
 from aas_core_codegen.common import assert_never, Identifier
 from icontract import ensure, require, invariant
 
-from aas_core_testdatagen import preseria, casing, generation, seria, common
+from aas_core_testdatagen import preseria, casing, generation, seria, common, names
 from aas_core_testdatagen.casing import NegativeCase
 
 
@@ -77,8 +77,8 @@ def serialize(
             prop_value = value.properties[prop_name]
 
             if aas_core_codegen.common.IDENTIFIER_RE.fullmatch(prop_name) is not None:
-                prop_name_json = aas_core_codegen.naming.json_property(
-                    aas_core_codegen.common.Identifier(prop_name)
+                prop_name_json = names.json_property(
+                    symbol_table, value.class_name, prop_name
                 )
             else:
                 prop_name_json = prop_name
@@ -126,6 +126,101 @@ def serialize(
 
         return json_list, None
 
+    elif isinstance(value, preseria.TupleOfImmutableValues):
+        json_tuple = []  # type: List[Any]
+
+        for i, tuple_item in enumerate(value.values):
+            json_item, serialization_error = serialize(
+                value=tuple_item, symbol_table=symbol_table
+            )
+
+            if serialization_error is not None:
+                return None, (
+                    f"Failed to serialize the tuple item {i}: {serialization_error}"
+                )
+
+            assert json_item is not None
+
+            json_tuple.append(json_item)
+
+        return json_tuple, None
+
+    elif isinstance(value, preseria.SetOfImmutablePrimitives):
+        json_set = []  # type: List[Any]
+
+        for i, set_item in enumerate(preseria.sorted_set_items(value.values)):
+            json_item, serialization_error = serialize(
+                value=set_item, symbol_table=symbol_table
+            )
+
+            if serialization_error is not None:
+                return None, (
+                    f"Failed to serialize the set item {i}: {serialization_error}"
+                )
+
+            assert json_item is not None
+
+            json_set.append(json_item)
+
+        return json_set, None
+
+    elif isinstance(value, preseria.SequenceOfImmutablePrimitives):
+        json_primitives = []  # type: List[Any]
+
+        for i, primitive_item in enumerate(value.values):
+            json_item, serialization_error = serialize(
+                value=primitive_item, symbol_table=symbol_table
+            )
+
+            if serialization_error is not None:
+                return None, (
+                    f"Failed to serialize the item {i}: {serialization_error}"
+                )
+
+            assert json_item is not None
+
+            json_primitives.append(json_item)
+
+        return json_primitives, None
+
+    elif isinstance(value, preseria.ImmutableJsonArray):
+        json_array = []  # type: List[Any]
+
+        for i, array_item in enumerate(value.values):
+            json_item, serialization_error = serialize(
+                value=array_item, symbol_table=symbol_table
+            )
+
+            if serialization_error is not None:
+                return None, (
+                    f"Failed to serialize the item {i}: {serialization_error}"
+                )
+
+            assert json_item is not None
+
+            json_array.append(json_item)
+
+        return json_array, None
+
+    elif isinstance(value, preseria.ImmutableJsonObject):
+        json_object: MutableMapping[str, Any] = collections.OrderedDict([])
+
+        for key, member_value in value.members:
+            json_member, serialization_error = serialize(
+                value=member_value, symbol_table=symbol_table
+            )
+
+            if serialization_error is not None:
+                return None, (
+                    f"Failed to serialize the member {key!r}: {serialization_error}"
+                )
+
+            assert json_member is not None
+
+            json_object[key] = json_member
+
+        return json_object, None
+
     else:
         # noinspection PyTypeChecker
         assert_never(value)
@@ -157,7 +252,9 @@ def must_serialize(
     and result.parts[-1].endswith(".json")
 )
 @ensure(lambda result: not result.is_absolute())
-def _determine_relative_path(case: casing.CaseUnion) -> pathlib.Path:
+def _determine_relative_path(
+    case: casing.CaseUnion, symbol_table: intermediate.SymbolTable
+) -> pathlib.Path:
     """Determine the relative path for a test case."""
     model_type = aas_core_codegen.naming.json_model_type(
         aas_core_codegen.common.Identifier(case.instance.class_name)
@@ -169,14 +266,18 @@ def _determine_relative_path(case: casing.CaseUnion) -> pathlib.Path:
         elif isinstance(case, casing.CaseMaximal):
             case_path_component = pathlib.Path("maximal.json")
         elif isinstance(case, casing.CasePositivePatternExample):
-            json_prop_name = aas_core_codegen.naming.json_property(case.property_name)
+            json_prop_name = names.json_property(
+                symbol_table, case.instance.class_name, case.property_name
+            )
 
             case_path_component = (
                 pathlib.Path(f"{json_prop_name}OverPatternExamples")
                 / f"{case.example_name}.json"
             )
         elif isinstance(case, casing.CasePositiveValueExample):
-            json_prop_name = aas_core_codegen.naming.json_property(case.property_name)
+            json_prop_name = names.json_property(
+                symbol_table, case.instance.class_name, case.property_name
+            )
             case_path_component = (
                 pathlib.Path(f"{json_prop_name}OverValueExamples")
                 / f"{case.value_type_name}_{case.example_name}.json"
@@ -196,7 +297,9 @@ def _determine_relative_path(case: casing.CaseUnion) -> pathlib.Path:
 
     elif isinstance(case, NegativeCase):
         if isinstance(case, casing.CaseTypeViolation):
-            json_prop_name = aas_core_codegen.naming.json_property(case.property_name)
+            json_prop_name = names.json_property(
+                symbol_table, case.instance.class_name, case.property_name
+            )
             return (
                 pathlib.Path("Json")
                 / "Unexpected"
@@ -211,7 +314,9 @@ def _determine_relative_path(case: casing.CaseUnion) -> pathlib.Path:
             # If you change this part, make sure you also update
             # _make_null_violation_out_of_required_violation.
 
-            json_prop_name = aas_core_codegen.naming.json_property(case.property_name)
+            json_prop_name = names.json_property(
+                symbol_table, case.instance.class_name, case.property_name
+            )
             return (
                 pathlib.Path("Json")
                 / "Unexpected"
@@ -232,7 +337,9 @@ def _determine_relative_path(case: casing.CaseUnion) -> pathlib.Path:
             )
 
         elif isinstance(case, casing.CaseEnumerationViolation):
-            json_prop_name = aas_core_codegen.naming.json_property(case.property_name)
+            json_prop_name = names.json_property(
+                symbol_table, case.instance.class_name, case.property_name
+            )
             return (
                 pathlib.Path("Json")
                 / "Unexpected"
@@ -243,7 +350,9 @@ def _determine_relative_path(case: casing.CaseUnion) -> pathlib.Path:
             )
 
         elif isinstance(case, casing.CasePatternViolation):
-            json_prop_name = aas_core_codegen.naming.json_property(case.property_name)
+            json_prop_name = names.json_property(
+                symbol_table, case.instance.class_name, case.property_name
+            )
             return (
                 pathlib.Path("Json")
                 / "Unexpected"
@@ -254,8 +363,24 @@ def _determine_relative_path(case: casing.CaseUnion) -> pathlib.Path:
                 / f"{case.example_name}.json"
             )
 
+        elif isinstance(case, casing.CaseJsonKeyViolation):
+            json_prop_name = names.json_property(
+                symbol_table, case.instance.class_name, case.property_name
+            )
+            return (
+                pathlib.Path("Json")
+                / "Unexpected"
+                / "Invalid"
+                / "JsonKeyViolation"
+                / model_type
+                / json_prop_name
+                / f"{case.example_name}.json"
+            )
+
         elif isinstance(case, casing.CaseMinLengthViolation):
-            json_prop_name = aas_core_codegen.naming.json_property(case.property_name)
+            json_prop_name = names.json_property(
+                symbol_table, case.instance.class_name, case.property_name
+            )
             return (
                 pathlib.Path("Json")
                 / "Unexpected"
@@ -266,7 +391,9 @@ def _determine_relative_path(case: casing.CaseUnion) -> pathlib.Path:
             )
 
         elif isinstance(case, casing.CaseMaxLengthViolation):
-            json_prop_name = aas_core_codegen.naming.json_property(case.property_name)
+            json_prop_name = names.json_property(
+                symbol_table, case.instance.class_name, case.property_name
+            )
             return (
                 pathlib.Path("Json")
                 / "Unexpected"
@@ -277,7 +404,9 @@ def _determine_relative_path(case: casing.CaseUnion) -> pathlib.Path:
             )
 
         elif isinstance(case, casing.CaseEnumerationViolation):
-            json_prop_name = aas_core_codegen.naming.json_property(case.property_name)
+            json_prop_name = names.json_property(
+                symbol_table, case.instance.class_name, case.property_name
+            )
             return (
                 pathlib.Path("Json")
                 / "Unexpected"
@@ -288,7 +417,9 @@ def _determine_relative_path(case: casing.CaseUnion) -> pathlib.Path:
             )
 
         elif isinstance(case, casing.CaseSetViolation):
-            json_prop_name = aas_core_codegen.naming.json_property(case.property_name)
+            json_prop_name = names.json_property(
+                symbol_table, case.instance.class_name, case.property_name
+            )
             return (
                 pathlib.Path("Json")
                 / "Unexpected"
@@ -299,7 +430,9 @@ def _determine_relative_path(case: casing.CaseUnion) -> pathlib.Path:
             )
 
         elif isinstance(case, casing.CaseDateTimeUtcViolationOnFebruary29th):
-            json_prop_name = aas_core_codegen.naming.json_property(case.property_name)
+            json_prop_name = names.json_property(
+                symbol_table, case.instance.class_name, case.property_name
+            )
             return (
                 pathlib.Path("Json")
                 / "Unexpected"
@@ -310,7 +443,9 @@ def _determine_relative_path(case: casing.CaseUnion) -> pathlib.Path:
             )
 
         elif isinstance(case, casing.CaseInvalidValueExample):
-            json_prop_name = aas_core_codegen.naming.json_property(case.property_name)
+            json_prop_name = names.json_property(
+                symbol_table, case.instance.class_name, case.property_name
+            )
             return (
                 pathlib.Path("Json")
                 / "Unexpected"
@@ -400,7 +535,9 @@ def _make_null_violation_out_of_required_violation(
         f"but got: {jsonable}"
     )
 
-    json_prop_name = aas_core_codegen.naming.json_property(prop_name)
+    json_prop_name = names.json_property(
+        symbol_table, case.instance.class_name, prop_name
+    )
     jsonable[json_prop_name] = None
 
     text = json.dumps(jsonable, indent=2)
@@ -526,7 +663,7 @@ def generate_test_data(case_generator: generation.CaseGenerator) -> Iterator[Out
     relative_path_asserter = seria.RelativePathAsserter()
 
     for case in case_generator.generate():
-        relative_path = _determine_relative_path(case)
+        relative_path = _determine_relative_path(case, case_generator.symbol_table)
 
         relative_path_asserter.assert_and_add(relative_path)
 

@@ -1,0 +1,21 @@
+{
+  "$fragment": {
+    "type": "ExternalReference",
+    "keys": [
+      {
+        "type": "GlobalReference",
+        "value": "unexpected reference"
+      }
+    ]
+  },
+  "$condition": {
+    "$ge": [
+      {
+        "$hexVal": "16#1"
+      },
+      {
+        "$hexVal": "16#1F"
+      }
+    ]
+  }
+}

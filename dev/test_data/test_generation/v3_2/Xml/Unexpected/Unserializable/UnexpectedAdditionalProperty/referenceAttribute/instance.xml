@@ -1,0 +1,4 @@
+<referenceAttribute xmlns="https://admin-shell.io/aas/3/2">
+  <reference>$sm("a\\b")#id</reference>
+  <unexpectedAdditionalProperty>UNEXPECTED-ADDITIONAL-PROPERTY</unexpectedAdditionalProperty>
+</referenceAttribute>

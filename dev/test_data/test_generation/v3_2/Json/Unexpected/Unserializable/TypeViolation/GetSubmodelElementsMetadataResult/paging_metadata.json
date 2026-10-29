@@ -1,0 +1,11 @@
+{
+  "paging_metadata": "Unexpected string value",
+  "result": [
+    {
+      "modelType": "EntityMetadata"
+    },
+    {
+      "modelType": "MultiLanguagePropertyMetadata"
+    }
+  ]
+}

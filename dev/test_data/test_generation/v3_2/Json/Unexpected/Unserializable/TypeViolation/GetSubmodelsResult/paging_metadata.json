@@ -1,0 +1,13 @@
+{
+  "paging_metadata": "Unexpected string value",
+  "result": [
+    {
+      "id": "6",
+      "modelType": "Submodel"
+    },
+    {
+      "id": "\u00f6\u0116a\udbf6\udce1\u0099|",
+      "modelType": "Submodel"
+    }
+  ]
+}

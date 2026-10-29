@@ -1,0 +1,104 @@
+<operationResultValueOnly xmlns="https://admin-shell.io/aas/3/2">
+  <executionState>Running</executionState>
+  <messages>
+    <message>
+      <messageType>Warning</messageType>
+      <text>something_fc5e4647</text>
+    </message>
+    <message>
+      <messageType>Error</messageType>
+      <text>something_ff32f5c8</text>
+    </message>
+  </messages>
+  <success>false</success>
+  <outputArguments>
+    <member xmlns="">
+      <name>򚪾󰾫7</name>
+      <value>
+        <string>something_764a7cd7</string>
+      </value>
+    </member>
+    <member xmlns="">
+      <name>a_</name>
+      <value>
+        <double>30188789.16</double>
+      </value>
+    </member>
+    <member xmlns="">
+      <name>aa</name>
+      <value>
+        <boolean>0</boolean>
+      </value>
+    </member>
+    <member xmlns="">
+      <name>a-_-_-_-_-_</name>
+      <value>
+        <array>
+          <data>
+            <value>
+              <string>something_62dd8d48</string>
+            </value>
+            <value>
+              <double>30606723.38</double>
+            </value>
+            <value>
+              <struct>
+                <member>
+                  <name>nested</name>
+                  <value>
+                    <boolean>1</boolean>
+                  </value>
+                </member>
+              </struct>
+            </value>
+          </data>
+        </array>
+      </value>
+    </member>
+  </outputArguments>
+  <inoutputArguments>
+    <member xmlns="">
+      <name>tWC</name>
+      <value>
+        <string>something_ab23bd21</string>
+      </value>
+    </member>
+    <member xmlns="">
+      <name>EO5DYAe</name>
+      <value>
+        <double>37181367.93</double>
+      </value>
+    </member>
+    <member xmlns="">
+      <name>aa</name>
+      <value>
+        <boolean>1</boolean>
+      </value>
+    </member>
+    <member xmlns="">
+      <name>a-_</name>
+      <value>
+        <array>
+          <data>
+            <value>
+              <string>something_7829b778</string>
+            </value>
+            <value>
+              <double>8436010.71</double>
+            </value>
+            <value>
+              <struct>
+                <member>
+                  <name>nested</name>
+                  <value>
+                    <boolean>0</boolean>
+                  </value>
+                </member>
+              </struct>
+            </value>
+          </data>
+        </array>
+      </value>
+    </member>
+  </inoutputArguments>
+</operationResultValueOnly>

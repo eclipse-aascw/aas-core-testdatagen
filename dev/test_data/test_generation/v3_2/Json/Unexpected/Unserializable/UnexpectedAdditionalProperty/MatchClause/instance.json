@@ -1,0 +1,37 @@
+{
+  "$match": [
+    {
+      "$eq": [
+        {
+          "$strVal": "something_b2d0f286"
+        },
+        {
+          "$strVal": "something_b0da9147"
+        }
+      ]
+    },
+    {
+      "$regex": [
+        {
+          "$attribute": {
+            "CLAIM": "something_aa0298f7"
+          }
+        },
+        {
+          "$strVal": "something_e5667ab1"
+        }
+      ]
+    },
+    {
+      "$gt": [
+        {
+          "$strVal": "something_697e8fb1"
+        },
+        {
+          "$strVal": "something_a06a3e2e"
+        }
+      ]
+    }
+  ],
+  "unexpectedAdditionalProperty": "UNEXPECTED-ADDITIONAL-PROPERTY"
+}

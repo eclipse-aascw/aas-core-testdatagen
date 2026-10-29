@@ -1,0 +1,43 @@
+{
+  "entityType": "CoManagedEntity",
+  "globalAssetId": "0",
+  "specificAssetIds": [
+    {
+      "11\u00d5\u00d1\ud803\udee8\u00b4K\udbca\udf2de<\udb45\uddde\u00a8ngA": "something_9893a589",
+      "0": 7611687.58,
+      "\u00db\u0103<P\udb63\udc7d\u00b2|dn\u009c\u00de\u00ae": true,
+      "J5": [
+        "something_976454e1",
+        6047604.47,
+        {
+          "nested": true
+        }
+      ]
+    },
+    {
+      "6": "something_e752ec58",
+      "11\u00d5\u00d1\ud803\udee8\u00b4K\udbca\udf2de<\udb45\uddde\u00a8ngA": 2450279.81,
+      "\u00f6\u0116a\udbf6\udce1\u0099|": true,
+      "[\\h$\ud90b\ude9f\u00ec\u00d6\u010b\u008a1\u00bf": [
+        "something_410466ac",
+        34492713.6,
+        {
+          "nested": true
+        }
+      ]
+    },
+    {
+      "0": "something_2af71231",
+      "\u00db\u0103<P\udb63\udc7d\u00b2|dn\u009c\u00de\u00ae": 41911723.71,
+      "[\\h$\ud90b\ude9f\u00ec\u00d6\u010b\u008a1\u00bf": true,
+      "J5": [
+        "something_0be6fa02",
+        71146.82,
+        {
+          "nested": false
+        }
+      ]
+    }
+  ],
+  "statements": "Unexpected string value"
+}

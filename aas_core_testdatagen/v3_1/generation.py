@@ -18,10 +18,12 @@ from aas_core_testdatagen import generation, verification, casing, preseria
 class InstanceGenerator(generation.InstanceGenerator):
     """Generate instances specific for the meta-model V3.1."""
 
-    # NOTE (mristin):
-    # Since the first version of the code was written with V3.1, and still no V3.2,
-    # there is no special logic for V3.1. However, this will change in future as
-    # the meta-models evolve.
+    # AASd-138 (exactly one element in lists of operation variables) was
+    # introduced in V3.2.
+    single_element_lists_in_operation_variables = False
+
+    # V3.2 introduced the created_at/updated_at timestamps.
+    administration_information_timestamps = False
 
 
 class CaseGenerator(generation.CaseGenerator):

@@ -1,0 +1,4 @@
+<securityAttributeObject xmlns="https://admin-shell.io/aas/3/2">
+  <type>W3C_DID</type>
+  <value>something_2db7f511</value>
+</securityAttributeObject>

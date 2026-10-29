@@ -1,0 +1,13 @@
+{
+  "$condition": {
+    "$ge": [
+      {
+        "$hexVal": "16#1"
+      },
+      {
+        "$hexVal": "16#1F"
+      }
+    ]
+  },
+  "unexpectedAdditionalProperty": "UNEXPECTED-ADDITIONAL-PROPERTY"
+}

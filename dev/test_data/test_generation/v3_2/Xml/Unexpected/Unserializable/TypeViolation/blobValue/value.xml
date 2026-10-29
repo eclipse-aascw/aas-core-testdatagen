@@ -1,0 +1,12 @@
+<blobValue xmlns="https://admin-shell.io/aas/3/2">
+  <contentType>15j/5j</contentType>
+  <value>
+    <type>ExternalReference</type>
+    <keys>
+      <key>
+        <type>GlobalReference</type>
+        <value>unexpected reference</value>
+      </key>
+    </keys>
+  </value>
+</blobValue>

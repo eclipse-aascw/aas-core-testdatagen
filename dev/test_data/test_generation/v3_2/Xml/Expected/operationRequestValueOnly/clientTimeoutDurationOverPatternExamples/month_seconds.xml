@@ -1,0 +1,3 @@
+<operationRequestValueOnly xmlns="https://admin-shell.io/aas/3/2">
+  <clientTimeoutDuration>PT2M10S</clientTimeoutDuration>
+</operationRequestValueOnly>

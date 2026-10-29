@@ -1,0 +1,11 @@
+<globalAttribute xmlns="https://admin-shell.io/aas/3/2">
+  <kind>
+    <type>ExternalReference</type>
+    <keys>
+      <key>
+        <type>GlobalReference</type>
+        <value>unexpected reference</value>
+      </key>
+    </keys>
+  </kind>
+</globalAttribute>

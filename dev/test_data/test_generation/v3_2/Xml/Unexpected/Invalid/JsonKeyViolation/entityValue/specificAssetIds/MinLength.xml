@@ -1,0 +1,186 @@
+<entityValue xmlns="https://admin-shell.io/aas/3/2">
+  <entityType>CoManagedEntity</entityType>
+  <globalAssetId>0</globalAssetId>
+  <specificAssetIds>
+    <v>
+      <member xmlns="">
+        <name></name>
+        <value>
+          <string>something_9893a589</string>
+        </value>
+      </member>
+      <member xmlns="">
+        <name>0</name>
+        <value>
+          <double>7611687.58</double>
+        </value>
+      </member>
+      <member xmlns="">
+        <name>Ûă&lt;P󨱽²|dnÞ®</name>
+        <value>
+          <boolean>1</boolean>
+        </value>
+      </member>
+      <member xmlns="">
+        <name>J5</name>
+        <value>
+          <array>
+            <data>
+              <value>
+                <string>something_976454e1</string>
+              </value>
+              <value>
+                <double>6047604.47</double>
+              </value>
+              <value>
+                <struct>
+                  <member>
+                    <name>nested</name>
+                    <value>
+                      <boolean>1</boolean>
+                    </value>
+                  </member>
+                </struct>
+              </value>
+            </data>
+          </array>
+        </value>
+      </member>
+    </v>
+    <v>
+      <member xmlns="">
+        <name>6</name>
+        <value>
+          <string>something_e752ec58</string>
+        </value>
+      </member>
+      <member xmlns="">
+        <name>11ÕÑ𐻨´K􂬭e&lt;󡗞¨ngA</name>
+        <value>
+          <double>2450279.81</double>
+        </value>
+      </member>
+      <member xmlns="">
+        <name>öĖa􍣡|</name>
+        <value>
+          <boolean>1</boolean>
+        </value>
+      </member>
+      <member xmlns="">
+        <name>[\h$񒺟ìÖċ1¿</name>
+        <value>
+          <array>
+            <data>
+              <value>
+                <string>something_410466ac</string>
+              </value>
+              <value>
+                <double>34492713.6</double>
+              </value>
+              <value>
+                <struct>
+                  <member>
+                    <name>nested</name>
+                    <value>
+                      <boolean>1</boolean>
+                    </value>
+                  </member>
+                </struct>
+              </value>
+            </data>
+          </array>
+        </value>
+      </member>
+    </v>
+    <v>
+      <member xmlns="">
+        <name>0</name>
+        <value>
+          <string>something_2af71231</string>
+        </value>
+      </member>
+      <member xmlns="">
+        <name>Ûă&lt;P󨱽²|dnÞ®</name>
+        <value>
+          <double>41911723.71</double>
+        </value>
+      </member>
+      <member xmlns="">
+        <name>[\h$񒺟ìÖċ1¿</name>
+        <value>
+          <boolean>1</boolean>
+        </value>
+      </member>
+      <member xmlns="">
+        <name>J5</name>
+        <value>
+          <array>
+            <data>
+              <value>
+                <string>something_0be6fa02</string>
+              </value>
+              <value>
+                <double>71146.82</double>
+              </value>
+              <value>
+                <struct>
+                  <member>
+                    <name>nested</name>
+                    <value>
+                      <boolean>0</boolean>
+                    </value>
+                  </member>
+                </struct>
+              </value>
+            </data>
+          </array>
+        </value>
+      </member>
+    </v>
+  </specificAssetIds>
+  <statements>
+    <member xmlns="">
+      <name>aa</name>
+      <value>
+        <string>something_ef8d35ae</string>
+      </value>
+    </member>
+    <member xmlns="">
+      <name>a-_-_-_-_-_</name>
+      <value>
+        <double>14955386.36</double>
+      </value>
+    </member>
+    <member xmlns="">
+      <name>fULCVpULCVq</name>
+      <value>
+        <boolean>0</boolean>
+      </value>
+    </member>
+    <member xmlns="">
+      <name>strange-name_</name>
+      <value>
+        <array>
+          <data>
+            <value>
+              <string>something_a6bc72af</string>
+            </value>
+            <value>
+              <double>40013686.16</double>
+            </value>
+            <value>
+              <struct>
+                <member>
+                  <name>nested</name>
+                  <value>
+                    <boolean>1</boolean>
+                  </value>
+                </member>
+              </struct>
+            </value>
+          </data>
+        </array>
+      </value>
+    </member>
+  </statements>
+</entityValue>

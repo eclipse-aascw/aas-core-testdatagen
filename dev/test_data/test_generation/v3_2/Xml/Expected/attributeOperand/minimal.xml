@@ -1,0 +1,7 @@
+<attributeOperand xmlns="https://admin-shell.io/aas/3/2">
+  <attribute>
+    <claimAttribute>
+      <claim>something_00860a04</claim>
+    </claimAttribute>
+  </attribute>
+</attributeOperand>

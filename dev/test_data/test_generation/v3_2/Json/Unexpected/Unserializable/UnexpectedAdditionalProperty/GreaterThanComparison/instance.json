@@ -1,0 +1,11 @@
+{
+  "$gt": [
+    {
+      "$hexVal": "16#00"
+    },
+    {
+      "$hexVal": "16#1F"
+    }
+  ],
+  "unexpectedAdditionalProperty": "UNEXPECTED-ADDITIONAL-PROPERTY"
+}

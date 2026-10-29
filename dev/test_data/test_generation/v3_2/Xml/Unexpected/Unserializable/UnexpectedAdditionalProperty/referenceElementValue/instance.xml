@@ -1,0 +1,10 @@
+<referenceElementValue xmlns="https://admin-shell.io/aas/3/2">
+  <type>ExternalReference</type>
+  <keys>
+    <key>
+      <type>Operation</type>
+      <value>öĖa􍣡|</value>
+    </key>
+  </keys>
+  <unexpectedAdditionalProperty>UNEXPECTED-ADDITIONAL-PROPERTY</unexpectedAdditionalProperty>
+</referenceElementValue>

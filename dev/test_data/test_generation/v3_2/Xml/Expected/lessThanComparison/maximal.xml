@@ -1,0 +1,10 @@
+<lessThanComparison xmlns="https://admin-shell.io/aas/3/2">
+  <lt>
+    <hexLiteral>
+      <hexVal>16#1F</hexVal>
+    </hexLiteral>
+    <hexLiteral>
+      <hexVal>16#1</hexVal>
+    </hexLiteral>
+  </lt>
+</lessThanComparison>

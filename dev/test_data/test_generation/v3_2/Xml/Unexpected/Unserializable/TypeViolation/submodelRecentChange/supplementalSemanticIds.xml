@@ -1,0 +1,15 @@
+<submodelRecentChange xmlns="https://admin-shell.io/aas/3/2">
+  <createdAt>2022-04-01T24:00:00+00:00</createdAt>
+  <updatedAt>2022-04-01T24:00:00Z</updatedAt>
+  <id>0</id>
+  <semanticId>
+    <type>ExternalReference</type>
+    <keys>
+      <key>
+        <type>GlobalReference</type>
+        <value>urn:another-company:14:e9fb9bbe</value>
+      </key>
+    </keys>
+  </semanticId>
+  <supplementalSemanticIds>Unexpected string value</supplementalSemanticIds>
+</submodelRecentChange>

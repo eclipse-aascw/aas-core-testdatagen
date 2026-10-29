@@ -1,0 +1,11 @@
+<lessThanOrEqualComparison xmlns="https://admin-shell.io/aas/3/2">
+  <le>
+    <hexLiteral>
+      <hexVal>16#00</hexVal>
+    </hexLiteral>
+    <hexLiteral>
+      <hexVal>16#00</hexVal>
+    </hexLiteral>
+  </le>
+  <unexpectedAdditionalProperty>UNEXPECTED-ADDITIONAL-PROPERTY</unexpectedAdditionalProperty>
+</lessThanOrEqualComparison>

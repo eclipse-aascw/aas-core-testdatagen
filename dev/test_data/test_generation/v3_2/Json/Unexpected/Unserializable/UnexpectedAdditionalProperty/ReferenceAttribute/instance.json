@@ -1,0 +1,4 @@
+{
+  "REFERENCE": "$sm(\"a\\\\b\")#id",
+  "unexpectedAdditionalProperty": "UNEXPECTED-ADDITIONAL-PROPERTY"
+}

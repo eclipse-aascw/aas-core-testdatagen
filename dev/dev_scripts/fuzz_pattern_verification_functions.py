@@ -26,7 +26,7 @@ def main() -> None:
     parser.add_argument(
         "--model_path",
         help="path to the meta-model",
-        default=str(repo_root / "dev" / "test_data" / "meta_model" / "v3_1.py"),
+        default=str(repo_root / "dev" / "test_data" / "meta_model" / "v3_2.py"),
     )
     args = parser.parse_args()
 

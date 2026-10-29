@@ -1,0 +1,22 @@
+{
+  "executionState": {
+    "type": "ExternalReference",
+    "keys": [
+      {
+        "type": "GlobalReference",
+        "value": "unexpected reference"
+      }
+    ]
+  },
+  "messages": [
+    {
+      "messageType": "Warning",
+      "text": "something_fc5e4647"
+    },
+    {
+      "messageType": "Error",
+      "text": "something_ff32f5c8"
+    }
+  ],
+  "success": false
+}

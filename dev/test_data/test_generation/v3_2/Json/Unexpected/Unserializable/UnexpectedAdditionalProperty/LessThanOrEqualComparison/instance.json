@@ -1,0 +1,11 @@
+{
+  "$le": [
+    {
+      "$hexVal": "16#00"
+    },
+    {
+      "$hexVal": "16#00"
+    }
+  ],
+  "unexpectedAdditionalProperty": "UNEXPECTED-ADDITIONAL-PROPERTY"
+}

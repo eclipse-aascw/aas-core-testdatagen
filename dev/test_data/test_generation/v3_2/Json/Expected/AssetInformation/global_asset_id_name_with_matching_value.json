@@ -1,0 +1,10 @@
+{
+  "assetKind": "Type",
+  "globalAssetId": "urn:global:asset",
+  "specificAssetIds": [
+    {
+      "name": "globalAssetId",
+      "value": "urn:global:asset"
+    }
+  ]
+}

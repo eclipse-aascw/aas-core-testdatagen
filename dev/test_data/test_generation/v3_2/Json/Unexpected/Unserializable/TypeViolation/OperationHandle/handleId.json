@@ -1,0 +1,11 @@
+{
+  "handleId": {
+    "type": "ExternalReference",
+    "keys": [
+      {
+        "type": "GlobalReference",
+        "value": "unexpected reference"
+      }
+    ]
+  }
+}

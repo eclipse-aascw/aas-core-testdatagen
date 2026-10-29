@@ -1,0 +1,82 @@
+{
+  "description": "Unexpected string value",
+  "displayName": [
+    {
+      "language": "en-JM-x-99426152",
+      "text": "[\\h$\ud90b\ude9f\u00ec\u00d6\u010b\u008a1\u00bf"
+    },
+    {
+      "language": "en-JM-x-431996fc",
+      "text": "<\u0103<P\udb63\udc7d\u00b2|dn\u009c\u00de\u00ae"
+    }
+  ],
+  "extensions": [
+    {
+      "name": "11\u00d5\u00d1\ud803\udee8\u00b4K\udbca\udf2de<\udb45\uddde\u00a8ngA"
+    },
+    {
+      "name": "6"
+    }
+  ],
+  "endpoints": [
+    {
+      "protocolInformation": {
+        "href": "something_9e563111"
+      },
+      "interface": "<\u0103<P\udb63\udc7d\u00b2|dn\u009c\u00de\u00ae"
+    },
+    {
+      "protocolInformation": {
+        "href": "something_5dae1086"
+      },
+      "interface": "<\u0103<P\udb63\udc7d\u00b2|dn\u009c\u00de\u00ae"
+    },
+    {
+      "protocolInformation": {
+        "href": "something_b8ea5b5e"
+      },
+      "interface": "<\u0103<P\udb63\udc7d\u00b2|dn\u009c\u00de\u00ae"
+    }
+  ],
+  "id": "0",
+  "administration": {},
+  "idShort": "<\u0103<P\udb63\udc7d\u00b2|dn\u009c\u00de\u00ae",
+  "semanticId": {
+    "type": "ExternalReference",
+    "keys": [
+      {
+        "type": "GlobalReference",
+        "value": "urn:another-company:14:e9fb9bbe"
+      }
+    ]
+  },
+  "supplementalSemanticIds": [
+    {
+      "type": "ExternalReference",
+      "keys": [
+        {
+          "type": "GlobalReference",
+          "value": "urn:another-example:14:967c1fae"
+        }
+      ]
+    },
+    {
+      "type": "ExternalReference",
+      "keys": [
+        {
+          "type": "GlobalReference",
+          "value": "urn:another-company:10:c92b4b06"
+        }
+      ]
+    },
+    {
+      "type": "ExternalReference",
+      "keys": [
+        {
+          "type": "GlobalReference",
+          "value": "urn:another-example:06:1f165292"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,28 @@
+<dataSpecificationUom xmlns="https://admin-shell.io/aas/3/2">
+  <preferredName>Unexpected string value</preferredName>
+  <symbol>11ÕÑ𐻨´K􂬭e&lt;󡗞¨ngA</symbol>
+  <specificUnitId>11ÕÑ𐻨´K􂬭e&lt;󡗞¨ngA</specificUnitId>
+  <definition>
+    <definitionTypeUom>
+      <language>en-JM-x-b7bc1552</language>
+      <text>11ÕÑ𐻨´K􂬭e&lt;󡗞¨ngA</text>
+    </definitionTypeUom>
+  </definition>
+  <preferredNameQuantity>
+    <langStringUom>
+      <language>en-JM-x-86de9a4b</language>
+      <text>&lt;ă&lt;P󨱽²|dnÞ®</text>
+    </langStringUom>
+    <langStringUom>
+      <language>en-JM-x-9bd9cd32</language>
+      <text>𠤢4𠤢</text>
+    </langStringUom>
+    <langStringUom>
+      <language>en-JM-x-3d2061f3</language>
+      <text>J5</text>
+    </langStringUom>
+  </preferredNameQuantity>
+  <quantityId>11ÕÑ𐻨´K􂬭e&lt;󡗞¨ngA</quantityId>
+  <classificationSystem>&lt;ă&lt;P󨱽²|dnÞ®</classificationSystem>
+  <classificationSystemVersion>11ÕÑ𐻨´K􂬭e&lt;󡗞¨ngA</classificationSystemVersion>
+</dataSpecificationUom>

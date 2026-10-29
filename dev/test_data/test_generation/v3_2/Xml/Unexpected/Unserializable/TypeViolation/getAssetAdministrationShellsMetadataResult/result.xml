@@ -1,0 +1,4 @@
+<getAssetAdministrationShellsMetadataResult xmlns="https://admin-shell.io/aas/3/2">
+  <pagingMetadata />
+  <result>Unexpected string value</result>
+</getAssetAdministrationShellsMetadataResult>

@@ -1,0 +1,6 @@
+{
+  "$hexCast": {
+    "$field": "$sme.list[3].prop#valueType"
+  },
+  "unexpectedAdditionalProperty": "UNEXPECTED-ADDITIONAL-PROPERTY"
+}

@@ -1,0 +1,10 @@
+<greaterThanComparison xmlns="https://admin-shell.io/aas/3/2">
+  <gt>
+    <hexLiteral>
+      <hexVal>16#00</hexVal>
+    </hexLiteral>
+    <hexLiteral>
+      <hexVal>16#1F</hexVal>
+    </hexLiteral>
+  </gt>
+</greaterThanComparison>

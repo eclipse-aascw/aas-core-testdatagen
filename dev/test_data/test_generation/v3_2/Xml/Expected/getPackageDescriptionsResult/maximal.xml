@@ -1,0 +1,11 @@
+<getPackageDescriptionsResult xmlns="https://admin-shell.io/aas/3/2">
+  <pagingMetadata />
+  <result>
+    <packageDescription>
+      <packageId>J5</packageId>
+    </packageDescription>
+    <packageDescription>
+      <packageId>0</packageId>
+    </packageDescription>
+  </result>
+</getPackageDescriptionsResult>

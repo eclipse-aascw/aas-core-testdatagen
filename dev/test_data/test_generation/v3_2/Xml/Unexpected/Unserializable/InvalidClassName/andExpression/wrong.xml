@@ -1,0 +1,24 @@
+<utterlyInvalid xmlns="https://admin-shell.io/aas/3/2">
+  <andOperands>
+    <containsComparison>
+      <contains>
+        <fieldOperand>
+          <field>$aas#idShort</field>
+        </fieldOperand>
+        <fieldOperand>
+          <field>$aasdesc#endpoints[0].protocolinformation.href</field>
+        </fieldOperand>
+      </contains>
+    </containsComparison>
+    <notEqualComparison>
+      <ne>
+        <stringLiteral>
+          <strVal>something_b589635f</strVal>
+        </stringLiteral>
+        <stringLiteral>
+          <strVal>something_cf0bb8c6</strVal>
+        </stringLiteral>
+      </ne>
+    </notEqualComparison>
+  </andOperands>
+</utterlyInvalid>

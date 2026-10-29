@@ -1,0 +1,13 @@
+<referenceElementValue xmlns="https://admin-shell.io/aas/3/2">
+  <type>ExternalReference</type>
+  <keys>Unexpected string value</keys>
+  <referredSemanticId>
+    <type>ExternalReference</type>
+    <keys>
+      <key>
+        <type>GlobalReference</type>
+        <value>urn:another-example:00:3fff168c</value>
+      </key>
+    </keys>
+  </referredSemanticId>
+</referenceElementValue>

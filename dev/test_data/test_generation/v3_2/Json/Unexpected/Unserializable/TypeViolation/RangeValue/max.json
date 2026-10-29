@@ -1,0 +1,12 @@
+{
+  "min": 12552311.97,
+  "max": {
+    "type": "ExternalReference",
+    "keys": [
+      {
+        "type": "GlobalReference",
+        "value": "unexpected reference"
+      }
+    ]
+  }
+}
