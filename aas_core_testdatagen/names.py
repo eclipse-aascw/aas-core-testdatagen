@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2025 aas-core-testdatagen AUTHORS
+#
+# SPDX-License-Identifier: MIT
+
 """Determine the serialized names of the properties as defined in the meta-model."""
 
 from typing import Optional

@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2025 aas-core-testdatagen AUTHORS
+#
+# SPDX-License-Identifier: MIT
+
 """Provide shared functionality for serialization of test cases."""
 
 import pathlib

@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2025 aas-core-testdatagen AUTHORS
+#
+# SPDX-License-Identifier: MIT
+
 """Update the meta-model, the golden test data and verify it for a given version."""
 
 import argparse

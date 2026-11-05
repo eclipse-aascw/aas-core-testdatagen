@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2025 aas-core-testdatagen AUTHORS
+#
+# SPDX-License-Identifier: MIT
+
 """Generate examples for all the pattern verification functions."""
 
 import argparse

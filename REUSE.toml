@@ -1,0 +1,21 @@
+# SPDX-FileCopyrightText: 2025 aas-core-testdatagen AUTHORS
+#
+# SPDX-License-Identifier: MIT
+
+version = 1
+
+# Prose and metadata where a header would end up in the rendered output
+# (e.g., README shown on PyPI and GitHub).
+[[annotations]]
+path = ["AUTHORS", "README.rst", "CHANGELOG.rst", "CONTRIBUTING.rst"]
+precedence = "aggregate"
+SPDX-FileCopyrightText = "2025 aas-core-testdatagen AUTHORS"
+SPDX-License-Identifier = "MIT"
+
+# The golden test data is generated, compared byte-by-byte in the tests and
+# shipped as release archives, and JSON can not carry a comment.
+[[annotations]]
+path = "dev/test_data/test_generation/**"
+precedence = "aggregate"
+SPDX-FileCopyrightText = "2025 aas-core-testdatagen AUTHORS"
+SPDX-License-Identifier = "MIT"

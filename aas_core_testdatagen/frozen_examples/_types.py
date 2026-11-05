@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2025 aas-core-testdatagen AUTHORS
+#
+# SPDX-License-Identifier: MIT
+
 """Provide common data types for the frozen_examples."""
 
 from typing import OrderedDict

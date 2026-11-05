@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2025 aas-core-testdatagen AUTHORS
+#
+# SPDX-License-Identifier: MIT
+
 # pylint: disable=missing-docstring
 
 """Test tuples, sets and named unions on a toy meta-model."""

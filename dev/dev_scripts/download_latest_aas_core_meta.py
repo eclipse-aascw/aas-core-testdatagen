@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2025 aas-core-testdatagen AUTHORS
+#
+# SPDX-License-Identifier: MIT
+
 """Download the latest meta-model for V3.0 to the test data."""
 
 import argparse
@@ -12,6 +16,20 @@ import requests
 _OWNER: Final[str] = "aas-core-works"
 _REPO: Final[str] = "aas-core-meta"
 _REF: Final[str] = "main"
+
+# NOTE (aaronzi, 2026-11-05):
+# The meta-model is copied verbatim from aas-core-meta, so we attribute it to
+# its authors. Older upstream revisions do not carry a license header, so we
+# prepend it unless the downloaded content already includes one.
+#
+# REUSE-IgnoreStart
+_META_MODEL_LICENSE_HEADER = """\
+# SPDX-FileCopyrightText: 2024 aas-core-meta AUTHORS
+#
+# SPDX-License-Identifier: MIT
+
+"""
+# REUSE-IgnoreEnd
 
 
 def _latest_commit_sha(remote_path: str, timeout: float = 15.0) -> str:
@@ -100,7 +118,16 @@ def main() -> int:
     out_path = repo_root / "dev/test_data/meta_model" / meta_model_filename
     out_path.parent.mkdir(exist_ok=True)
 
-    out_path.write_text(f"{banner}\n\n{content.rstrip()}\n\n{banner}", encoding="utf-8")
+    # REUSE-IgnoreStart
+    license_header = (
+        "" if "SPDX-License-Identifier:" in content else _META_MODEL_LICENSE_HEADER
+    )
+    # REUSE-IgnoreEnd
+
+    out_path.write_text(
+        f"{license_header}{banner}\n\n{content.rstrip()}\n\n{banner}",
+        encoding="utf-8",
+    )
 
     black.format_file_in_place(
         src=out_path, fast=False, mode=black.FileMode(), write_back=black.WriteBack.YES
