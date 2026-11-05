@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2025 aas-core-testdatagen AUTHORS
+#
+# SPDX-License-Identifier: MIT
+
 """Run aas-core3.1-testdatagen as Python module."""
 
 import aas_core_testdatagen.main

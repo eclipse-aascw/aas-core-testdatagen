@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2025 aas-core-testdatagen AUTHORS
+#
+# SPDX-License-Identifier: MIT
+
 """Generate test data for AAS elements based on the meta-model."""
 
 __version__ = "0.0.5rc1"
