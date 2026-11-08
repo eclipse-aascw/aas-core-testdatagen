@@ -19,3 +19,14 @@ path = "dev/test_data/test_generation/**"
 precedence = "aggregate"
 SPDX-FileCopyrightText = "2025 aas-core-testdatagen AUTHORS"
 SPDX-License-Identifier = "MIT"
+
+# The meta-model transcribes the AAS
+# specification: its docstrings quote
+# the definitions of the classes, attributes and constraints. That text keeps
+# the license of the specification, next to the MIT license of our own code.
+# The specifications published by IDTA are licensed under CC BY 4.0.
+[[annotations]]
+path = ["dev/test_data/meta_model/v3_1.py", "dev/test_data/meta_model/v3_2.py"]
+precedence = "aggregate"
+SPDX-FileCopyrightText = "Industrial Digital Twin Association e. V."
+SPDX-License-Identifier = "CC-BY-4.0"
