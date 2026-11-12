@@ -31,7 +31,7 @@ authors = [
 
 dependencies = [
   "icontract>=2,<3",
-  "aas-core-codegen==0.0.27rc3",
+  "aas-core-codegen==0.0.27rc5",
   "typing-extensions==4.15.0"
 ]
 

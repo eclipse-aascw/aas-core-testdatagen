@@ -417,10 +417,12 @@ class CaseGenerator(generation.CaseGenerator):
 
     def _generate_created_at_equal_to_updated_at(
         self,
-    ) -> Iterator[casing.CaseConstraintViolation]:
-        yield casing.CaseConstraintViolation(
-            instance=self._administrative_information_with_dates(
-                "2022-04-01T12:00:00Z", "2022-04-01T12:00:00Z"
+    ) -> Iterator[casing.CasePositiveManual]:
+        yield casing.CasePositiveManual(
+            instance=self.verificator.must(
+                self._administrative_information_with_dates(
+                    "2022-04-01T12:00:00Z", "2022-04-01T12:00:00Z"
+                )
             ),
             name=generation.test_name_from_function_name(),
         )

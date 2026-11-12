@@ -1,14 +1,9 @@
+# Downloaded from: https://raw.githubusercontent.com/aas-core-works/aas-core-meta/feab6a1c7047e4b05f636c1fa16dfe5d3469b661/aas_core_meta/v3_2.py
+# Do NOT edit or append!
+
 # SPDX-FileCopyrightText: 2024 aas-core-meta AUTHORS
 #
 # SPDX-License-Identifier: MIT
-
-# Downloaded from: https://raw.githubusercontent.com/aas-core-works/aas-core-meta/2244c160abe5409a5171342e21a8d7f1cdd6f9c8/aas_core_meta/v3_2.py
-# Do NOT edit or append!
-
-# NOTE:
-# Part 1 is copied verbatim. All the definitions of Part 2 are included, but they
-# are re-ordered so that the definitions precede their usages as required by the
-# latest aas-core-codegen 0.0.27rc3.
 
 """
 --- WORK IN PROGRESS ---
@@ -825,26 +820,30 @@ def date_time_UTC_less(that: str, other: str) -> Optional[bool]:
 
 
 @verification
-def date_time_UTC_less_or_invalid(that: str, other: str) -> bool:
+def date_time_UTC_less_or_equal_or_invalid(that: str, other: str) -> bool:
     """
-    Check that the date-time :paramref:`that` is before :paramref:`other`, unless
-    either of them is invalid.
+    Check that the date-time :paramref:`that` is before or at the same instant as
+    :paramref:`other`, unless either of them is invalid.
 
     The invalid date-times are reported by the invariants of
     :class:`Date_time_UTC`, so that we do not report them twice.
     See :func:`date_time_UTC_less`.
 
-    :param that: Date-time which is expected to come first
-    :param other: Date-time which is expected to come later
+    :param that: Date-time which is expected to come first or at the same instant
+    :param other: Date-time which is expected to come later or at the same instant
     :returns:
-        True if :paramref:`that` is before :paramref:`other`, or if either of
-        them is not a valid ``xs:dateTime`` in UTC
+        True if :paramref:`that` is before or at the same instant as
+        :paramref:`other`, or if either of them is not a valid ``xs:dateTime``
+        in UTC
     """
-    less = date_time_UTC_less(that, other)
-    if less is None:
+    # NOTE (mristin):
+    # The date-time :paramref:`that` is before or at the same instant as
+    # :paramref:`other` if and only if :paramref:`other` is not before it.
+    other_less = date_time_UTC_less(other, that)
+    if other_less is None:
         return True
 
-    return less
+    return not other_less
 
 
 # noinspection SpellCheckingInspection
@@ -2726,8 +2725,8 @@ class Has_data_specification(DBC):
 @invariant(
     lambda self:
     not (self.created_at is not None and self.updated_at is not None)
-    or date_time_UTC_less_or_invalid(self.created_at, self.updated_at),
-    "Created-at must be before updated-at."
+    or date_time_UTC_less_or_equal_or_invalid(self.created_at, self.updated_at),
+    "Created-at must be before or equal to updated-at."
 )
 # fmt: on
 class Administrative_information(Has_data_specification):
@@ -6900,8 +6899,10 @@ class Data_specification_IEC_61360(Data_specification_content):
         self.level_type = level_type
 
 
+# region Part 2
 
-# region Part 2 (partial)
+
+# region API Interfaces
 
 
 class Serialization_format(Enum):
@@ -6929,6 +6930,12 @@ class Serialization_format(Enum):
 
     AASX = "application/aasx+xml"
     """AASX-Package (binary data) containing the requested data object"""
+
+
+# endregion API Interfaces
+
+
+# region Data Types For Payload
 
 
 @abstract
@@ -7230,12 +7237,6 @@ class Endpoint(DBC):
     not (self.security_attributes is not None)
     or len(self.security_attributes) >= 1,
     "Security attributes must be either not set or have at least one item."
-)
-@invariant(
-    lambda self:
-    not (self.endpoint_protocol_version is not None)
-    or len(self.endpoint_protocol_version) >= 1,
-    "Endpoint protocol versions must be either not set or have at least one item."
 )
 # fmt: on
 class Protocol_information(DBC):
@@ -7549,7 +7550,7 @@ class Service_specification_profile_enum(Enum):
     )
     """
     Indicates that the server implemented all features of the Submodel Service
-    Specification Value Profile in version 3.2.
+    Specification Read Profile in version 3.2.
     """
 
     Submodel_service_specification_SSP_003_V3_0 = (
@@ -7573,7 +7574,7 @@ class Service_specification_profile_enum(Enum):
     )
     """
     Indicates that the server implemented all features of the Submodel Service
-    Specification Read Profile in version 3.2.
+    Specification Value Profile in version 3.2.
     """
 
     AASX_file_server_service_specification_SSP_001_V3_0 = (
@@ -7618,7 +7619,7 @@ class Service_specification_profile_enum(Enum):
     )
     """
     Indicates that the server implemented all details of the AASX File Server
-    Service Specification Read Profile in version 3.2.
+    Service Specification Async Profile in version 3.2.
     """
 
     AAS_registry_service_specification_SSP_001_V3_0 = (
@@ -7848,7 +7849,7 @@ class Service_specification_profile_enum(Enum):
     )
     """
     Indicates that the server implemented all details of the Discovery Service
-    Specification Read Profile in version 3.1.
+    Specification Read Profile in version 3.2.
     """
 
     AAS_repository_service_specification_SSP_001_V3_0 = (
@@ -7875,7 +7876,7 @@ class Service_specification_profile_enum(Enum):
     )
     """
     Indicates that the server implemented all details of the Asset Administration
-    Shell Repository Service Specification Read Profile in version 3.2.
+    Shell Repository Service Specification Full Profile in version 3.2.
     """
 
     AAS_repository_service_specification_SSP_002_V3_0 = (
@@ -7939,6 +7940,15 @@ class Service_specification_profile_enum(Enum):
     """
     Indicates that the server implemented all details of the Asset Administration
     Shell Repository Service Specification Identifiable Profile in version 3.2.
+    """
+
+    AAS_repository_service_specification_SSP_006_V3_2 = (
+        "https://admin-shell.io/aas/API/3/2/"
+        "AssetAdministrationShellRepositoryServiceSpecification/SSP-006"
+    )
+    """
+    Indicates that the server implemented all details of the Asset Administration
+    Shell Repository Service Specification History Profile in version 3.2.
     """
 
     Submodel_repository_service_specification_SSP_001_V3_0 = (
@@ -8076,6 +8086,15 @@ class Service_specification_profile_enum(Enum):
     Repository Specification Signature Profile in version 3.2.
     """
 
+    Submodel_repository_service_specification_SSP_007_V3_2 = (
+        "https://admin-shell.io/aas/API/3/2/"
+        "SubmodelRepositoryServiceSpecification/SSP-007"
+    )
+    """
+    Indicates that the server implemented all details of the Submodel Service
+    Repository Specification History Profile in version 3.2.
+    """
+
     Concept_description_repository_service_specification_SSP_001_V3_0 = (
         "https://admin-shell.io/aas/API/3/0/"
         "ConceptDescriptionRepositoryServiceSpecification/SSP-001"
@@ -8092,6 +8111,15 @@ class Service_specification_profile_enum(Enum):
     """
     Indicates that the server implemented all details of the Concept Description
     Repository Service Specification Profile in version 3.1.
+    """
+
+    Concept_description_repository_service_specification_SSP_001_V3_2 = (
+        "https://admin-shell.io/aas/API/3/2/"
+        "ConceptDescriptionRepositoryServiceSpecification/SSP-001"
+    )
+    """
+    Indicates that the server implemented all details of the Concept Description
+    Repository Service Specification Full Profile in version 3.2.
     """
 
     Concept_description_repository_service_specification_SSP_002_V3_2 = (
@@ -8274,6 +8302,12 @@ class Non_negative_integer(int, DBC):
     """
 
 
+# region Primitive Data Types
+#
+# See:
+# https://industrialdigitaltwin.io/aas-specifications/IDTA-01002/v3.2/specification/interfaces-payload.html#_primitive_data_types
+
+
 # fmt: off
 @invariant(
     lambda self: len(self) >= 1,
@@ -8354,6 +8388,9 @@ class Scheme_type(Name_type, DBC):
     """
 
 
+# endregion Primitive Data Types
+
+
 class Status_code(Enum):
     """
     Generic status codes.
@@ -8405,6 +8442,60 @@ class Status_code(Enum):
     """Bad gateway"""
 
 
+class Result(DBC):
+    """
+    The result object.
+
+    See:
+    https://industrialdigitaltwin.io/aas-specifications/IDTA-01002/v3.2/specification/interfaces-payload.html#Result
+    """
+
+    messages: Optional[List["Message"]]
+    """Additional messages containing information for the requester"""
+
+    def __init__(self, messages: Optional[List["Message"]] = None) -> None:
+        self.messages = messages
+
+
+class Message(DBC):
+    """
+    A message containing more information for the requester about a certain
+    happening in the backend.
+
+    See:
+    https://industrialdigitaltwin.io/aas-specifications/IDTA-01002/v3.2/specification/interfaces-payload.html#Message
+    """
+
+    message_type: "Message_type_enum"
+    """The message type"""
+
+    text: str
+    """The message text"""
+
+    code: Optional["Code_type"]
+    """Technology-dependent status or error code"""
+
+    correlation_ID: Optional["Short_ID_type"]
+    """Identifier to relate several result messages throughout several systems"""
+
+    timestamp: Optional["Date_time_UTC"]
+    """Timestamp of the message"""
+
+    def __init__(
+        self,
+        message_type: "Message_type_enum",
+        text: str,
+        code: Optional["Code_type"] = None,
+        correlation_ID: Optional["Short_ID_type"] = None,
+        timestamp: Optional["Date_time_UTC"] = None,
+    ) -> None:
+        self.message_type = message_type
+        self.text = text
+        self.code = code
+        self.correlation_ID = correlation_ID
+        self.timestamp = timestamp
+
+
 class Message_type_enum(Enum):
     """
     The message type.
@@ -8436,6 +8527,358 @@ class Message_type_enum(Enum):
     """Used in case of an internal and/or unhandled exception"""
 
 
+# fmt: off
+@invariant(
+    lambda self:
+    not (self.input_arguments is not None)
+    or len(self.input_arguments) >= 1,
+    "Input arguments must be either not set or have at least one item."
+)
+@invariant(
+    lambda self:
+    not (self.inoutput_arguments is not None)
+    or len(self.inoutput_arguments) >= 1,
+    "InOutput arguments must be either not set or have at least one item."
+)
+# fmt: on
+class Operation_request(DBC):
+    """
+    The operation request object.
+
+    See:
+    https://industrialdigitaltwin.io/aas-specifications/IDTA-01002/v3.2/specification/interfaces-payload.html#OperationRequest
+    """
+
+    input_arguments: Optional[List["Operation_variable"]]
+    """Input argument"""
+
+    inoutput_arguments: Optional[List["Operation_variable"]]
+    """InOutput argument"""
+
+    client_timeout_duration: Optional["Duration"]
+    """
+    Duration indicating when the client suggests the server to have finished
+    execution of the invoked operation. The server may take this value into account to
+    decide on its effective timeout, however, the server may or may not use by its own
+    discretion.
+    """
+
+    def __init__(
+        self,
+        input_arguments: Optional[List["Operation_variable"]] = None,
+        inoutput_arguments: Optional[List["Operation_variable"]] = None,
+        client_timeout_duration: Optional["Duration"] = None,
+    ) -> None:
+        self.input_arguments = input_arguments
+        self.inoutput_arguments = inoutput_arguments
+        self.client_timeout_duration = client_timeout_duration
+
+
+# fmt: off
+@invariant(
+    lambda self:
+    not (self.input_arguments is not None)
+    or len(self.input_arguments) >= 1,
+    "Input arguments must be either not set or have at least one item."
+)
+@invariant(
+    lambda self:
+    not (self.inoutput_arguments is not None)
+    or len(self.inoutput_arguments) >= 1,
+    "InOutput arguments must be either not set or have at least one item."
+)
+# fmt: on
+class Operation_request_async(DBC):
+    """
+    The operation request object for asynchronous invocation.
+
+    This class is not part of the metamodel and is not itself a named class
+    in the specification. It corresponds to the request body of the
+    ``InvokeOperationAsync`` operation, which is shaped like
+    :class:`Operation_request` with
+    :attr:`~Operation_request.client_timeout_duration` made mandatory.
+
+    .. note::
+
+        This class is deliberately *not* related to :class:`Operation_request`
+        by inheritance: a subclass constructor must exactly match
+        argument's type to the inherited property's declared
+        type, so a property declared ``Optional[Duration]`` on a base class
+        cannot be narrowed to a required ``Duration`` on a subclass. Making
+        this a standalone class lets ``client_timeout_duration`` be
+        genuinely required here.
+
+    See:
+    https://industrialdigitaltwin.io/aas-specifications/IDTA-01002/v3.2/specification/interfaces.html#_operation_invokeoperationasync
+    """
+
+    input_arguments: Optional[List["Operation_variable"]]
+    """Input argument"""
+
+    inoutput_arguments: Optional[List["Operation_variable"]]
+    """InOutput argument"""
+
+    client_timeout_duration: "Duration"
+    """
+    Duration indicating when the client suggests the server to have finished
+    execution of the invoked operation. The server may take this value into account to
+    decide on its effective timeout, however, the server may or may not use by its own
+    discretion.
+    """
+
+    def __init__(
+        self,
+        client_timeout_duration: "Duration",
+        input_arguments: Optional[List["Operation_variable"]] = None,
+        inoutput_arguments: Optional[List["Operation_variable"]] = None,
+    ) -> None:
+        self.client_timeout_duration = client_timeout_duration
+        self.input_arguments = input_arguments
+        self.inoutput_arguments = inoutput_arguments
+
+
+class Operation_request_value_only(DBC):
+    """
+    The operation request object in the ValueOnly notation.
+
+    .. note::
+
+        The arguments are given in the ValueOnly serialization, *i.e.*, as
+        a JSON object whose keys are the ID-shorts of the argument values and
+        whose values are the ValueOnly serializations of the argument values.
+        Their shape depends on the concrete submodel elements and can not be
+        pinned down statically, so they are represented as open JSON objects.
+
+    See:
+    https://industrialdigitaltwin.io/aas-specifications/IDTA-01002/v3.2/specification/interfaces-payload.html#operation-request-value-only
+    """
+
+    input_arguments: Optional[JSONObject["ID_short_type"]]
+    """Input argument"""
+
+    inoutput_arguments: Optional[JSONObject["ID_short_type"]]
+    """InOutput argument"""
+
+    client_timeout_duration: Optional["Duration"]
+    """
+    Duration indicating when the client suggests the server to have finished
+    execution of the invoked operation. The server may take this value into account to
+    decide on its effective timeout, however, the server may or may not use by its own
+    discretion.
+    """
+
+    def __init__(
+        self,
+        input_arguments: Optional[JSONObject["ID_short_type"]] = None,
+        inoutput_arguments: Optional[JSONObject["ID_short_type"]] = None,
+        client_timeout_duration: Optional["Duration"] = None,
+    ) -> None:
+        self.input_arguments = input_arguments
+        self.inoutput_arguments = inoutput_arguments
+        self.client_timeout_duration = client_timeout_duration
+
+
+class Operation_request_async_value_only(DBC):
+    """
+    The operation request object for asynchronous invocation in the ValueOnly
+    notation.
+
+    This class is not part of the metamodel and is not itself a named class
+    in the specification. It corresponds to the request body of the
+    ``InvokeOperationAsync`` operation in the ValueOnly notation, which is
+    shaped like :class:`Operation_request_value_only` with
+    :attr:`~Operation_request_value_only.client_timeout_duration` made
+    mandatory.
+
+    .. note::
+
+        This class is deliberately *not* related to
+        :class:`Operation_request_value_only` by inheritance; see the note
+        on :class:`Operation_request_async`.
+
+    See:
+    https://industrialdigitaltwin.io/aas-specifications/IDTA-01002/v3.2/specification/interfaces.html#_operation_invokeoperationasync
+    """
+
+    input_arguments: Optional[JSONObject["ID_short_type"]]
+    """Input argument"""
+
+    inoutput_arguments: Optional[JSONObject["ID_short_type"]]
+    """InOutput argument"""
+
+    client_timeout_duration: "Duration"
+    """
+    Duration indicating when the client suggests the server to have finished
+    execution of the invoked operation. The server may take this value into account to
+    decide on its effective timeout, however, the server may or may not use by its own
+    discretion.
+    """
+
+    def __init__(
+        self,
+        client_timeout_duration: "Duration",
+        input_arguments: Optional[JSONObject["ID_short_type"]] = None,
+        inoutput_arguments: Optional[JSONObject["ID_short_type"]] = None,
+    ) -> None:
+        self.client_timeout_duration = client_timeout_duration
+        self.input_arguments = input_arguments
+        self.inoutput_arguments = inoutput_arguments
+
+
+class Base_operation_result(DBC):
+    """
+    The object containing the intermediate state of an operation.
+
+    .. note::
+
+        This class is deliberately *not* related to :class:`Result` by
+        inheritance (and :class:`Operation_result` below is, in turn, not
+        related to this class by inheritance either). aas-core-codegen
+        refuses to generate a schema for a concrete class with concrete
+        descendants unless it is marked
+        ``@serialization(with_model_type=True)``, which would introduce a
+        ``modelType`` discriminator property that the official schema does
+        not have for this hierarchy. Flattening the hierarchy avoids that
+        mismatch, at the cost of repeating :attr:`messages` here.
+
+    See:
+    https://industrialdigitaltwin.io/aas-specifications/IDTA-01002/v3.2/specification/interfaces-payload.html#BaseOperationResult
+    """
+
+    execution_state: "Execution_state"
+    """Execution state"""
+
+    messages: Optional[List["Message"]]
+    """Additional messages containing information for the requester"""
+
+    success: Optional[bool]
+    """
+    Flag indicating whether the business operation behind the operation was
+    successful (true) or not (false)
+    """
+
+    def __init__(
+        self,
+        execution_state: "Execution_state",
+        messages: Optional[List["Message"]] = None,
+        success: Optional[bool] = None,
+    ) -> None:
+        self.execution_state = execution_state
+        self.messages = messages
+        self.success = success
+
+
+# fmt: off
+@invariant(
+    lambda self:
+    not (self.output_arguments is not None)
+    or len(self.output_arguments) >= 1,
+    "Output arguments must be either not set or have at least one item."
+)
+@invariant(
+    lambda self:
+    not (self.inoutput_arguments is not None)
+    or len(self.inoutput_arguments) >= 1,
+    "InOutput arguments must be either not set or have at least one item."
+)
+# fmt: on
+class Operation_result(DBC):
+    """
+    The operation's invocation result object.
+
+    .. note::
+
+        This class is deliberately *not* related to :class:`Base_operation_result`
+        by inheritance; see the note on that class.
+
+    See:
+    https://industrialdigitaltwin.io/aas-specifications/IDTA-01002/v3.2/specification/interfaces-payload.html#OperationResult
+    """
+
+    execution_state: "Execution_state"
+    """Execution state"""
+
+    messages: Optional[List["Message"]]
+    """Additional messages containing information for the requester"""
+
+    success: Optional[bool]
+    """
+    Flag indicating whether the business operation behind the operation was
+    successful (true) or not (false)
+    """
+
+    output_arguments: Optional[List["Operation_variable"]]
+    """Output argument"""
+
+    inoutput_arguments: Optional[List["Operation_variable"]]
+    """InOutput argument"""
+
+    def __init__(
+        self,
+        execution_state: "Execution_state",
+        messages: Optional[List["Message"]] = None,
+        success: Optional[bool] = None,
+        output_arguments: Optional[List["Operation_variable"]] = None,
+        inoutput_arguments: Optional[List["Operation_variable"]] = None,
+    ) -> None:
+        self.execution_state = execution_state
+        self.messages = messages
+        self.success = success
+        self.output_arguments = output_arguments
+        self.inoutput_arguments = inoutput_arguments
+
+
+class Operation_result_value_only(DBC):
+    """
+    The operation's invocation result object in the ValueOnly notation.
+
+    .. note::
+
+        This class is deliberately *not* related to :class:`Base_operation_result`
+        by inheritance; see the note on that class.
+
+    .. note::
+
+        The arguments are given in the ValueOnly serialization; see the note
+        on :class:`Operation_request_value_only`.
+
+    See:
+    https://industrialdigitaltwin.io/aas-specifications/IDTA-01002/v3.2/specification/interfaces-payload.html#operation-result-value-only
+    """
+
+    execution_state: "Execution_state"
+    """Execution state"""
+
+    messages: Optional[List["Message"]]
+    """Additional messages containing information for the requester"""
+
+    success: Optional[bool]
+    """
+    Flag indicating whether the business operation behind the operation was
+    successful (true) or not (false)
+    """
+
+    output_arguments: Optional[JSONObject["ID_short_type"]]
+    """Output argument"""
+
+    inoutput_arguments: Optional[JSONObject["ID_short_type"]]
+    """InOutput argument"""
+
+    def __init__(
+        self,
+        execution_state: "Execution_state",
+        messages: Optional[List["Message"]] = None,
+        success: Optional[bool] = None,
+        output_arguments: Optional[JSONObject["ID_short_type"]] = None,
+        inoutput_arguments: Optional[JSONObject["ID_short_type"]] = None,
+    ) -> None:
+        self.execution_state = execution_state
+        self.messages = messages
+        self.success = success
+        self.output_arguments = output_arguments
+        self.inoutput_arguments = inoutput_arguments
+
+
 class Execution_state(Enum):
     """
     The operation's invocation result state.
@@ -8463,15 +8906,46 @@ class Execution_state(Enum):
     """The operation has timed out due to given client or server timeout"""
 
 
+class Operation_handle(DBC):
+    """
+    The returned handle of an operation's asynchronous invocation used to
+    request the current state of the operation's execution.
+
+    See:
+    https://industrialdigitaltwin.io/aas-specifications/IDTA-01002/v3.2/specification/interfaces-payload.html#OperationHandle
+    """
+
+    handle_ID: "Short_ID_type"
+    """Handle ID"""
+
+    def __init__(self, handle_ID: "Short_ID_type") -> None:
+        self.handle_ID = handle_ID
+
+
+# endregion Data Types For Payload
+
+# region Basic Operation Parameters
+#
+# See:
+# https://industrialdigitaltwin.io/aas-specifications/IDTA-01002/v3.2/specification/interfaces-operation-parameters.html#SerializationModifier
+
+
 class Level(Enum):
     """
     Indicates the depth of the structure of the response or input content.
 
     See:
     https://industrialdigitaltwin.io/aas-specifications/IDTA-01002/v3.2/specification/interfaces-operation-parameters.html#SerializationModifier
+
+    .. note::
+
+        We follow the spelling of the literals in the Part 2 OpenAPI schema
+        (Part2-API-Schemas/openapi.yaml), ``deep`` and ``core``, rather than
+        the spelling in the book prose, since the servers, such as BaSyx, accept
+        only the former.
     """
 
-    Deep = "Deep"
+    Deep = "deep"
     """
     All elements of a requested hierarchy level and all children on all
     sublevels are returned.
@@ -8483,7 +8957,7 @@ class Level(Enum):
     AnnotatedRelationshipElements.
     """
 
-    Core = "Core"
+    Core = "core"
     """
     Only elements of a requested hierarchy level as well as direct children
     are returned. By this, a client can iterate the hierarchy step by step.
@@ -8535,20 +9009,195 @@ class Extent(Enum):
 
     See:
     https://industrialdigitaltwin.io/aas-specifications/IDTA-01002/v3.2/specification/interfaces-operation-parameters.html#SerializationModifier
+
+    .. note::
+
+        We follow the spelling of the literals in the Part 2 OpenAPI schema
+        (Part2-API-Schemas/openapi.yaml), ``withoutBlobValue`` and
+        ``withBlobValue``, rather than the spelling in the book prose, such as
+        ``WithBLOBValue``, since the servers, such as BaSyx, accept only
+        the former.
     """
 
-    Without_blob_value = "WithoutBLOBValue"
+    Without_blob_value = "withoutBlobValue"
     """
     Only applicable to BLOB-elements; the BLOB content is not returned.
 
     This is the default value.
     """
 
-    With_blob_value = "WithBLOBValue"
+    With_blob_value = "withBlobValue"
     """
     Only applicable to BLOB-elements; the BLOB content is returned as
     base64-encoded string.
     """
+
+
+# endregion Basic Operation Parameters
+
+
+# region HTTP/REST API
+
+
+class Paged_result(DBC):
+    """
+    An object connecting the actual list of returned items with metadata
+    information to, *e.g.*, fetch the next part of the result set.
+
+    See:
+    https://industrialdigitaltwin.io/aas-specifications/IDTA-01002/v3.2/http-rest-api/http-rest-api.html#pagination
+    """
+
+    result: Optional[List["Referable"]]
+    """
+    List of returned items. Any kind of Referables is possible, depending on
+    the endpoint which has been requested.
+    """
+
+    paging_metadata: Annotated["Paging_metadata", json_name("paging_metadata")]
+    """
+    Additional information for the client to, *e.g.*, fetch the next part of
+    the result set.
+    """
+
+    def __init__(
+        self,
+        paging_metadata: "Paging_metadata",
+        result: Optional[List["Referable"]] = None,
+    ) -> None:
+        self.paging_metadata = paging_metadata
+        self.result = result
+
+
+class Paging_metadata(DBC):
+    """
+    Additional information for the client to, *e.g.*, fetch the next part of
+    the result set.
+
+    .. note::
+
+        More attributes may be added to this class in future versions.
+
+    See:
+    https://industrialdigitaltwin.io/aas-specifications/IDTA-01002/v3.2/http-rest-api/http-rest-api.html#pagination
+    """
+
+    cursor: Optional[str]
+    """
+    The cursor for the next part of the result set. No cursor attribute means that
+    the end of the result set has been reached.
+    """
+
+    def __init__(self, cursor: Optional[str] = None) -> None:
+        self.cursor = cursor
+
+
+class Package_description(DBC):
+    """
+    The package description consists of a system-wide unique packageId and
+    its corresponding Asset Administration Shell identifiers.
+
+    The packageId is used to identify the AASX package at the AASX file
+    server. The package description is used to list the Asset
+    Administration Shells in a given AASX package.
+
+    This class is not part of the metamodel.
+
+    See:
+    https://industrialdigitaltwin.io/aas-specifications/IDTA-01002/v3.2/http-rest-api/http-rest-api.html#PackageDescription
+    """
+
+    package_ID: "Short_ID_type"
+    """File server specific package id"""
+
+    AAS_IDs: Optional[List["Identifier"]]
+    """Asset Administration Shell unique identifiers"""
+
+    def __init__(
+        self,
+        package_ID: "Short_ID_type",
+        AAS_IDs: Optional[List["Identifier"]] = None,
+    ) -> None:
+        self.package_ID = package_ID
+        self.AAS_IDs = AAS_IDs
+
+
+@verification
+def matches_path_item(text: str) -> bool:
+    """
+    Check that :paramref:`text` is a valid idShortPath.
+
+    An idShortPath is a chain of idShorts or SubmodelElementList-indexes
+    which points to an element within a hierarchy of elements, *e.g.*,
+    ``sme1.sme2[0].p1``.
+    """
+    pattern = (
+        r"^(([A-Za-z][A-Za-z0-9_]+)|(\[[0-9]+\]))"
+        r"((\.[A-Za-z][A-Za-z0-9_]+)|(\[[0-9]+\])){0,}$"
+    )
+
+    return match(pattern, text) is not None
+
+
+@invariant(
+    lambda self: matches_path_item(self),
+    "The value must match the pattern of a path item.",
+)
+class Path_item(str, DBC):
+    """
+    A chain of idShorts or SubmodelElementList-indexes, which points to an
+    element within a hierarchy of elements, *e.g.*, ``sme1.sme2[0].p1``.
+
+    The root of the path is always a submodel, and the first element is
+    always the idShort of a first-level submodel element within it. idShorts
+    are separated by a dot, while SubmodelElementList indices are written in
+    brackets.
+
+    This class is not part of the metamodel and is not itself a named class
+    in the specification.
+
+    See:
+    https://industrialdigitaltwin.io/aas-specifications/IDTA-01002/v3.2/http-rest-api/http-rest-api.html#_addressing_resources
+    """
+
+
+# endregion HTTP/REST API
+
+
+# region Metadata And Value Views
+
+
+# NOTE (mristin):
+# This region formalizes the Content=Metadata and Content=Value serialization
+# views referenced by SerializationModifier's Content enumeration (see class
+# Content above), specified for the individual submodel element (and submodel /
+# asset administration shell) types in Part 1's mappings document. These views
+# are not part of the metamodel itself; they are payload shapes defined for the
+# HTTP/REST API, mirrored here from the Part 2 OpenAPI schema
+# (Part2-API-Schemas/openapi.yaml) rather than from book prose, since the book
+# only describes the Content enumeration in general terms and does not spell
+# out each view's attributes.
+#
+# The *_metadata classes carry every attribute of the corresponding submodel
+# element *except* its value, mirroring the OpenAPI schema's
+# SubmodelElementAttributes/SubmodelElementMetadata/*Metadata composition.
+#
+# The *_value classes carry only the value. The ValueOnly-shaped parts of
+# their content (*e.g.*, the statements of an entity), whose shape depends on
+# the concrete submodel elements, are represented as open JSON objects keyed by
+# ID-shorts. The Value variants which are not JSON objects themselves (a bare
+# scalar, a bare array, or an open JSON object with no fixed attributes) do not
+# have a class here: PropertyValue, MultiLanguagePropertyValue,
+# SubmodelElementCollectionValue, SubmodelElementListValue, SubmodelValue and
+# SpecificAssetIdValue. SubmodelElementValue, the union over all the Value
+# variants, is not formalized either, since its alternatives can not be told
+# apart on the wire without knowing the submodel element up-front (*e.g.*,
+# a FileValue and a BlobValue are indistinguishable, and so are
+# a SubmodelElementCollectionValue and a RangeValue with a "min" and "max"
+# child). Each omission is noted where it would otherwise be expected.
+#
+# See:
+# https://industrialdigitaltwin.io/aas-specifications/IDTA-01002/v3.2/specification/interfaces-operation-parameters.html#SerializationModifier
 
 
 @abstract
@@ -9388,6 +10037,33 @@ class Asset_administration_shell_metadata(Identifiable, Has_data_specification):
         self.derived_from = derived_from
 
 
+# NOTE (mristin):
+# The *_value classes below are deliberately *not* related by inheritance,
+# and none of them is used as a base class.
+#
+# Consequently, each is marked with @serialization(with_model_type=False):
+# since none of them is part of a polymorphic hierarchy here, no "modelType"
+# discriminator should be emitted for them on serialization.
+#
+# Several variants from the HTTP schema have no class here at all, since
+# a class is always serialized as a JSON object with fixed attributes:
+#
+# * ``PropertyValue`` is a raw JSON string, number or boolean, not an
+#   object -- use :py:data:`JSONValue` where needed.
+# * ``MultiLanguagePropertyValue`` is a bare JSON array of single-entry
+#   objects, language tag to text, not an object with fixed attributes.
+# * ``SubmodelElementCollectionValue`` and ``SubmodelValue`` are
+#   ValueOnly-shaped JSON objects keyed by the ID-shorts of the contained
+#   elements -- use :class:`JSONObject` over :class:`ID_short_type` where
+#   needed.
+# * ``SubmodelElementListValue`` is a bare JSON array of values, not an
+#   object.
+# * ``SpecificAssetIdValue`` is a single-entry JSON object, name to value,
+#   so it is represented as an open JSON object in :class:`Entity_value`.
+# * ``SubmodelElementValue`` is a union over all of the above, which can not
+#   be decided on the wire without knowing the submodel element up-front.
+
+
 # fmt: off
 @invariant(
     lambda self: len(self.keys) >= 1,
@@ -9598,6 +10274,13 @@ class Annotated_relationship_element_value(DBC):
         self.annotations = annotations
 
 
+# NOTE (mristin):
+# We follow the Part 2 OpenAPI schema (and the Part 1 ValueOnly JSON schema)
+# for ``specificAssetIds``, where each item is a single-entry JSON object
+# mapping the name of the specific asset ID to its value. The Part 1 prose,
+# in contrast, states that the items are serialized as SpecificAssetId in
+# format "Normal".
+#
 # fmt: off
 @invariant(
     lambda self:
@@ -9664,604 +10347,50 @@ class Entity_value(DBC):
         self.statements = statements
 
 
-# fmt: off
-@invariant(
-    lambda self:
-    not (self.messages is not None)
-    or len(self.messages) >= 1,
-    "Messages must be either not set or have at least one item."
-)
-# fmt: on
-class Result(DBC):
-    """
-    The result object.
+# endregion Metadata And Value Views
+
+
+# region GetXxxResult Envelopes
+
+
+# NOTE (mristin):
+# Each class here is one endpoint's paginated response envelope: the
+# official API composes it as PagedResult + a "result" property with a
+# type specific to that endpoint. We do not model this via inheritance from
+# Paged_result: doing so would give Paged_result concrete descendants, which would force
+# @serialization(with_model_type=True) on it and introduce a
+# "modelType" discriminator that the official API does not have anywhere
+# in this family. Each class below is therefore standalone, duplicating
+# paging_metadata by hand (same reasoning as for Result/
+# Base_operation_result/Operation_result above).
+#
+# GetSubmodelElementsValueResult and GetSubmodelsValueResult type the items
+# of their "result" as ValueOnly-shaped JSON, so we represent each item as
+# an open JSON object keyed by ID-shorts.
+#
+# Since V3.0.4 (https://github.com/admin-shell-io/aas-specs-api/pull/414),
+# the OpenAPI types these results as a single JSON object instead of an array
+# of items. We deliberately deviate from the OpenAPI here and follow BaSyx Go
+# (https://github.com/eclipse-basyx/basyx-go-components), which keeps both
+# results as arrays, as did the OpenAPI up to V3.0.3, all the other GetXxxResult
+# schemas, and the prose of the specification (cardinality 0..* of result).
+#
+# In particular, a single SubmodelValue can not hold a page of several
+# submodels, since the ValueOnly serialization carries no identifier of
+# the submodel, and the ID-shorts may repeat across the submodels. Each item
+# of the result of GetSubmodelElementsValueResult is a JSON object with
+# a single key, the ID-short of the submodel element, so that the ID-short is
+# not lost, as it would be for a bare PropertyValue.
+#
+# We therefore suspect this to be a bug in the OpenAPI. The change in V3.0.4
+# refers to https://github.com/admin-shell-io/aas-specs-api/issues/251,
+# which only concerns removing the wrapping "submodelElements" from
+# SubmodelValue, and not the paging.
+#
+# See:
+# https://industrialdigitaltwin.io/aas-specifications/IDTA-01002/v3.2/http-rest-api/http-rest-api.html#pagination
 
-    See:
-    https://industrialdigitaltwin.io/aas-specifications/IDTA-01002/v3.2/specification/interfaces-payload.html#Result
-    """
 
-    messages: Optional[List["Message"]]
-    """Additional messages containing information for the requester"""
-
-    def __init__(self, messages: Optional[List["Message"]] = None) -> None:
-        self.messages = messages
-
-
-class Message(DBC):
-    """
-    A message containing more information for the requester about a certain
-    happening in the backend.
-
-    See:
-    https://industrialdigitaltwin.io/aas-specifications/IDTA-01002/v3.2/specification/interfaces-payload.html#Message
-    """
-
-    message_type: "Message_type_enum"
-    """The message type"""
-
-    text: str
-    """The message text"""
-
-    code: Optional["Code_type"]
-    """Technology-dependent status or error code"""
-
-    correlation_ID: Optional["Short_ID_type"]
-    """Identifier to relate several result messages throughout several systems"""
-
-    timestamp: Optional["Date_time_UTC"]
-    """Timestamp of the message"""
-
-    def __init__(
-        self,
-        message_type: "Message_type_enum",
-        text: str,
-        code: Optional["Code_type"] = None,
-        correlation_ID: Optional["Short_ID_type"] = None,
-        timestamp: Optional["Date_time_UTC"] = None,
-    ) -> None:
-        self.message_type = message_type
-        self.text = text
-        self.code = code
-        self.correlation_ID = correlation_ID
-        self.timestamp = timestamp
-
-
-# fmt: off
-@invariant(
-    lambda self:
-    not (self.input_arguments is not None)
-    or len(self.input_arguments) >= 1,
-    "Input arguments must be either not set or have at least one item."
-)
-@invariant(
-    lambda self:
-    not (self.inoutput_arguments is not None)
-    or len(self.inoutput_arguments) >= 1,
-    "InOutput arguments must be either not set or have at least one item."
-)
-# fmt: on
-class Operation_request(DBC):
-    """
-    The operation request object.
-
-    See:
-    https://industrialdigitaltwin.io/aas-specifications/IDTA-01002/v3.2/specification/interfaces-payload.html#OperationRequest
-    """
-
-    input_arguments: Optional[List["Operation_variable"]]
-    """Input argument"""
-
-    inoutput_arguments: Optional[List["Operation_variable"]]
-    """InOutput argument"""
-
-    client_timeout_duration: Optional["Duration"]
-    """
-    Duration indicating when the client suggests the server to have finished
-    execution of the invoked operation. The server may take this value into account to
-    decide on its effective timeout, however, the server may or may not use by its own
-    discretion.
-    """
-
-    def __init__(
-        self,
-        input_arguments: Optional[List["Operation_variable"]] = None,
-        inoutput_arguments: Optional[List["Operation_variable"]] = None,
-        client_timeout_duration: Optional["Duration"] = None,
-    ) -> None:
-        self.input_arguments = input_arguments
-        self.inoutput_arguments = inoutput_arguments
-        self.client_timeout_duration = client_timeout_duration
-
-
-# fmt: off
-@invariant(
-    lambda self:
-    not (self.input_arguments is not None)
-    or len(self.input_arguments) >= 1,
-    "Input arguments must be either not set or have at least one item."
-)
-@invariant(
-    lambda self:
-    not (self.inoutput_arguments is not None)
-    or len(self.inoutput_arguments) >= 1,
-    "InOutput arguments must be either not set or have at least one item."
-)
-# fmt: on
-class Operation_request_async(DBC):
-    """
-    The operation request object for asynchronous invocation.
-
-    This class is not part of the metamodel and is not itself a named class
-    in the specification. It corresponds to the request body of the
-    ``InvokeOperationAsync`` operation, which is shaped like
-    :class:`Operation_request` with
-    :attr:`~Operation_request.client_timeout_duration` made mandatory.
-
-    .. note::
-
-        This class is deliberately *not* related to :class:`Operation_request`
-        by inheritance: a subclass constructor must exactly match
-        argument's type to the inherited property's declared
-        type, so a property declared ``Optional[Duration]`` on a base class
-        cannot be narrowed to a required ``Duration`` on a subclass. Making
-        this a standalone class lets ``client_timeout_duration`` be
-        genuinely required here.
-
-    See:
-    https://industrialdigitaltwin.io/aas-specifications/IDTA-01002/v3.2/specification/interfaces.html#_operation_invokeoperationasync
-    """
-
-    input_arguments: Optional[List["Operation_variable"]]
-    """Input argument"""
-
-    inoutput_arguments: Optional[List["Operation_variable"]]
-    """InOutput argument"""
-
-    client_timeout_duration: "Duration"
-    """
-    Duration indicating when the client suggests the server to have finished
-    execution of the invoked operation. The server may take this value into account to
-    decide on its effective timeout, however, the server may or may not use by its own
-    discretion.
-    """
-
-    def __init__(
-        self,
-        client_timeout_duration: "Duration",
-        input_arguments: Optional[List["Operation_variable"]] = None,
-        inoutput_arguments: Optional[List["Operation_variable"]] = None,
-    ) -> None:
-        self.client_timeout_duration = client_timeout_duration
-        self.input_arguments = input_arguments
-        self.inoutput_arguments = inoutput_arguments
-
-
-class Operation_request_value_only(DBC):
-    """
-    The operation request object in the ValueOnly notation.
-
-    .. note::
-
-        The arguments are given in the ValueOnly serialization, *i.e.*, as
-        a JSON object whose keys are the ID-shorts of the argument values and
-        whose values are the ValueOnly serializations of the argument values.
-        Their shape depends on the concrete submodel elements and can not be
-        pinned down statically, so they are represented as open JSON objects.
-
-    See:
-    https://industrialdigitaltwin.io/aas-specifications/IDTA-01002/v3.2/specification/interfaces-payload.html#operation-request-value-only
-    """
-
-    input_arguments: Optional[JSONObject["ID_short_type"]]
-    """Input argument"""
-
-    inoutput_arguments: Optional[JSONObject["ID_short_type"]]
-    """InOutput argument"""
-
-    client_timeout_duration: Optional["Duration"]
-    """
-    Duration indicating when the client suggests the server to have finished
-    execution of the invoked operation. The server may take this value into account to
-    decide on its effective timeout, however, the server may or may not use by its own
-    discretion.
-    """
-
-    def __init__(
-        self,
-        input_arguments: Optional[JSONObject["ID_short_type"]] = None,
-        inoutput_arguments: Optional[JSONObject["ID_short_type"]] = None,
-        client_timeout_duration: Optional["Duration"] = None,
-    ) -> None:
-        self.input_arguments = input_arguments
-        self.inoutput_arguments = inoutput_arguments
-        self.client_timeout_duration = client_timeout_duration
-
-
-class Operation_request_async_value_only(DBC):
-    """
-    The operation request object for asynchronous invocation in the ValueOnly
-    notation.
-
-    This class is not part of the metamodel and is not itself a named class
-    in the specification. It corresponds to the request body of the
-    ``InvokeOperationAsync`` operation in the ValueOnly notation, which is
-    shaped like :class:`Operation_request_value_only` with
-    :attr:`~Operation_request_value_only.client_timeout_duration` made
-    mandatory.
-
-    .. note::
-
-        This class is deliberately *not* related to
-        :class:`Operation_request_value_only` by inheritance; see the note
-        on :class:`Operation_request_async`.
-
-    See:
-    https://industrialdigitaltwin.io/aas-specifications/IDTA-01002/v3.2/specification/interfaces.html#_operation_invokeoperationasync
-    """
-
-    input_arguments: Optional[JSONObject["ID_short_type"]]
-    """Input argument"""
-
-    inoutput_arguments: Optional[JSONObject["ID_short_type"]]
-    """InOutput argument"""
-
-    client_timeout_duration: "Duration"
-    """
-    Duration indicating when the client suggests the server to have finished
-    execution of the invoked operation. The server may take this value into account to
-    decide on its effective timeout, however, the server may or may not use by its own
-    discretion.
-    """
-
-    def __init__(
-        self,
-        client_timeout_duration: "Duration",
-        input_arguments: Optional[JSONObject["ID_short_type"]] = None,
-        inoutput_arguments: Optional[JSONObject["ID_short_type"]] = None,
-    ) -> None:
-        self.client_timeout_duration = client_timeout_duration
-        self.input_arguments = input_arguments
-        self.inoutput_arguments = inoutput_arguments
-
-
-# fmt: off
-@invariant(
-    lambda self:
-    not (self.messages is not None)
-    or len(self.messages) >= 1,
-    "Messages must be either not set or have at least one item."
-)
-# fmt: on
-class Base_operation_result(DBC):
-    """
-    The object containing the intermediate state of an operation.
-
-    .. note::
-
-        This class is deliberately *not* related to :class:`Result` by
-        inheritance (and :class:`Operation_result` below is, in turn, not
-        related to this class by inheritance either). aas-core-codegen
-        refuses to generate a schema for a concrete class with concrete
-        descendants unless it is marked
-        ``@serialization(with_model_type=True)``, which would introduce a
-        ``modelType`` discriminator property that the official schema does
-        not have for this hierarchy. Flattening the hierarchy avoids that
-        mismatch, at the cost of repeating :attr:`messages` here.
-
-    See:
-    https://industrialdigitaltwin.io/aas-specifications/IDTA-01002/v3.2/specification/interfaces-payload.html#BaseOperationResult
-    """
-
-    execution_state: "Execution_state"
-    """Execution state"""
-
-    messages: Optional[List["Message"]]
-    """Additional messages containing information for the requester"""
-
-    success: Optional[bool]
-    """
-    Flag indicating whether the business operation behind the operation was
-    successful (true) or not (false)
-    """
-
-    def __init__(
-        self,
-        execution_state: "Execution_state",
-        messages: Optional[List["Message"]] = None,
-        success: Optional[bool] = None,
-    ) -> None:
-        self.execution_state = execution_state
-        self.messages = messages
-        self.success = success
-
-
-# fmt: off
-@invariant(
-    lambda self:
-    not (self.messages is not None)
-    or len(self.messages) >= 1,
-    "Messages must be either not set or have at least one item."
-)
-@invariant(
-    lambda self:
-    not (self.output_arguments is not None)
-    or len(self.output_arguments) >= 1,
-    "Output arguments must be either not set or have at least one item."
-)
-@invariant(
-    lambda self:
-    not (self.inoutput_arguments is not None)
-    or len(self.inoutput_arguments) >= 1,
-    "InOutput arguments must be either not set or have at least one item."
-)
-# fmt: on
-class Operation_result(DBC):
-    """
-    The operation's invocation result object.
-
-    .. note::
-
-        This class is deliberately *not* related to :class:`Base_operation_result`
-        by inheritance; see the note on that class.
-
-    See:
-    https://industrialdigitaltwin.io/aas-specifications/IDTA-01002/v3.2/specification/interfaces-payload.html#OperationResult
-    """
-
-    execution_state: "Execution_state"
-    """Execution state"""
-
-    messages: Optional[List["Message"]]
-    """Additional messages containing information for the requester"""
-
-    success: Optional[bool]
-    """
-    Flag indicating whether the business operation behind the operation was
-    successful (true) or not (false)
-    """
-
-    output_arguments: Optional[List["Operation_variable"]]
-    """Output argument"""
-
-    inoutput_arguments: Optional[List["Operation_variable"]]
-    """InOutput argument"""
-
-    def __init__(
-        self,
-        execution_state: "Execution_state",
-        messages: Optional[List["Message"]] = None,
-        success: Optional[bool] = None,
-        output_arguments: Optional[List["Operation_variable"]] = None,
-        inoutput_arguments: Optional[List["Operation_variable"]] = None,
-    ) -> None:
-        self.execution_state = execution_state
-        self.messages = messages
-        self.success = success
-        self.output_arguments = output_arguments
-        self.inoutput_arguments = inoutput_arguments
-
-
-# fmt: off
-@invariant(
-    lambda self:
-    not (self.messages is not None)
-    or len(self.messages) >= 1,
-    "Messages must be either not set or have at least one item."
-)
-# fmt: on
-class Operation_result_value_only(DBC):
-    """
-    The operation's invocation result object in the ValueOnly notation.
-
-    .. note::
-
-        This class is deliberately *not* related to :class:`Base_operation_result`
-        by inheritance; see the note on that class.
-
-    .. note::
-
-        The arguments are given in the ValueOnly serialization; see the note
-        on :class:`Operation_request_value_only`.
-
-    See:
-    https://industrialdigitaltwin.io/aas-specifications/IDTA-01002/v3.2/specification/interfaces-payload.html#operation-result-value-only
-    """
-
-    execution_state: "Execution_state"
-    """Execution state"""
-
-    messages: Optional[List["Message"]]
-    """Additional messages containing information for the requester"""
-
-    success: Optional[bool]
-    """
-    Flag indicating whether the business operation behind the operation was
-    successful (true) or not (false)
-    """
-
-    output_arguments: Optional[JSONObject["ID_short_type"]]
-    """Output argument"""
-
-    inoutput_arguments: Optional[JSONObject["ID_short_type"]]
-    """InOutput argument"""
-
-    def __init__(
-        self,
-        execution_state: "Execution_state",
-        messages: Optional[List["Message"]] = None,
-        success: Optional[bool] = None,
-        output_arguments: Optional[JSONObject["ID_short_type"]] = None,
-        inoutput_arguments: Optional[JSONObject["ID_short_type"]] = None,
-    ) -> None:
-        self.execution_state = execution_state
-        self.messages = messages
-        self.success = success
-        self.output_arguments = output_arguments
-        self.inoutput_arguments = inoutput_arguments
-
-
-class Operation_handle(DBC):
-    """
-    The returned handle of an operation's asynchronous invocation used to
-    request the current state of the operation's execution.
-
-    See:
-    https://industrialdigitaltwin.io/aas-specifications/IDTA-01002/v3.2/specification/interfaces-payload.html#OperationHandle
-    """
-
-    handle_ID: "Short_ID_type"
-    """Handle ID"""
-
-    def __init__(self, handle_ID: "Short_ID_type") -> None:
-        self.handle_ID = handle_ID
-
-
-# fmt: off
-@invariant(
-    lambda self:
-    not (self.result is not None)
-    or len(self.result) >= 1,
-    "Result must be either not set or have at least one item."
-)
-# fmt: on
-class Paged_result(DBC):
-    """
-    An object connecting the actual list of returned items with metadata
-    information to, *e.g.*, fetch the next part of the result set.
-
-    See:
-    https://industrialdigitaltwin.io/aas-specifications/IDTA-01002/v3.2/http-rest-api/http-rest-api.html#pagination
-    """
-
-    result: Optional[List["Referable"]]
-    """
-    List of returned items. Any kind of Referables is possible, depending on
-    the endpoint which has been requested.
-    """
-
-    paging_metadata: Annotated["Paging_metadata", json_name("paging_metadata")]
-    """
-    Additional information for the client to, *e.g.*, fetch the next part of
-    the result set.
-    """
-
-    def __init__(
-        self,
-        paging_metadata: "Paging_metadata",
-        result: Optional[List["Referable"]] = None,
-    ) -> None:
-        self.paging_metadata = paging_metadata
-        self.result = result
-
-
-class Paging_metadata(DBC):
-    """
-    Additional information for the client to, *e.g.*, fetch the next part of
-    the result set.
-
-    .. note::
-
-        More attributes may be added to this class in future versions.
-
-    See:
-    https://industrialdigitaltwin.io/aas-specifications/IDTA-01002/v3.2/http-rest-api/http-rest-api.html#pagination
-    """
-
-    cursor: Optional[str]
-    """
-    The cursor for the next part of the result set. No cursor attribute means that
-    the end of the result set has been reached.
-    """
-
-    def __init__(self, cursor: Optional[str] = None) -> None:
-        self.cursor = cursor
-
-
-# fmt: off
-@invariant(
-    lambda self:
-    not (self.AAS_IDs is not None)
-    or len(self.AAS_IDs) >= 1,
-    "AAS IDs must be either not set or have at least one item."
-)
-# fmt: on
-class Package_description(DBC):
-    """
-    The package description consists of a system-wide unique packageId and
-    its corresponding Asset Administration Shell identifiers.
-
-    The packageId is used to identify the AASX package at the AASX file
-    server. The package description is used to list the Asset
-    Administration Shells in a given AASX package.
-
-    This class is not part of the metamodel.
-
-    See:
-    https://industrialdigitaltwin.io/aas-specifications/IDTA-01002/v3.2/http-rest-api/http-rest-api.html#PackageDescription
-    """
-
-    package_ID: "Short_ID_type"
-    """File server specific package id"""
-
-    AAS_IDs: Optional[List["Identifier"]]
-    """Asset Administration Shell unique identifiers"""
-
-    def __init__(
-        self,
-        package_ID: "Short_ID_type",
-        AAS_IDs: Optional[List["Identifier"]] = None,
-    ) -> None:
-        self.package_ID = package_ID
-        self.AAS_IDs = AAS_IDs
-
-
-@verification
-def matches_path_item(text: str) -> bool:
-    """
-    Check that :paramref:`text` is a valid idShortPath.
-
-    An idShortPath is a chain of idShorts or SubmodelElementList-indexes
-    which points to an element within a hierarchy of elements, *e.g.*,
-    ``sme1.sme2[0].p1``.
-    """
-    pattern = (
-        r"^(([A-Za-z][A-Za-z0-9_]+)|(\[[0-9]+\]))"
-        r"((\.[A-Za-z][A-Za-z0-9_]+)|(\[[0-9]+\])){0,}$"
-    )
-
-    return match(pattern, text) is not None
-
-
-@invariant(
-    lambda self: matches_path_item(self),
-    "The value must match the pattern of a path item.",
-)
-class Path_item(str, DBC):
-    """
-    A chain of idShorts or SubmodelElementList-indexes, which points to an
-    element within a hierarchy of elements, *e.g.*, ``sme1.sme2[0].p1``.
-
-    The root of the path is always a submodel, and the first element is
-    always the idShort of a first-level submodel element within it. idShorts
-    are separated by a dot, while SubmodelElementList indices are written in
-    brackets.
-
-    This class is not part of the metamodel and is not itself a named class
-    in the specification.
-
-    See:
-    https://industrialdigitaltwin.io/aas-specifications/IDTA-01002/v3.2/http-rest-api/http-rest-api.html#_addressing_resources
-    """
-
-
-# fmt: off
-@invariant(
-    lambda self:
-    not (self.result is not None)
-    or len(self.result) >= 1,
-    "Result must be either not set or have at least one item."
-)
-# fmt: on
 class Get_asset_administration_shells_result(DBC):
     """
     The result of listing all Asset Administration Shells.
@@ -10291,14 +10420,6 @@ class Get_asset_administration_shells_result(DBC):
         self.result = result
 
 
-# fmt: off
-@invariant(
-    lambda self:
-    not (self.result is not None)
-    or len(self.result) >= 1,
-    "Result must be either not set or have at least one item."
-)
-# fmt: on
 class Get_asset_administration_shells_metadata_result(DBC):
     """
     The result of listing the metadata of all Asset Administration Shells.
@@ -10328,14 +10449,6 @@ class Get_asset_administration_shells_metadata_result(DBC):
         self.result = result
 
 
-# fmt: off
-@invariant(
-    lambda self:
-    not (self.result is not None)
-    or len(self.result) >= 1,
-    "Result must be either not set or have at least one item."
-)
-# fmt: on
 class Get_all_asset_administration_shells_recent_changes_result(DBC):
     """
     The result of listing the recent changes of all Asset Administration Shells.
@@ -10365,14 +10478,6 @@ class Get_all_asset_administration_shells_recent_changes_result(DBC):
         self.result = result
 
 
-# fmt: off
-@invariant(
-    lambda self:
-    not (self.result is not None)
-    or len(self.result) >= 1,
-    "Result must be either not set or have at least one item."
-)
-# fmt: on
 class Get_asset_administration_shell_descriptors_result(DBC):
     """
     The result of listing all Asset Administration Shell descriptors.
@@ -10402,14 +10507,6 @@ class Get_asset_administration_shell_descriptors_result(DBC):
         self.result = result
 
 
-# fmt: off
-@invariant(
-    lambda self:
-    not (self.result is not None)
-    or len(self.result) >= 1,
-    "Result must be either not set or have at least one item."
-)
-# fmt: on
 class Get_concept_descriptions_result(DBC):
     """
     The result of listing all concept descriptions.
@@ -10439,14 +10536,6 @@ class Get_concept_descriptions_result(DBC):
         self.result = result
 
 
-# fmt: off
-@invariant(
-    lambda self:
-    not (self.result is not None)
-    or len(self.result) >= 1,
-    "Result must be either not set or have at least one item."
-)
-# fmt: on
 class Get_all_concept_descriptions_recent_changes_result(DBC):
     """
     The result of listing the recent changes of all concept descriptions.
@@ -10476,14 +10565,6 @@ class Get_all_concept_descriptions_recent_changes_result(DBC):
         self.result = result
 
 
-# fmt: off
-@invariant(
-    lambda self:
-    not (self.result is not None)
-    or len(self.result) >= 1,
-    "Result must be either not set or have at least one item."
-)
-# fmt: on
 class Get_package_descriptions_result(DBC):
     """
     The result of listing all AASX package descriptions.
@@ -10513,14 +10594,6 @@ class Get_package_descriptions_result(DBC):
         self.result = result
 
 
-# fmt: off
-@invariant(
-    lambda self:
-    not (self.result is not None)
-    or len(self.result) >= 1,
-    "Result must be either not set or have at least one item."
-)
-# fmt: on
 class Get_path_items_result(DBC):
     """
     The result of listing idShortPaths.
@@ -10550,14 +10623,6 @@ class Get_path_items_result(DBC):
         self.result = result
 
 
-# fmt: off
-@invariant(
-    lambda self:
-    not (self.result is not None)
-    or len(self.result) >= 1,
-    "Result must be either not set or have at least one item."
-)
-# fmt: on
 class Get_references_result(DBC):
     """
     The result of listing references.
@@ -10587,14 +10652,6 @@ class Get_references_result(DBC):
         self.result = result
 
 
-# fmt: off
-@invariant(
-    lambda self:
-    not (self.result is not None)
-    or len(self.result) >= 1,
-    "Result must be either not set or have at least one item."
-)
-# fmt: on
 class Get_submodel_descriptors_result(DBC):
     """
     The result of listing all submodel descriptors.
@@ -10624,14 +10681,6 @@ class Get_submodel_descriptors_result(DBC):
         self.result = result
 
 
-# fmt: off
-@invariant(
-    lambda self:
-    not (self.result is not None)
-    or len(self.result) >= 1,
-    "Result must be either not set or have at least one item."
-)
-# fmt: on
 class Get_submodel_elements_metadata_result(DBC):
     """
     The result of listing the metadata of all submodel elements.
@@ -10662,12 +10711,6 @@ class Get_submodel_elements_metadata_result(DBC):
 
 
 # fmt: off
-@invariant(
-    lambda self:
-    not (self.result is not None)
-    or len(self.result) >= 1,
-    "Result must be either not set or have at least one item."
-)
 @invariant(
     lambda self:
     not (self.result is not None)
@@ -10718,11 +10761,16 @@ class Get_submodel_elements_value_result(DBC):
 
     .. note::
 
-        The result is given in the ValueOnly serialization, *i.e.*, as
-        a JSON object whose keys are the ID-shorts of the submodel elements
-        and whose values are their ValueOnly serializations. Their shape
-        depends on the concrete submodel elements and can not be pinned down
-        statically, so the result is represented as an open JSON object.
+        Each item of the result is a submodel element given in the ValueOnly
+        serialization, *i.e.*, as a JSON object with a single key, the ID-short
+        of the submodel element, whose value is its ValueOnly serialization.
+        The shape of the value depends on the concrete submodel element and
+        can not be pinned down statically, so each item is represented as
+        an open JSON object.
+
+        Unlike the OpenAPI schema, which types the result as a single JSON
+        object since V3.0.4, we follow BaSyx Go and represent the result as
+        an array of items. We suspect the OpenAPI schema to be buggy here.
 
     See:
     https://industrialdigitaltwin.io/aas-specifications/IDTA-01002/v3.2/http-rest-api/http-rest-api.html#pagination
@@ -10734,26 +10782,18 @@ class Get_submodel_elements_value_result(DBC):
     the result set.
     """
 
-    result: Optional[JSONObject["ID_short_type"]]
+    result: Optional[List[JSONObject["ID_short_type"]]]
     """The returned items."""
 
     def __init__(
         self,
         paging_metadata: "Paging_metadata",
-        result: Optional[JSONObject["ID_short_type"]] = None,
+        result: Optional[List[JSONObject["ID_short_type"]]] = None,
     ) -> None:
         self.paging_metadata = paging_metadata
         self.result = result
 
 
-# fmt: off
-@invariant(
-    lambda self:
-    not (self.result is not None)
-    or len(self.result) >= 1,
-    "Result must be either not set or have at least one item."
-)
-# fmt: on
 class Get_all_submodels_recent_changes_result(DBC):
     """
     The result of listing the recent changes of all submodels.
@@ -10783,14 +10823,6 @@ class Get_all_submodels_recent_changes_result(DBC):
         self.result = result
 
 
-# fmt: off
-@invariant(
-    lambda self:
-    not (self.result is not None)
-    or len(self.result) >= 1,
-    "Result must be either not set or have at least one item."
-)
-# fmt: on
 class Get_submodels_metadata_result(DBC):
     """
     The result of listing the metadata of all submodels.
@@ -10820,14 +10852,6 @@ class Get_submodels_metadata_result(DBC):
         self.result = result
 
 
-# fmt: off
-@invariant(
-    lambda self:
-    not (self.result is not None)
-    or len(self.result) >= 1,
-    "Result must be either not set or have at least one item."
-)
-# fmt: on
 class Get_submodels_result(DBC):
     """
     The result of listing all submodels.
@@ -10866,11 +10890,17 @@ class Get_submodels_value_result(DBC):
 
     .. note::
 
-        The result is given in the ValueOnly serialization, *i.e.*, as
-        a JSON object whose keys are the ID-shorts of the submodel elements
-        and whose values are their ValueOnly serializations. Their shape
-        depends on the concrete submodel elements and can not be pinned down
-        statically, so the result is represented as an open JSON object.
+        Each item of the result is a submodel given in the ValueOnly
+        serialization, *i.e.*, as a JSON object whose keys are the ID-shorts
+        of the submodel elements and whose values are their ValueOnly
+        serializations. Their shape depends on the concrete submodel elements
+        and can not be pinned down statically, so each item is represented
+        as an open JSON object.
+
+        Unlike the OpenAPI schema, which types the result as a single
+        SubmodelValue since V3.0.4, we follow BaSyx Go and represent
+        the result as an array of items. We suspect the OpenAPI schema to be
+        buggy here.
 
     See:
     https://industrialdigitaltwin.io/aas-specifications/IDTA-01002/v3.2/http-rest-api/http-rest-api.html#pagination
@@ -10882,16 +10912,79 @@ class Get_submodels_value_result(DBC):
     the result set.
     """
 
-    result: Optional[JSONObject["ID_short_type"]]
+    result: Optional[List[JSONObject["ID_short_type"]]]
     """The returned items."""
 
     def __init__(
         self,
         paging_metadata: "Paging_metadata",
-        result: Optional[JSONObject["ID_short_type"]] = None,
+        result: Optional[List[JSONObject["ID_short_type"]]] = None,
     ) -> None:
         self.paging_metadata = paging_metadata
         self.result = result
+
+
+# endregion GetXxxResult Envelopes
+
+
+# region AAS Query Language
+
+
+# NOTE (mristin):
+# This region formalizes the JSON serialization of the AAS Query Language
+# following the normative JSON schema given in the specification, see:
+# https://industrialdigitaltwin.io/aas-specifications/IDTA-01002/v3.2/query-language.html#_json_schema
+#
+# The copy of the schema in the Part 2 OpenAPI schema
+# (Part2-API-Schemas/openapi.yaml) is less strict: it does not constrain
+# the ``REFERENCE`` attribute by a pattern, and it does not require
+# the non-field operands of a comparison to be of the same type.
+#
+# The language is also shared with the AAS Access Rules of Part 4
+# (IDTA-01004), but we formalize here only the part which is accepted as
+# a query.
+#
+# The schema represents each expression as a JSON object with exactly
+# one of many possible properties (*e.g.*, ``{"$and": [...]}``,
+# ``{"$eq": [...]}``). We model each such alternative as a separate class
+# with a single required property, and group the alternatives in named unions
+# (*e.g.*, :py:data:`Logical_expression` or :py:data:`Value`). Since the
+# required properties of the alternatives within a union are pairwise
+# distinct, the alternatives can be told apart on the wire by the property
+# alone, so no ``modelType`` discriminator is needed.
+#
+# The schema types each comparison by the type of its operands (*e.g.*,
+# ``numericalComparisonItems`` or ``stringItems``). As the operator (*e.g.*,
+# ``$eq``) is the same JSON property for all the operand types, we can not
+# dispatch on the operand types statically. Hence, we represent the operands
+# of the overloaded comparisons (``$eq``, ``$ne``, ``$gt``, ``$ge``, ``$lt``
+# and ``$le``) as a pair of any :py:data:`Value`, and check the types of
+# the operands in the invariants (see :func:`are_equality_comparable` and
+# :func:`are_order_comparable`).
+#
+# We deviate from the schema in the following points:
+#
+# * In ``$timeCast``, the schema allows either a ``stringValue`` or
+#   a ``dateTimeOperand``. Both allow an ``$attribute`` alternative, and
+#   ``dateTimeAttributeItem`` is a subset of ``attributeItem``. We therefore
+#   leave out :class:`Date_time_attribute_operand` in
+#   :py:data:`Time_cast_operand` so that the ``$attribute`` alternative remains
+#   decidable, and a date-time attribute is covered by
+#   :class:`Attribute_operand`.
+#
+# * The schema limits the identifier in a ``REFERENCE`` attribute to 2048
+#   characters with a bounded repetition (``{1,2048}``) in the pattern. We
+#   use an unbounded repetition (``+``) in :func:`matches_reference_identifier`
+#   instead, since such a large bound is not supported by all the regular
+#   expression engines (*e.g.*, the one of Go limits the repetition to 1000).
+#
+# The query results (``QueryResultAssetAdministrationShell``,
+# ``QueryResultSubmodel`` *etc.*) are not formalized here, since their
+# ``result`` items are either an object or a plain string (depending on
+# ``$select``), which can not be represented as a named union of classes.
+#
+# See:
+# https://industrialdigitaltwin.io/aas-specifications/IDTA-01002/v3.2/query-language.html
 
 
 @verification
@@ -12163,14 +12256,6 @@ class Query_filter(DBC):
         self.condition = condition
 
 
-# fmt: off
-@invariant(
-    lambda self:
-    not (self.filters is not None)
-    or len(self.filters) >= 1,
-    "Filters must be either not set or have at least one item."
-)
-# fmt: on
 class Query(DBC):
     """
     A query in the AAS Query Language.
@@ -12193,7 +12278,12 @@ class Query(DBC):
     """The condition which the returned objects need to fulfill"""
 
     filters: Annotated[Optional[List["Query_filter"]], json_name("$filters")]
-    """Filters to reduce the returned data"""
+    """
+    Filters to reduce the returned data
+
+    The list can be empty, as the grammar allows ``$filters`` to be followed by
+    zero filters. Elements without a filter remain unfiltered.
+    """
 
     def __init__(
         self,
@@ -12206,34 +12296,43 @@ class Query(DBC):
         self.filters = filters
 
 
+#: An attribute which can be used as an operand
 Attribute_item = Union[Claim_attribute, Global_attribute, Reference_attribute]
 
-
+#: An operand which evaluates to a string
 String_value = Union[Field_operand, String_literal, String_cast, Attribute_operand]
 
-
+#: An operand which evaluates to a date and time
 Date_time_operand = Union[
     Date_time_literal, Date_time_cast, Date_time_attribute_operand
 ]
 
-
+#: An operand which can be cast to ``xs:time``
 Time_cast_operand = Union[String_value, Date_time_literal, Date_time_cast]
 
-
+#: An operand which evaluates to a number
 Numerical_operand = Union[
     Number_literal, Number_cast, Day_of_week, Day_of_month, Month, Year
 ]
 
-
+#: An operand which evaluates to a hexadecimal
 Hex_operand = Union[Hex_literal, Hex_cast]
 
-
+#: An operand which evaluates to a boolean
 Bool_operand = Union[Boolean_literal, Boolean_cast]
 
-
+#: An operand which evaluates to a time
 Time_operand = Union[Time_literal, Time_cast]
 
+# NOTE (mristin):
+# We can not include :py:data:`Date_time_operand` as a whole in
+# :py:data:`Value`, since its :class:`Date_time_attribute_operand` shares
+# the JSON property ``$attribute`` with :class:`Attribute_operand` of
+# :py:data:`String_value`, so the two could not be told apart on the wire.
+# A date-time global attribute is covered by :class:`Attribute_operand`
+# instead, and we list the remaining date-time operands individually.
 
+#: Any operand of a comparison
 Value = Union[
     String_value,
     Numerical_operand,
@@ -12244,7 +12343,7 @@ Value = Union[
     Time_operand,
 ]
 
-
+#: An expression which can be nested in a :class:`Match_clause`
 Match_expression = Union[
     Match_clause,
     Equal_comparison,
@@ -12259,7 +12358,7 @@ Match_expression = Union[
     Regex_comparison,
 ]
 
-
+#: An expression which evaluates to a boolean
 Logical_expression = Union[
     And_expression,
     Or_expression,
@@ -12269,4 +12368,10 @@ Logical_expression = Union[
 ]
 
 
+# endregion AAS Query Language
+
+
 # endregion Part 2
+
+# Downloaded from: https://raw.githubusercontent.com/aas-core-works/aas-core-meta/feab6a1c7047e4b05f636c1fa16dfe5d3469b661/aas_core_meta/v3_2.py
+# Do NOT edit or append!
