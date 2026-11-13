@@ -1,48 +1,95 @@
 <getSubmodelsValueResult xmlns="https://admin-shell.io/aas/3/2">
   <pagingMetadata />
   <result>
-    <member xmlns="">
-      <name>a-b123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456</name>
-      <value>
-        <string>something_674111b6</string>
-      </value>
-    </member>
-    <member xmlns="">
-      <name>nRdRe</name>
-      <value>
-        <double>19940151.74</double>
-      </value>
-    </member>
-    <member xmlns="">
-      <name>P7gn</name>
-      <value>
-        <boolean>0</boolean>
-      </value>
-    </member>
-    <member xmlns="">
-      <name>AopQejF</name>
-      <value>
-        <array>
-          <data>
-            <value>
-              <string>something_b80208ec</string>
-            </value>
-            <value>
-              <double>20105121.76</double>
-            </value>
-            <value>
-              <struct>
-                <member>
-                  <name>nested</name>
-                  <value>
-                    <boolean>1</boolean>
-                  </value>
-                </member>
-              </struct>
-            </value>
-          </data>
-        </array>
-      </value>
-    </member>
+    <v>
+      <member xmlns="">
+        <name>A_1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567</name>
+        <value>
+          <string>something_26d9750b</string>
+        </value>
+      </member>
+      <member xmlns="">
+        <name>a_</name>
+        <value>
+          <double>11487601.16</double>
+        </value>
+      </member>
+      <member xmlns="">
+        <name>Jk0k1414Di</name>
+        <value>
+          <boolean>0</boolean>
+        </value>
+      </member>
+      <member xmlns="">
+        <name>AopQejF</name>
+        <value>
+          <array>
+            <data>
+              <value>
+                <string>something_eed9253c</string>
+              </value>
+              <value>
+                <double>40277513.02</double>
+              </value>
+              <value>
+                <struct>
+                  <member>
+                    <name>nested</name>
+                    <value>
+                      <boolean>1</boolean>
+                    </value>
+                  </member>
+                </struct>
+              </value>
+            </data>
+          </array>
+        </value>
+      </member>
+    </v>
+    <v>
+      <member xmlns="">
+        <name>a-_</name>
+        <value>
+          <string>something_e3ee22c6</string>
+        </value>
+      </member>
+      <member xmlns="">
+        <name>tWC</name>
+        <value>
+          <double>41825534.23</double>
+        </value>
+      </member>
+      <member xmlns="">
+        <name>a-b</name>
+        <value>
+          <boolean>1</boolean>
+        </value>
+      </member>
+      <member xmlns="">
+        <name>t8x1pz9WS4TGV</name>
+        <value>
+          <array>
+            <data>
+              <value>
+                <string>something_949a3976</string>
+              </value>
+              <value>
+                <double>32116879.18</double>
+              </value>
+              <value>
+                <struct>
+                  <member>
+                    <name>nested</name>
+                    <value>
+                      <boolean>0</boolean>
+                    </value>
+                  </member>
+                </struct>
+              </value>
+            </data>
+          </array>
+        </value>
+      </member>
+    </v>
   </result>
 </getSubmodelsValueResult>
